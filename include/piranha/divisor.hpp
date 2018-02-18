@@ -57,6 +57,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/gcd3.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/s11n.hpp>
@@ -187,7 +189,7 @@ struct msgpack_convert_impl<
  * Move semantics is equivalent to the move semantics of piranha::hash_set.
  */
 // NOTE: if we ever make this completely generic on T, remember there are some hard-coded assumptions. E.g.,
-// is_zero must be available in split().
+// is_zero must() be available in split(), is_one() in the canonicality check, etc.
 // NOTE: the implementation defined range restriction is needed in order to make the gcd computations safe.
 template <typename T>
 class divisor
@@ -218,8 +220,9 @@ public:
     using container_type = hash_set<p_type, p_type_hasher>;
 
 private:
-    // Canonical term: the first nonzero element is positive and all the gcd of all elements is 1 or -1.
-    // NOTE: this also includes the check for all zero elements, as gcd(0,0,...,0) = 0.
+    // Canonical term: the first nonzero element is positive and the gcd of all elements is 1.
+    // NOTE: this also includes the check for all zero elements, as gcd(0,0,...,0) = 0,
+    // and for empty p.v.
     static bool term_is_canonical(const p_type &p)
     {
         bool first_nonzero_found = false;
@@ -231,13 +234,10 @@ private:
                 }
                 first_nonzero_found = true;
             }
-            // NOTE: gcd(0,n) == n (or +-n, in our case) for all n, zero included.
-            math::gcd3(cd, cd, n);
+            // NOTE: gcd3(0,n) == abs(n) for all n, zero included.
+            piranha::gcd3(cd, cd, n);
         }
-        if (cd != 1 && cd != -1) {
-            return false;
-        }
-        return true;
+        return piranha::is_one(cd);
     }
     // Range check on a term - meaningful only if T is a C++ integral type.
     template <typename U = T, typename std::enable_if<std::is_integral<U>::value, int>::type = 0>

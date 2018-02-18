@@ -47,6 +47,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/gcd.hpp>
+#include <piranha/math/gcd3.hpp>
+#include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/safe_cast.hpp>
@@ -389,42 +392,49 @@ struct gcd_tester {
     void operator()(const T &) const
     {
         using int_type = mppp::integer<T::value>;
-        BOOST_CHECK((has_gcd<int_type>::value));
-        BOOST_CHECK((has_gcd<int_type, int>::value));
-        BOOST_CHECK((has_gcd<long, int_type>::value));
-        BOOST_CHECK((has_gcd<char &, const int_type>::value));
-        BOOST_CHECK((has_gcd<const char &, const int_type>::value));
-        BOOST_CHECK((has_gcd3<int_type>::value));
-        BOOST_CHECK((has_gcd3<int_type &>::value));
-        BOOST_CHECK((!has_gcd3<const int_type &>::value));
-        BOOST_CHECK((!has_gcd3<const int_type>::value));
-        BOOST_CHECK((has_gcd<int_type, wchar_t>::value));
-        BOOST_CHECK((has_gcd<wchar_t, int_type>::value));
-        BOOST_CHECK((!has_gcd<int_type, void>::value));
-        BOOST_CHECK((!has_gcd<void, int_type>::value));
+        BOOST_CHECK((are_gcd_types<int_type>::value));
+        BOOST_CHECK((are_gcd_types<int_type, int>::value));
+        BOOST_CHECK((are_gcd_types<long, int_type>::value));
+        BOOST_CHECK((are_gcd_types<char &, const int_type>::value));
+        BOOST_CHECK((are_gcd_types<const char &, const int_type>::value));
+        BOOST_CHECK((are_gcd3_types<int_type>::value));
+        BOOST_CHECK((are_gcd3_types<int_type &>::value));
+        BOOST_CHECK((are_gcd3_types<int_type &, int, long>::value));
+        BOOST_CHECK((!are_gcd3_types<const int_type &>::value));
+        BOOST_CHECK((!are_gcd3_types<const int_type>::value));
+        BOOST_CHECK((are_gcd_types<int_type, wchar_t>::value));
+        BOOST_CHECK((are_gcd_types<wchar_t, int_type>::value));
+        BOOST_CHECK((!are_gcd_types<int_type, void>::value));
+        BOOST_CHECK((!are_gcd_types<void, int_type>::value));
         // NOTE: the demangler in mp++ earlier than 0.9 does not support
         // correctly 128bit types on OSX. Once we bump up the mp++ version,
         // we can remove the second check.
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
-        BOOST_CHECK((has_gcd<int_type, __int128_t>::value));
-        BOOST_CHECK((has_gcd<__int128_t, int_type>::value));
-        BOOST_CHECK((has_gcd<int_type, __uint128_t>::value));
-        BOOST_CHECK((has_gcd<__uint128_t, int_type>::value));
+        BOOST_CHECK((are_gcd_types<int_type, __int128_t>::value));
+        BOOST_CHECK((are_gcd_types<__int128_t, int_type>::value));
+        BOOST_CHECK((are_gcd_types<int_type, __uint128_t>::value));
+        BOOST_CHECK((are_gcd_types<__uint128_t, int_type>::value));
 #endif
-        BOOST_CHECK_EQUAL(math::gcd(int_type{4}, int_type{6}), 2);
-        BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{-6}), 6);
-        BOOST_CHECK_EQUAL(math::gcd(int_type{6}, int_type{0}), 6);
-        BOOST_CHECK_EQUAL(math::gcd(int_type{0}, int_type{0}), 0);
-        BOOST_CHECK_EQUAL(math::gcd(-4, int_type{6}), 2);
-        BOOST_CHECK_EQUAL(math::gcd(int_type{4}, -6ll), 2);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{4}, int_type{6}), 2);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{0}, int_type{-6}), 6);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{6}, int_type{0}), 6);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{0}, int_type{0}), 0);
+        BOOST_CHECK_EQUAL(piranha::gcd(-4, int_type{6}), 2);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{4}, -6ll), 2);
 #if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
-        BOOST_CHECK_EQUAL(math::gcd(__int128_t(-4), int_type{6}), 2);
-        BOOST_CHECK_EQUAL(math::gcd(int_type{4}, __uint128_t(6)), 2);
+        BOOST_CHECK_EQUAL(piranha::gcd(__int128_t(-4), int_type{6}), 2);
+        BOOST_CHECK_EQUAL(piranha::gcd(int_type{4}, __uint128_t(6)), 2);
 #endif
         int_type n;
-        math::gcd3(n, int_type{4}, int_type{6});
+        piranha::gcd3(n, int_type{4}, int_type{6});
         BOOST_CHECK_EQUAL(n, 2);
-        math::gcd3(n, int_type{0}, int_type{0});
+        piranha::gcd3(n, -4, int_type{6});
+        BOOST_CHECK_EQUAL(n, 2);
+        piranha::gcd3(n, int_type{-4}, 6);
+        BOOST_CHECK_EQUAL(n, 2);
+        piranha::gcd3(n, 4, -6);
+        BOOST_CHECK_EQUAL(n, 2);
+        piranha::gcd3(n, int_type{0}, int_type{0});
         BOOST_CHECK_EQUAL(n, 0);
     }
 };
@@ -432,8 +442,8 @@ struct gcd_tester {
 BOOST_AUTO_TEST_CASE(integer_gcd_test)
 {
     tuple_for_each(size_types{}, gcd_tester{});
-    BOOST_CHECK((!has_gcd<mppp::integer<1>, mppp::integer<2>>::value));
-    BOOST_CHECK((!has_gcd<mppp::integer<2>, mppp::integer<1>>::value));
+    BOOST_CHECK((!are_gcd_types<mppp::integer<1>, mppp::integer<2>>::value));
+    BOOST_CHECK((!are_gcd_types<mppp::integer<2>, mppp::integer<1>>::value));
 }
 
 BOOST_AUTO_TEST_CASE(integer_literal_test)

@@ -55,6 +55,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_cf.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/gcd3.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/power_series.hpp>
 #include <piranha/safe_cast.hpp>
@@ -334,9 +335,9 @@ class divisor_series
                     if (need_negate) {
                         math::negate(n);
                     }
-                    // NOTE: gcd(0,n) == n for all n, zero included.
+                    // NOTE: gcd(0,n) == abs(n) for all n, zero included.
                     // NOTE: the gcd computation here is safe as we are operating on integers.
-                    math::gcd3(cd, cd, n);
+                    piranha::gcd3(cd, cd, n);
                 }
                 // GCD on integers should always return non-negative numbers, and cd should never be zero: if all
                 // elements in v_int are zero, we would not have been able to extract the linear combination.

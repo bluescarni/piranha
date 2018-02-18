@@ -54,6 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/gcd3.hpp>
 #include <piranha/math/is_one.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/safe_cast.hpp>
@@ -169,18 +170,17 @@ struct base_series_multiplier_impl<
         auto it_f = c1.end();
         int_type g;
         for (auto it = c1.begin(); it != it_f; ++it) {
-            math::gcd3(g, m_lcm, it->m_cf.get_den());
+            piranha::gcd3(g, m_lcm, it->m_cf.get_den());
             math::mul3(m_lcm, m_lcm, it->m_cf.get_den());
             divexact(m_lcm, m_lcm, g);
         }
         it_f = c2.end();
         for (auto it = c2.begin(); it != it_f; ++it) {
-            math::gcd3(g, m_lcm, it->m_cf.get_den());
+            piranha::gcd3(g, m_lcm, it->m_cf.get_den());
             math::mul3(m_lcm, m_lcm, it->m_cf.get_den());
             divexact(m_lcm, m_lcm, g);
         }
-        // All these computations involve only positive numbers,
-        // the GCD must always be positive.
+        // Double check that the gcd is positive.
         piranha_assert(m_lcm.sgn() == 1);
         // Copy over the terms and renormalise to lcm.
         it_f = c1.end();
