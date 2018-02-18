@@ -53,7 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/detail/km_commons.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
@@ -473,7 +473,7 @@ public:
         piranha_assert(tmp.size() == args.size());
         degree_type retval(0);
         for (const auto &x : tmp) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(x));
+            retval = safe_int_add(retval, static_cast<degree_type>(x));
         }
         return retval;
     }
@@ -518,7 +518,7 @@ public:
         }
         degree_type retval(0);
         for (auto idx : p) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
+            retval = safe_int_add(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
         }
         return retval;
     }
@@ -561,7 +561,7 @@ public:
         for (const auto &x : tmp) {
             // NOTE: here the k codification is symmetric, we can always take the negative
             // safely.
-            detail::safe_integral_adder(retval, static_cast<order_type>(math::abs(x)));
+            retval = safe_int_add(retval, static_cast<order_type>(math::abs(x)));
         }
         return retval;
     }
@@ -590,7 +590,7 @@ public:
      *
      * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
      * of \p args.
-     * @throws std::overflow_error if the computation of the degree overflows.
+     * @throws std::overflow_error if the computation of the order overflows.
      * @throws unspecified any exception thrown by unpack().
      */
     order_type t_order(const symbol_idx_fset &p, const symbol_fset &args) const
@@ -606,8 +606,8 @@ public:
         }
         order_type retval(0);
         for (auto idx : p) {
-            detail::safe_integral_adder(
-                retval, static_cast<degree_type>(math::abs(tmp[static_cast<decltype(tmp.size())>(idx)])));
+            retval
+                = safe_int_add(retval, static_cast<order_type>(math::abs(tmp[static_cast<decltype(tmp.size())>(idx)])));
         }
         return retval;
     }
@@ -690,13 +690,13 @@ public:
         v_type result_plus, result_minus;
         for (typename v_type::size_type i = 0u; i < size; ++i) {
             result_plus.push_back(tmp1[i]);
-            detail::safe_integral_adder(result_plus[i], tmp2[i]);
+            result_plus[i] = safe_int_add(result_plus[i], tmp2[i]);
             // NOTE: it is safe here to take the negative because in kronecker_array we are guaranteed
             // that the range of each element is symmetric, so if tmp2[i] is representable also -tmp2[i] is.
             // NOTE: the static cast here is because if value_type is narrower than int, the unary minus will promote
-            // to int and safe_adder won't work as it expects identical types.
+            // to int and safe_int_add() won't work as it expects identical types.
             result_minus.push_back(tmp1[i]);
-            detail::safe_integral_adder(result_minus[i], static_cast<value_type>(-tmp2[i]));
+            result_minus[i] = safe_int_add(result_minus[i], static_cast<value_type>(-tmp2[i]));
         }
         // Handle sign changes.
         sign_plus = canonicalise_impl(result_plus);

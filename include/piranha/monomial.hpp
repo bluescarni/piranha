@@ -54,7 +54,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/init.hpp>
 #include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/integer.hpp>
@@ -284,7 +284,7 @@ private:
     template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
     static void expo_add(degree_type<U> &retval, const U &n)
     {
-        detail::safe_integral_adder(retval, static_cast<degree_type<U>>(n));
+        retval = safe_int_add(retval, static_cast<degree_type<U>>(n));
     }
     template <typename U, enable_if_t<!std::is_integral<U>::value, int> = 0>
     static void expo_add(degree_type<U> &retval, const U &x)

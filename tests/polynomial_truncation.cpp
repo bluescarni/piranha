@@ -40,7 +40,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <mp++/config.hpp>
 
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/monomial.hpp>
@@ -131,7 +131,7 @@ struct main_tester {
                     // This is what would happen if we used d1 + d2 <= M instead of d1 <= M - d2 in
                     // the truncation logic.
                     auto check = max / 2 + max / 2;
-                    BOOST_CHECK_THROW(detail::safe_integral_adder(check, max / 2 + 2), std::overflow_error);
+                    BOOST_CHECK_THROW(safe_int_add(check, max / 2 + 2), std::overflow_error);
                 }
                 // Now partial degree.
                 pt::set_auto_truncate_degree(1, {"x"});
