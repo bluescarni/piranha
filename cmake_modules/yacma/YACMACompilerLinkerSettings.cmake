@@ -142,6 +142,12 @@ if(NOT _YACMACompilerLinkerSettingsRun)
             message(STATUS "Activating the '-Wno-attributes' workaround for GCC >= 6.")
             _YACMA_CHECK_ENABLE_CXX_FLAG(-Wno-attributes)
         endif()
+        if(YACMA_COMPILER_IS_GNUCXX)
+            # The -Wmaybe-uninitialized flag is enabled by -Wall, but it is known
+            # to emit a lot of possibly spurious warnings. Let's just disable it.
+            message(STATUS "Activating the '-Wno-maybe-uninitialized' workaround for GCC.")
+            _YACMA_CHECK_ENABLE_DEBUG_CXX_FLAG(-Wno-maybe-uninitialized)
+        endif()
     endif()
 
     # MSVC setup.
