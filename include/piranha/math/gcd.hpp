@@ -115,7 +115,7 @@ class gcd_impl<T, U, enable_if_t<conjunction<std::is_integral<T>, std::is_integr
 #else
         // NOTE: like std::gcd(), let's abs() both input arguments. This ensures
         // in the algorithm below everything stays positive.
-        auto make_abs = [](ret_t x) { return x >= ret_t(0) ? static_cast<ret_t>(x) : static_cast<ret_t>(-x); };
+        auto make_abs = [](ret_t val) { return val >= ret_t(0) ? static_cast<ret_t>(val) : static_cast<ret_t>(-val); };
         ret_t a(make_abs(x)), b(make_abs(y));
         while (true) {
             if (a == ret_t(0)) {
