@@ -33,6 +33,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/init.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 

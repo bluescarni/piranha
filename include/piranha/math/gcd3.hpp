@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_MATH_GCD3_HPP
 #define PIRANHA_MATH_GCD3_HPP
 
+#include <type_traits>
 #include <utility>
 
 #include <piranha/config.hpp>
