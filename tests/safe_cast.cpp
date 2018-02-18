@@ -173,7 +173,10 @@ struct fp_int_checker {
 // GCC complains about int to float conversions here.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 8)
+// This warning is present since gcc 4.9.
 #pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif
 #endif
             if (std::numeric_limits<U>::max() > std::numeric_limits<T>::max()) {
 #if defined(PIRANHA_COMPILER_IS_GCC)
