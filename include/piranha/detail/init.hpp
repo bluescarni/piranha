@@ -51,6 +51,7 @@ inline namespace impl
 struct mpfr_init_checks {
     mpfr_init_checks()
     {
+        // LCOV_EXCL_START
         if (!::mpfr_buildopt_tls_p()) {
             // Make sure we can access the default C++ streams:
             // http://en.cppreference.com/w/cpp/io/ios_base/Init
@@ -61,6 +62,7 @@ struct mpfr_init_checks {
                          "installation instructions at "
                          "http://www.mpfr.org/mpfr-current/mpfr.html#Installing-MPFR)\n=========================\n";
         }
+        // LCOV_EXCL_STOP
     }
 };
 
