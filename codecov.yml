@@ -1,6 +1,5 @@
 coverage:
   ignore:
   - tests/.*
-  - include/piranha/mppp/.*
 
 comment: off
