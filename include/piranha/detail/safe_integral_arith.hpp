@@ -49,31 +49,15 @@ see https://www.gnu.org/licenses/. */
 
 #elif defined(PIRANHA_COMPILER_IS_CLANG)
 
-// Clang has them since version 3.4:
+// On Clang, we can test explicitly if the builtins are available with the
+// __has_builtin() macro:
 // http://releases.llvm.org/3.4/tools/clang/docs/LanguageExtensions.html
-// However we need to take care of AppleClang's hijacking of clang's version macros:
-// https://stackoverflow.com/questions/19387043/how-can-i-reliably-detect-the-version-of-clang-at-preprocessing-time
-// It seems like on OSX clang's version macros refer to the Xcode version. According to this table, clang 3.4 first
-// appears in Xcode 5.1:
-// https://en.wikipedia.org/wiki/Xcode#8.x_series
+// NOTE: the typed overflow builtins are available since clang 3.4, the
+// generic ones are available since clang 3.8.
 
-#if defined(__apple_build_version__)
-
-// Xcode >= 5.1.
-#if __clang_major__ > 5 || (__clang_major__ == 5 && __clang_minor__ >= 1)
+#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow)
 
 #define PIRANHA_HAVE_INTEGER_OVERFLOW_BUILTINS
-
-#endif
-
-#else
-
-// Vanilla clang >= 3.4.
-#if __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 4)
-
-#define PIRANHA_HAVE_INTEGER_OVERFLOW_BUILTINS
-
-#endif
 
 #endif
 
