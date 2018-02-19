@@ -60,7 +60,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/parallel_vector_transform.hpp>
 #include <piranha/detail/poisson_series_fwd.hpp>
 #include <piranha/detail/polynomial_fwd.hpp>
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/detail/sfinae_types.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/forwarding.hpp>
@@ -1240,9 +1240,7 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
     template <typename T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
     static T degree_sub(const T &a, const T &b)
     {
-        T retval(a);
-        detail::safe_integral_subber(retval, b);
-        return retval;
+        return safe_int_sub(a, b);
     }
     // Dispatch of untruncated multiplication.
     template <typename T = Series,

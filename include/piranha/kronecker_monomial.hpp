@@ -51,7 +51,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/km_commons.hpp>
 #include <piranha/detail/monomial_common.hpp>
 #include <piranha/detail/prepare_for_print.hpp>
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
@@ -422,7 +422,7 @@ public:
         for (const auto &x : tmp) {
             // NOTE: here it might be possible to demonstrate that overflow can
             // never occur, and that we can use a normal integral addition.
-            detail::safe_integral_adder(retval, static_cast<degree_type>(x));
+            retval = safe_int_add(retval, static_cast<degree_type>(x));
         }
         return retval;
     }
@@ -467,7 +467,7 @@ public:
         }
         degree_type retval(0);
         for (auto idx : p) {
-            detail::safe_integral_adder(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
+            retval = safe_int_add(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
         }
         return retval;
     }

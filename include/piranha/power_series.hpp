@@ -34,7 +34,7 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 
 #include <piranha/detail/init.hpp>
-#include <piranha/detail/safe_integral_adder.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/math.hpp>
 #include <piranha/safe_cast.hpp>
@@ -90,9 +90,8 @@ using common_degree_type_checks
         ->decltype(math::property(t.m_cf) + t.m_key.property(s))                                                       \
     {                                                                                                                  \
         using ret_type = decltype(math::property(t.m_cf) + t.m_key.property(s));                                       \
-        ret_type retval(math::property(t.m_cf));                                                                       \
-        detail::safe_integral_adder(retval, static_cast<ret_type>(t.m_key.property(s)));                               \
-        return retval;                                                                                                 \
+        return safe_int_add(static_cast<ret_type>(math::property(t.m_cf)),                                             \
+                            static_cast<ret_type>(t.m_key.property(s)));                                               \
     }                                                                                                                  \
     template <typename Term,                                                                                           \
               enable_if_t<                                                                                             \
@@ -146,9 +145,8 @@ PIRANHA_DEFINE_PS_PROPERTY_GETTER(ldegree)
         ->decltype(math::property(t.m_cf, names) + t.m_key.property(p, s))                                             \
     {                                                                                                                  \
         using ret_type = decltype(math::property(t.m_cf, names) + t.m_key.property(p, s));                             \
-        ret_type retval(math::property(t.m_cf, names));                                                                \
-        detail::safe_integral_adder(retval, static_cast<ret_type>(t.m_key.property(p, s)));                            \
-        return retval;                                                                                                 \
+        return safe_int_add(static_cast<ret_type>(math::property(t.m_cf, names)),                                      \
+                            static_cast<ret_type>(t.m_key.property(p, s)));                                            \
     }                                                                                                                  \
     template <                                                                                                         \
         typename Term,                                                                                                 \
