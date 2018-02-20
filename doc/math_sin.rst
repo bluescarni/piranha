@@ -3,6 +3,10 @@
 Sine
 ====
 
+.. todo::
+
+   Document series specialisations.
+
 *#include <piranha/math/sin.hpp>*
 
 .. cpp:function:: template <typename T> auto piranha::sin(T &&x)

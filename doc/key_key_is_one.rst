@@ -3,6 +3,10 @@
 Detect unitary keys
 ===================
 
+.. todo::
+
+   Document key specialisations.
+
 *#include <piranha/key/key_is_one.hpp>*
 
 .. cpp:function:: template <typename T> bool piranha::key_is_one(const T &x, const piranha::symbol_fset &s)

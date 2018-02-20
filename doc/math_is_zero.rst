@@ -3,6 +3,10 @@
 Detect zero
 ===========
 
+.. todo::
+
+   Document series specialisations.
+
 *#include <piranha/math/is_zero.hpp>*
 
 .. cpp:function:: template <typename T> bool piranha::is_zero(const T &x)

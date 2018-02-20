@@ -3,6 +3,10 @@
 Detect zero keys
 ================
 
+.. todo::
+
+   Document key specialisations.
+
 *#include <piranha/key/key_is_zero.hpp>*
 
 .. cpp:function:: template <typename T> bool piranha::key_is_zero(const T &x, const piranha::symbol_fset &s)

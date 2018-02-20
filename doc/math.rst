@@ -38,3 +38,12 @@ Comparisons
 
    math_is_zero.rst
    math_is_one.rst
+
+Degree and related
+------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   math_degree.rst
+   math_ldegree.rst
