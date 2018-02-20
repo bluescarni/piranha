@@ -166,6 +166,12 @@ template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
 }
 
+// Detect C++ FP complex types, in a similar way to std::is_floating_point.
+template <typename T>
+using is_cpp_complex
+    = disjunction<std::is_same<uncv_t<T>, std::complex<float>>, std::is_same<uncv_t<T>, std::complex<double>>,
+                  std::is_same<uncv_t<T>, std::complex<long double>>>;
+
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 // Provide concept versions of a few C++ type traits.
@@ -187,15 +193,6 @@ concept bool Convertible = std::is_convertible<From, To>::value;
 template <typename T>
 concept bool NonConst = !std::is_const<T>::value;
 
-#endif
-
-template <typename T>
-using is_cpp_complex
-    = disjunction<std::is_same<uncv_t<T>, std::complex<float>>, std::is_same<uncv_t<T>, std::complex<double>>,
-                  std::is_same<uncv_t<T>, std::complex<long double>>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
 template <typename T>
 concept bool CppComplex = is_cpp_complex<T>::value;
 
@@ -209,26 +206,10 @@ template <typename T, typename U>
 using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
 }
 
-/// Addable type trait.
-/**
- * This type trait will be \p true if objects of type \p T can be added to objects of type \p U using the binary
- * addition operator, \p false otherwise. The operator will be tested in the form:
- * @code
- * operator+(const T &, const U &)
- * @endcode
- */
+// Addable type trait.
 template <typename T, typename U = T>
-class is_addable
-{
-    static const bool implementation_defined = is_detected<add_t, T, U>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
+struct is_addable : is_detected<add_t, T, U> {
 };
-
-template <typename T, typename U>
-const bool is_addable<T, U>::value;
 
 /// In-place addable type trait.
 /**
