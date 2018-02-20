@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE ldegree_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <utility>
+
 #include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
@@ -41,6 +43,15 @@ class foo
 
 class bar
 {
+};
+
+struct mbar {
+    mbar() = default;
+    mbar(mbar &&m)
+    {
+        m.value = 1;
+    }
+    int value = 0;
 };
 
 namespace piranha
@@ -70,6 +81,19 @@ public:
         return 0;
     }
 };
+
+template <>
+class ldegree_impl<mbar>
+{
+public:
+    template <typename T, typename... Args>
+    int operator()(T &&x, const Args &...) const
+    {
+        T other(std::forward<T>(x));
+        (void)other;
+        return sizeof...(Args);
+    }
+};
 }
 
 BOOST_AUTO_TEST_CASE(ldegree_test_00)
@@ -91,4 +115,14 @@ BOOST_AUTO_TEST_CASE(ldegree_test_00)
     BOOST_CHECK(!is_ldegree_type<const bar>::value);
     BOOST_CHECK(!is_ldegree_type<const bar &>::value);
     BOOST_CHECK(!is_ldegree_type<bar &&>::value);
+    BOOST_CHECK(is_ldegree_type<mbar>::value);
+    BOOST_CHECK_EQUAL(piranha::ldegree(mbar{}), 0);
+    BOOST_CHECK_EQUAL(piranha::ldegree(mbar{}, symbol_fset{}), 1);
+    mbar m1, m2;
+    BOOST_CHECK_EQUAL(m1.value, 0);
+    BOOST_CHECK_EQUAL(m2.value, 0);
+    piranha::ldegree(std::move(m1));
+    piranha::ldegree(std::move(m2), symbol_fset{});
+    BOOST_CHECK_EQUAL(m1.value, 1);
+    BOOST_CHECK_EQUAL(m2.value, 1);
 }
