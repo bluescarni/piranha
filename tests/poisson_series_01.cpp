@@ -52,6 +52,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/degree.hpp>
+#include <piranha/math/ldegree.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
@@ -335,43 +337,43 @@ BOOST_AUTO_TEST_CASE(poisson_series_degree_test)
 {
     {
         typedef poisson_series<polynomial<rational, monomial<short>>> p_type1;
-        BOOST_CHECK(has_degree<p_type1>::value);
-        BOOST_CHECK(has_ldegree<p_type1>::value);
-        BOOST_CHECK(math::degree(p_type1{}) == 0);
-        BOOST_CHECK(math::degree(p_type1{"x"}) == 1);
-        BOOST_CHECK(math::degree(p_type1{"x"} + 1) == 1);
-        BOOST_CHECK(math::degree(p_type1{"x"}.pow(2) + 1) == 2);
-        BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1) == 2);
-        BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1, {"x"}) == 1);
-        BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1, {"x", "y"}) == 2);
-        BOOST_CHECK(math::degree(p_type1{"x"} * p_type1{"y"} + 1, {"z"}) == 0);
-        BOOST_CHECK(math::ldegree(p_type1{"x"} + 1) == 0);
-        BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"x", "y"}) == 1);
-        BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"x"}) == 1);
-        BOOST_CHECK(math::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"y"}) == 0);
+        BOOST_CHECK(is_degree_type<p_type1>::value);
+        BOOST_CHECK(is_ldegree_type<p_type1>::value);
+        BOOST_CHECK(piranha::degree(p_type1{}) == 0);
+        BOOST_CHECK(piranha::degree(p_type1{"x"}) == 1);
+        BOOST_CHECK(piranha::degree(p_type1{"x"} + 1) == 1);
+        BOOST_CHECK(piranha::degree(p_type1{"x"}.pow(2) + 1) == 2);
+        BOOST_CHECK(piranha::degree(p_type1{"x"} * p_type1{"y"} + 1) == 2);
+        BOOST_CHECK(piranha::degree(p_type1{"x"} * p_type1{"y"} + 1, {"x"}) == 1);
+        BOOST_CHECK(piranha::degree(p_type1{"x"} * p_type1{"y"} + 1, {"x", "y"}) == 2);
+        BOOST_CHECK(piranha::degree(p_type1{"x"} * p_type1{"y"} + 1, {"z"}) == 0);
+        BOOST_CHECK(piranha::ldegree(p_type1{"x"} + 1) == 0);
+        BOOST_CHECK(piranha::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"x", "y"}) == 1);
+        BOOST_CHECK(piranha::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"x"}) == 1);
+        BOOST_CHECK(piranha::ldegree(p_type1{"x"} * p_type1{"y"} + p_type1{"x"}, {"y"}) == 0);
         p_type1 x{"x"}, y{"y"};
-        BOOST_CHECK(math::degree(piranha::pow(x, 2) * piranha::cos(y) + 1) == 2);
-        BOOST_CHECK(math::ldegree(piranha::pow(x, 2) * piranha::cos(y) + 1) == 0);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + 1, {"x"}) == 0);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + 1, {"y"}) == 0);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + y, {"y"}) == 1);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + y, {"x"}) == 0);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + y) == 1);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + y, {"x", "y"}) == 1);
-        BOOST_CHECK(math::ldegree((x * y + y) * piranha::cos(y) + 1, {"x", "y"}) == 0);
+        BOOST_CHECK(piranha::degree(piranha::pow(x, 2) * piranha::cos(y) + 1) == 2);
+        BOOST_CHECK(piranha::ldegree(piranha::pow(x, 2) * piranha::cos(y) + 1) == 0);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + 1, {"x"}) == 0);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + 1, {"y"}) == 0);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + y, {"y"}) == 1);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + y, {"x"}) == 0);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + y) == 1);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + y, {"x", "y"}) == 1);
+        BOOST_CHECK(piranha::ldegree((x * y + y) * piranha::cos(y) + 1, {"x", "y"}) == 0);
         typedef poisson_series<rational> p_type2;
-        BOOST_CHECK(!has_degree<p_type2>::value);
-        BOOST_CHECK(!has_ldegree<p_type2>::value);
+        BOOST_CHECK(!is_degree_type<p_type2>::value);
+        BOOST_CHECK(!is_ldegree_type<p_type2>::value);
     }
     // Try also with eps.
     {
         using eps = poisson_series<divisor_series<polynomial<rational, monomial<short>>, divisor<short>>>;
-        using math::degree;
         using math::invert;
-        using math::ldegree;
+        using piranha::degree;
+        using piranha::ldegree;
         eps x{"x"}, y{"y"}, z{"z"};
-        BOOST_CHECK(has_degree<eps>::value);
-        BOOST_CHECK(has_ldegree<eps>::value);
+        BOOST_CHECK(is_degree_type<eps>::value);
+        BOOST_CHECK(is_ldegree_type<eps>::value);
         BOOST_CHECK_EQUAL(degree(x), 1);
         BOOST_CHECK_EQUAL(degree(x * y + z), 2);
         BOOST_CHECK_EQUAL(ldegree(x * y + z), 1);

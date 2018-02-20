@@ -26,9 +26,9 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/math/degree.hpp>
+#include <piranha/math/ldegree.hpp>
 
-#define BOOST_TEST_MODULE degree_test
+#define BOOST_TEST_MODULE ldegree_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <piranha/symbol_utils.hpp>
@@ -47,7 +47,7 @@ namespace piranha
 {
 
 template <>
-class degree_impl<foo>
+class ldegree_impl<foo>
 {
 public:
     int operator()(const foo &) const
@@ -62,7 +62,7 @@ public:
 
 // bar is missing the partial degree overload.
 template <>
-class degree_impl<bar>
+class ldegree_impl<bar>
 {
 public:
     int operator()(const bar &) const
@@ -72,23 +72,23 @@ public:
 };
 }
 
-BOOST_AUTO_TEST_CASE(degree_test_00)
+BOOST_AUTO_TEST_CASE(ldegree_test_00)
 {
-    BOOST_CHECK(!is_degree_type<void>::value);
-    BOOST_CHECK(!is_degree_type<int>::value);
-    BOOST_CHECK(!is_degree_type<const int>::value);
-    BOOST_CHECK(!is_degree_type<const int &&>::value);
-    BOOST_CHECK(!is_degree_type<int &&>::value);
-    BOOST_CHECK(is_degree_type<foo>::value);
-    BOOST_CHECK(is_degree_type<foo &>::value);
-    BOOST_CHECK(is_degree_type<const foo>::value);
-    BOOST_CHECK(is_degree_type<const foo &>::value);
-    BOOST_CHECK(is_degree_type<foo &&>::value);
-    BOOST_CHECK_EQUAL(piranha::degree(foo{}), 0);
-    BOOST_CHECK_EQUAL(piranha::degree(foo{}, symbol_fset{}), 1);
-    BOOST_CHECK(!is_degree_type<bar>::value);
-    BOOST_CHECK(!is_degree_type<bar &>::value);
-    BOOST_CHECK(!is_degree_type<const bar>::value);
-    BOOST_CHECK(!is_degree_type<const bar &>::value);
-    BOOST_CHECK(!is_degree_type<bar &&>::value);
+    BOOST_CHECK(!is_ldegree_type<void>::value);
+    BOOST_CHECK(!is_ldegree_type<int>::value);
+    BOOST_CHECK(!is_ldegree_type<const int>::value);
+    BOOST_CHECK(!is_ldegree_type<const int &&>::value);
+    BOOST_CHECK(!is_ldegree_type<int &&>::value);
+    BOOST_CHECK(is_ldegree_type<foo>::value);
+    BOOST_CHECK(is_ldegree_type<foo &>::value);
+    BOOST_CHECK(is_ldegree_type<const foo>::value);
+    BOOST_CHECK(is_ldegree_type<const foo &>::value);
+    BOOST_CHECK(is_ldegree_type<foo &&>::value);
+    BOOST_CHECK_EQUAL(piranha::ldegree(foo{}), 0);
+    BOOST_CHECK_EQUAL(piranha::ldegree(foo{}, symbol_fset{}), 1);
+    BOOST_CHECK(!is_ldegree_type<bar>::value);
+    BOOST_CHECK(!is_ldegree_type<bar &>::value);
+    BOOST_CHECK(!is_ldegree_type<const bar>::value);
+    BOOST_CHECK(!is_ldegree_type<const bar &>::value);
+    BOOST_CHECK(!is_ldegree_type<bar &&>::value);
 }

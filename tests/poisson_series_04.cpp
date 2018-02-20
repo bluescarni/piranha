@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/invert.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/degree.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(poisson_series_transform_filter_test)
     p_type1 x{"x"}, y{"y"};
     auto s = piranha::pow(1 + x + y, 3) * piranha::cos(x) + piranha::pow(y, 3) * piranha::sin(x);
     auto s_t = s.transform([](const pair_type &p) {
-        return std::make_pair(p.first.filter([](const pair_type2 &p2) { return math::degree(p2.second) < 2; }),
+        return std::make_pair(p.first.filter([](const pair_type2 &p2) { return piranha::degree(p2.second) < 2; }),
                               p.second);
     });
     BOOST_CHECK_EQUAL(s_t, (3 * x + 3 * y + 1) * piranha::cos(x));

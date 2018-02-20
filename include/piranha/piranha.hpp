@@ -119,17 +119,6 @@ see https://www.gnu.org/licenses/. */
  * also in the existing serialization tests.
  * \todo positional new needs the <new> header.
  * \todo std::move() needs the <utility> header.
- * \todo as an idea, the series specialisations for the impl functors in the toolboxes might all go in series.hpp, with
- * the following conditions:
- * - the involved object is/are series,
- * - they support the needed methods (e.g., subs(), degree(), etc.).
- * This way if we need, e.g., a custom subs() in a particular series type, we can implement the custom method (i.e.,
- * without using the toolbox) but still ending
- * up with a correct math::subs() specialisation without having to re-code it for the particular series type. We need to
- * check that we always use
- * math::* functors instead of member functions in order to avoid picking the base implementation.
- * \todo related to the above, beautification of the enabling conditions for impl functors - in the same fashion as we
- * do for methods and functions.
  * \todo we probably need a way to handle the excessive growth of ipow caches. Just keep the most recently used entries
  * up to a certain
  * user-configurable limit. Also, it might be useful to give the user the ability to query the cache, see how many items
@@ -209,10 +198,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
+#include <piranha/math/degree.hpp>
 #include <piranha/math/gcd.hpp>
 #include <piranha/math/gcd3.hpp>
 #include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
+#include <piranha/math/ldegree.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/memory.hpp>
