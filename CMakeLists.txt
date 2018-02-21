@@ -35,6 +35,9 @@ option(PIRANHA_WITH_ZLIB "Enable support for zlib/gzip compression." OFF)
 # Build option: enable bzip2 compression.
 option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 
+# Build option: enable support for the Boost stacktrace library.
+option(PIRANHA_WITH_BOOST_STACKTRACE "Enable support for the Boost stacktrace library." OFF)
+
 # Build option: enable the installation of the library headers.
 option(PIRANHA_INSTALL_HEADERS "Enable the installation of the library headers." ON)
 mark_as_advanced(PIRANHA_INSTALL_HEADERS)
@@ -132,9 +135,28 @@ endif()
 if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2)
 	target_link_libraries(piranha INTERFACE Boost::iostreams)
 endif()
+# At the moment we hard-code the following config for the
+# stacktrace library:
+# - on Windows, we use windbg,
+# - on Unix, we use libbacktrace.
+if(PIRANHA_WITH_BOOST_STACKTRACE)
+	if(NOT WIN32)
+		find_package(libbacktrace REQUIRED)
+		message(STATUS "backtrace library found.")
+		message(STATUS "backtrace include dir is: ${libbacktrace_INCLUDE_DIR}")
+		message(STATUS "backtrace library is: ${libbacktrace_LIBRARY}")
+		target_link_libraries(piranha INTERFACE libbacktrace::libbacktrace)
+		if(UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+			# OSX apparently does not have libdl:
+			# https://stackoverflow.com/questions/20169660/where-is-libdl-so-on-mac-os-x
+			target_link_libraries(piranha INTERFACE ${CMAKE_DL_LIBS})
+		endif()
+	endif()
+endif()
 
 # Find mp++.
-find_package(mp++ 0.8 REQUIRED)
+set(PIRANHA_MINIMUM_MPPP_VERSION 0.8)
+find_package(mp++ ${PIRANHA_MINIMUM_MPPP_VERSION} REQUIRED)
 target_link_libraries(piranha INTERFACE mp++::mp++)
 
 if(PIRANHA_WITH_MSGPACK)
@@ -201,8 +223,14 @@ if(PIRANHA_INSTALL_HEADERS)
 	if(PIRANHA_WITH_BOOST_S11N)
 		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}set(PIRANHA_WITH_BOOST_S11N TRUE)\n")
 	endif()
+	if(PIRANHA_WITH_BOOST_STACKTRACE)
+		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}set(PIRANHA_WITH_BOOST_STACKTRACE TRUE)\n")
+		if(NOT WIN32)
+			install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/Findlibbacktrace.cmake" DESTINATION "lib/cmake/piranha")
+		endif()
+	endif()
 	if(PIRANHA_WITH_MSGPACK)
-		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(MSGPACK-C REQUIRED)\n")
+		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}find_package(MSGPACK-C REQUIRED)\nset(PIRANHA_WITH_MSGPACK TRUE)\n")
 		install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindMSGPACK-C.cmake" DESTINATION "lib/cmake/piranha")
 	endif()
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/piranha-config.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/piranha-config.cmake" @ONLY)
