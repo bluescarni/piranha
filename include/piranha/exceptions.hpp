@@ -35,53 +35,22 @@ see https://www.gnu.org/licenses/. */
 #include <string>
 #include <type_traits>
 #include <utility>
-
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
-
 #include <atomic>
-#include <cstdlib>
-#include <ios>
-#include <iostream>
-#include <limits>
 #include <sstream>
-
-#if defined(_WIN32)
-
-// NOTE: setting the backend explicitly is needed for
-// proper support for clang-cl.
-#define BOOST_STACKTRACE_USE_WINDBG
-#include <boost/stacktrace.hpp>
-#undef BOOST_STACKTRACE_USE_WINDBG
-
-#else
-
-// On non-windows, we force the use of libbacktrace for the time being.
-#define BOOST_STACKTRACE_USE_BACKTRACE
-#include <boost/stacktrace.hpp>
-#undef BOOST_STACKTRACE_USE_BACKTRACE
-
-#endif
-
-// We will represent the stacktrace with a boost/std optional, as
-// the generation of stacktraces is disabled by default at runtime
-// due to cpu cost.
 #if PIRANHA_CPLUSPLUS >= 201703L
-
 #include <optional>
-
-using optional_st_t = std::optional<const boost::stacktrace::stacktrace>;
-
-#else
-
-#include <boost/optional.hpp>
-
-using optional_st_t = boost::optional<const boost::stacktrace::stacktrace>;
-
+#endif
 #endif
 
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE) && PIRANHA_CPLUSPLUS < 201703L
+#include <boost/optional.hpp>
 #endif
 
 #include <piranha/detail/init.hpp>
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE)
+#include <piranha/detail/stacktrace.hpp>
+#endif
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -100,6 +69,17 @@ struct stacktrace_statics {
 // On startup, stacktraces are disabled.
 template <typename T>
 std::atomic<bool> stacktrace_statics<T>::enabled = ATOMIC_VAR_INIT(false);
+
+// We will represent the stacktrace with a boost/std optional, as
+// the generation of stacktraces is disabled by default at runtime
+// due to cpu cost.
+using optional_st_t =
+#if PIRANHA_CPLUSPLUS >= 201703L
+    std::
+#else
+    boost::
+#endif
+        optional<stacktrace>;
 
 #endif
 
@@ -125,29 +105,7 @@ struct ex_thrower {
         std::ostringstream oss;
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
         if (m_st) {
-            oss << '\n';
-            const auto w = oss.width();
-            const auto max_idx_width = std::to_string(m_st->size()).size();
-            // NOTE: the overflow check is because we will have to cast to std::streamsize
-            // later, due to the iostreams API.
-            // LCOV_EXCL_START
-            if (unlikely(max_idx_width > static_cast<std::make_unsigned<std::streamsize>::type>(
-                                             std::numeric_limits<std::streamsize>::max()))) {
-                // Not much left to do here really.
-                std::cerr << "Overflow in the size of a stacktrace, aborting now.\n";
-                std::abort();
-            }
-            // LCOV_EXCL_STOP
-            // We customize a bit the printing of the stacktrace, and we traverse
-            // it backwards.
-            auto i = m_st->size();
-            for (auto it = m_st->rbegin(); it != m_st->rend(); --i, ++it) {
-                oss << "#";
-                oss.width(static_cast<std::streamsize>(max_idx_width));
-                oss << i;
-                oss.width(w);
-                oss << "| " << *it << '\n';
-            }
+            stream_stacktrace(oss, *m_st);
         } else {
 #endif
             // This is what is printed if stacktraces are not available/disabled.
@@ -193,9 +151,9 @@ struct ex_thrower {
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
 #define piranha_throw(exception_type, ...)                                                                             \
     (piranha::ex_thrower<exception_type>{__FILE__, __LINE__, __func__,                                                 \
-                                         stacktrace_statics<>::enabled.load(std::memory_order_relaxed)                 \
-                                             ? optional_st_t(boost::stacktrace::stacktrace{})                          \
-                                             : optional_st_t{}}(__VA_ARGS__))
+                                         piranha::stacktrace_statics<>::enabled.load(std::memory_order_relaxed)        \
+                                             ? piranha::optional_st_t(piranha::stacktrace{})                           \
+                                             : piranha::optional_st_t{}}(__VA_ARGS__))
 #else
 #define piranha_throw(exception_type, ...)                                                                             \
     (piranha::ex_thrower<exception_type>{__FILE__, __LINE__, __func__}(__VA_ARGS__))
