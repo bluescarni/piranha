@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 #include <utility>
 
+#include <mp++/concepts.hpp>
 #include <mp++/detail/type_traits.hpp>
 
 #include <piranha/config.hpp>
@@ -49,10 +50,17 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+// Import a bunch of public type traits / utils from mp++.
+using mppp::is_string_type;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+using mppp::StringType;
+#endif
+
 inline namespace impl
 {
 
-// Import a bunch of type traits / utils from mp++.
+// Import a bunch of implementation-detail type traits / utils from mp++.
 using mppp::conjunction;
 using mppp::detected_t;
 using mppp::disjunction;

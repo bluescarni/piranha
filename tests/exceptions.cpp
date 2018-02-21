@@ -31,10 +31,14 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE exceptions_test
 #include <boost/test/included/unit_test.hpp>
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
+
+#include <boost/algorithm/string/predicate.hpp>
+
+#include <piranha/config.hpp>
 
 using namespace piranha;
 
@@ -45,6 +49,18 @@ struct exc0 {
 struct exc1 {
     exc1(int) {}
 };
+
+template <int N>
+inline void foo()
+{
+    foo<N - 1>();
+}
+
+template <>
+inline void foo<0>()
+{
+    piranha_throw(std::runtime_error, "here we are!");
+}
 
 BOOST_AUTO_TEST_CASE(exception_test_00)
 {
@@ -65,4 +81,14 @@ BOOST_AUTO_TEST_CASE(exception_test_00)
     BOOST_CHECK_THROW(piranha_throw(std::bad_alloc, ), std::bad_alloc);
     BOOST_CHECK_THROW(piranha_throw(exc0, 1, 2.3), exc0);
     BOOST_CHECK_THROW(piranha_throw(exc1, 1), exc1);
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE)
+    BOOST_CHECK(!stacktrace_statics<>::enabled.load());
+    stacktrace_statics<>::enabled.store(true);
+    BOOST_CHECK_THROW(piranha_throw(exc1, 1), exc1);
+    try {
+        foo<100>();
+    } catch (const std::runtime_error &re) {
+        std::cout << re.what() << '\n';
+    }
+#endif
 }

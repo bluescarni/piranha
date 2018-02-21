@@ -7,6 +7,11 @@ if(PIRANHA_WITH_BOOST_S11N)
 	set(PIRANHA_ENABLE_BOOST_S11N "#define PIRANHA_WITH_BOOST_S11N")
 endif()
 
+# Optional Boost stacktrace.
+if(PIRANHA_WITH_BOOST_STACKTRACE)
+	set(PIRANHA_ENABLE_BOOST_STACKTRACE "#define PIRANHA_WITH_BOOST_STACKTRACE")
+endif()
+
 # Boost::iostreams is needed if any compression is enabled (in which case we need the iostreams filters).
 if(PIRANHA_WITH_ZLIB OR PIRANHA_WITH_BZIP2)
 	list(APPEND _PIRANHA_REQUIRED_BOOST_LIBS iostreams)
@@ -23,7 +28,13 @@ endif()
 
 message(STATUS "Required Boost libraries: ${_PIRANHA_REQUIRED_BOOST_LIBS}")
 
-find_package(Boost 1.58.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+if(PIRANHA_WITH_BOOST_STACKTRACE)
+	# Boost stacktrace is available since 1.65.
+	find_package(Boost 1.65.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+else()
+	# Otherwise, we require at least 1.58 due to flat_set/flat_map API requirements.
+	find_package(Boost 1.58.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+endif()
 
 if(NOT Boost_FOUND)
 	message(FATAL_ERROR "Not all the requested Boost components were found, exiting.")
