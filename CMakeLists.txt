@@ -85,6 +85,7 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-sign-conversion"
 			"-Wno-non-virtual-dtor"
 			"-Wno-deprecated"
+			"-Wno-shadow"
 			"-Wno-shorten-64-to-32")
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
@@ -140,7 +141,12 @@ endif()
 # - on Windows, we use windbg,
 # - on Unix, we use libbacktrace.
 if(PIRANHA_WITH_BOOST_STACKTRACE)
-	if(NOT WIN32)
+	if(WIN32)
+		find_package(DbgEng REQUIRED)
+		message(STATUS "DbgEng library found.")
+		message(STATUS "DbgEng library is: ${DbgEng_LIBRARY}")
+		target_link_libraries(piranha INTERFACE DbgEng::DbgEng)
+	else()
 		find_package(libbacktrace REQUIRED)
 		message(STATUS "backtrace library found.")
 		message(STATUS "backtrace include dir is: ${libbacktrace_INCLUDE_DIR}")
@@ -225,7 +231,9 @@ if(PIRANHA_INSTALL_HEADERS)
 	endif()
 	if(PIRANHA_WITH_BOOST_STACKTRACE)
 		set(_PIRANHA_CONFIG_OPTIONAL_DEPS "${_PIRANHA_CONFIG_OPTIONAL_DEPS}set(PIRANHA_WITH_BOOST_STACKTRACE TRUE)\n")
-		if(NOT WIN32)
+		if(WIN32)
+			install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/FindDbgEng.cmake" DESTINATION "lib/cmake/piranha")
+		else()
 			install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/Findlibbacktrace.cmake" DESTINATION "lib/cmake/piranha")
 		endif()
 	endif()

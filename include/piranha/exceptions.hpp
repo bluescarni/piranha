@@ -47,7 +47,11 @@ see https://www.gnu.org/licenses/. */
 
 #if defined(_WIN32)
 
+// NOTE: setting the backend explicitly is needed for
+// proper support for clang-cl.
+#define BOOST_STACKTRACE_USE_WINDBG
 #include <boost/stacktrace.hpp>
+#undef BOOST_STACKTRACE_USE_WINDBG
 
 #else
 
