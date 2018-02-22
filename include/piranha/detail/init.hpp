@@ -64,7 +64,7 @@ struct init_checks {
             // http://en.cppreference.com/w/cpp/io/ios_base/Init
             std::ios_base::Init ios_init;
             std::cerr << "=========================\nWARNING: MPFR was not compiled as thread safe, and piranha's "
-                         "parallel algorithms might thus fail at runtime in unpredictable ways.\nPlease re-compile "
+                         "parallel algorithms may thus fail at runtime in unpredictable ways.\nPlease re-compile "
                          "MPFR with the '--enable-thread-safe' configure option (see the MPFR "
                          "installation instructions at "
                          "http://www.mpfr.org/mpfr-current/mpfr.html#Installing-MPFR)\n=========================\n";
@@ -73,12 +73,12 @@ struct init_checks {
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE) && !defined(_WIN32)
         if (!BACKTRACE_SUPPORTED) {
             std::ios_base::Init ios_init;
-            std::cerr << "=========================\nWARNING: The BACKTRACE_SUPPORTED define is set to 0, please "
+            std::cerr << "=========================\nWARNING: the BACKTRACE_SUPPORTED define is set to 0, please "
                          "double check your libbacktrace installation.\n=========================\n";
         }
         if (!BACKTRACE_SUPPORTS_THREADS) {
             std::ios_base::Init ios_init;
-            std::cerr << "=========================\nWARNING: It looks like libbacktrace was not compiled as thread "
+            std::cerr << "=========================\nWARNING: it looks like libbacktrace was not compiled as thread "
                          "safe, and the generation of stacktraces from concurrent threads may thus fail at runtime in "
                          "unpredictable ways. Please double check your libbacktrace "
                          "installation.\n=========================\n";

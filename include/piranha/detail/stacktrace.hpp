@@ -29,6 +29,9 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DETAIL_STACKTRACE_HPP
 #define PIRANHA_DETAIL_STACKTRACE_HPP
 
+// NOTE: this header must be included from config.hpp, so we cannot really include
+// any other piranha header here. Thus it's up to the consumers of this file to make
+// sure it is included only if PIRANHA_WITH_BOOST_STACKTRACE was activated.
 #if !defined(PIRANHA_WITH_BOOST_STACKTRACE)
 
 #error The detail/stacktrace.hpp header was included, but piranha was not configured with the PIRANHA_WITH_BOOST_STACKTRACE option.
