@@ -42,6 +42,6 @@ mark_as_advanced(libbacktrace_LIBRARY)
 # NOTE: this has been adapted from CMake's FindPNG.cmake.
 if(libbacktrace_FOUND AND NOT TARGET libbacktrace::libbacktrace)
 	add_library(libbacktrace::libbacktrace UNKNOWN IMPORTED)
-    set_target_properties(libbacktrace::libbacktrace PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${libbacktrace_INCLUDE_DIR}"
-        IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION "${libbacktrace_LIBRARY}")
+	set_target_properties(libbacktrace::libbacktrace PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${libbacktrace_INCLUDE_DIR}"
+		IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION "${libbacktrace_LIBRARY}")
 endif()
