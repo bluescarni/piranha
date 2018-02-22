@@ -41,6 +41,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_GIT_REVISION "@PIRANHA_GIT_REVISION@"
 @PIRANHA_SYSTEM_LOGICAL_PROCESSOR_INFORMATION@
 @PIRANHA_ENABLE_BOOST_S11N@
+@PIRANHA_ENABLE_BOOST_STACKTRACE@
 @PIRANHA_ENABLE_MSGPACK@
 @PIRANHA_ENABLE_ZLIB@
 @PIRANHA_ENABLE_BZIP2@
@@ -64,9 +65,26 @@ see https://www.gnu.org/licenses/. */
 
 #define PIRANHA_CPLUSPLUS MPPP_CPLUSPLUS
 
-// Assertion macro, currently just calling assert(). In the future
-// we may add features.
+// Assertion macro. If we have stacktrace support and we are in debug mode,
+// then we will print the current stacktrace on assertion failure and then hand over
+// to the standard assert(). Otherwise, just call the standard assert() macro.
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE) && !defined(NDEBUG)
+
+#include <iostream>
+
+#include <piranha/detail/stacktrace.hpp>
+
+#define piranha_assert(x)                                                                                              \
+    if (!static_cast<bool>(x)) {                                                                                       \
+        piranha::stream_stacktrace(std::cerr, piranha::stacktrace{});                                                  \
+    }                                                                                                                  \
+    assert(x);
+
+#else
+
 #define piranha_assert(x) assert(x)
+
+#endif
 
 // NOTE: clang has to go first, as it might define __GNUC__ internally.
 // Same thing could happen with ICC.

@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE type_traits_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <piranha/config.hpp>
+
 #include <complex>
 #include <cstddef>
 #include <functional>
@@ -43,13 +45,14 @@ see https://www.gnu.org/licenses/. */
 #include <memory>
 #include <set>
 #include <string>
+#if PIRANHA_CPLUSPLUS >= 201703L
+#include <string_view>
+#endif
 #include <thread>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <piranha/config.hpp>
 
 using namespace piranha;
 
@@ -1915,4 +1918,22 @@ BOOST_AUTO_TEST_CASE(type_traits_cpp_complex)
     BOOST_CHECK(!is_cpp_complex<std::complex<float> &>::value);
     BOOST_CHECK(!is_cpp_complex<std::complex<double> &&>::value);
     BOOST_CHECK(!is_cpp_complex<const std::complex<long double> &>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_is_string_type_test)
+{
+    BOOST_CHECK(is_string_type<char *>::value);
+    BOOST_CHECK(is_string_type<const char *>::value);
+    BOOST_CHECK(is_string_type<char[10]>::value);
+    BOOST_CHECK(is_string_type<char[]>::value);
+    BOOST_CHECK(is_string_type<std::string>::value);
+#if PIRANHA_CPLUSPLUS >= 201703L
+    BOOST_CHECK(is_string_type<std::string_view>::value);
+#endif
+    BOOST_CHECK(!is_string_type<std::string &>::value);
+    BOOST_CHECK(!is_string_type<std::string &&>::value);
+    BOOST_CHECK(!is_string_type<const std::string &>::value);
+    BOOST_CHECK(!is_string_type<const std::string>::value);
+    BOOST_CHECK(!is_string_type<void>::value);
+    BOOST_CHECK(!is_string_type<int>::value);
 }

@@ -44,6 +44,11 @@ Type categories
    This concept is satisfied if ``T`` is *not* a const-qualified type, as established by the standard ``std::is_const``
    type trait.
 
+.. cpp:concept:: template <typename T> piranha::StringType
+
+   This concept is satisfied if ``T`` is a string-like entity. The types satisfying this concept are listed in the documentation
+   of :cpp:concept:`mppp::StringType <mppp::StringType>`.
+
 Type properties
 ---------------
 
