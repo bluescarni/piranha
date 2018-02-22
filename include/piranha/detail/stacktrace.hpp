@@ -29,9 +29,11 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_DETAIL_STACKTRACE_HPP
 #define PIRANHA_DETAIL_STACKTRACE_HPP
 
-#include <piranha/config.hpp>
+#if !defined(PIRANHA_WITH_BOOST_STACKTRACE)
 
-#if defined(PIRANHA_WITH_BOOST_STACKTRACE)
+#error The detail/stacktrace.hpp header was included, but piranha was not configured with the PIRANHA_WITH_BOOST_STACKTRACE option.
+
+#endif
 
 #include <cstdlib>
 #include <ios>
@@ -95,10 +97,4 @@ inline void stream_stacktrace(std::ostream &os, const stacktrace &st)
 }
 }
 
-#else
-
-#error The detail/stacktrace.hpp header was included, but piranha was not configured with the PIRANHA_WITH_BOOST_STACKTRACE option.
-
-#endif // PIRANHA_WITH_BOOST_STACKTRACE
-
-#endif // Include guard.
+#endif

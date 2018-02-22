@@ -85,10 +85,42 @@ BOOST_AUTO_TEST_CASE(exception_test_00)
     BOOST_CHECK(!stacktrace_statics<>::enabled.load());
     stacktrace_statics<>::enabled.store(true);
     BOOST_CHECK_THROW(piranha_throw(exc1, 1), exc1);
+    bool caught = false;
     try {
         foo<100>();
     } catch (const std::runtime_error &re) {
         std::cout << re.what() << '\n';
+        BOOST_CHECK(boost::contains(re.what(), "here we are!"));
+        caught = true;
     }
+    BOOST_CHECK(caught);
 #endif
 }
+
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE)
+
+#include <csignal>
+#include <cstdlib>
+
+extern "C" {
+
+inline void signal_handler(int)
+{
+    // NOTE: we call _Exit here because it's guaranteed to be
+    // async-safe:
+    // https://stackoverflow.com/questions/8493095/what-constitutes-asynchronous-safeness
+    std::_Exit(EXIT_SUCCESS);
+}
+}
+
+BOOST_AUTO_TEST_CASE(assert_test_00)
+{
+    // Here are going to trigger an assertion failure to verify
+    // visually that the stacktrace is actually printed. We need to
+    // override the default abort handler in order to have the process
+    // return success.
+    std::signal(SIGABRT, signal_handler);
+    piranha_assert(false);
+}
+
+#endif
