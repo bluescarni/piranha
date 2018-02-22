@@ -24,23 +24,24 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------------------
 
-# We look only for the header-only version of msgpack-c for C++.
-
-if(MSGPACK-C_INCLUDE_DIR)
+if(libbacktrace_INCLUDE_DIR AND libbacktrace_LIBRARY)
 	# Already in cache, be silent
-	set(MSGPACK-C_FIND_QUIETLY TRUE)
+	set(libbacktrace_FIND_QUIETLY TRUE)
 endif()
 
-find_path(MSGPACK-C_INCLUDE_DIR NAMES msgpack.hpp)
+find_path(libbacktrace_INCLUDE_DIR NAMES backtrace.h)
+find_library(libbacktrace_LIBRARY NAMES backtrace)
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args(MSGPACK-C DEFAULT_MSG MSGPACK-C_INCLUDE_DIR)
+find_package_handle_standard_args(libbacktrace DEFAULT_MSG libbacktrace_INCLUDE_DIR libbacktrace_LIBRARY)
 
-mark_as_advanced(MSGPACK-C_INCLUDE_DIR)
+mark_as_advanced(libbacktrace_INCLUDE_DIR)
+mark_as_advanced(libbacktrace_LIBRARY)
 
 # NOTE: this has been adapted from CMake's FindPNG.cmake.
-if(MSGPACK-C_FOUND AND NOT TARGET MSGPACK-C::MSGPACK-C)
-	add_library(MSGPACK-C::MSGPACK-C INTERFACE IMPORTED)
-	set_target_properties(MSGPACK-C::MSGPACK-C PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${MSGPACK-C_INCLUDE_DIR}")
+if(libbacktrace_FOUND AND NOT TARGET libbacktrace::libbacktrace)
+	add_library(libbacktrace::libbacktrace UNKNOWN IMPORTED)
+	set_target_properties(libbacktrace::libbacktrace PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${libbacktrace_INCLUDE_DIR}"
+		IMPORTED_LINK_INTERFACE_LANGUAGES "C" IMPORTED_LOCATION "${libbacktrace_LIBRARY}")
 endif()
