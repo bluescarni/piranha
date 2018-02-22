@@ -51,10 +51,13 @@ namespace piranha
 {
 
 // Import a bunch of public type traits / utils from mp++.
-using mppp::is_string_type;
+template <typename T>
+struct is_string_type : mppp::is_string_type<T> {
+};
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
-using mppp::StringType;
+template <typename T>
+concept bool StringType = is_string_type<T>::value;
 #endif
 
 inline namespace impl
