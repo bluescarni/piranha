@@ -41,6 +41,8 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
+#include <mp++/integer.hpp>
+
 #include <piranha/config.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
@@ -51,7 +53,7 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 // Type requirement for Kronecker array.
@@ -89,18 +91,18 @@ class kronecker_array
 {
 public:
     /// Signed integer type used for encoding.
-    typedef SignedInteger int_type;
+    using int_type = SignedInteger;
 
 private:
-    static_assert(detail::ka_type_reqs<int_type>::value, "This class can be used only with signed integers.");
+    static_assert(ka_type_reqs<int_type>::value, "This class can be used only with signed integers.");
     // This is a 4-tuple of int_type built as follows:
     // 0. vector of absolute values of the upper/lower limit for each component,
     // 1. h_min,
     // 2. h_max,
     // 3. h_max - h_min.
-    typedef std::tuple<std::vector<int_type>, int_type, int_type, int_type> limit_type;
+    using limit_type = std::tuple<std::vector<int_type>, int_type, int_type, int_type>;
     // Vector of limits.
-    typedef std::vector<limit_type> limits_type;
+    using limits_type = std::vector<limit_type>;
 
 public:
     /// Size type.
@@ -108,7 +110,7 @@ public:
      * Equivalent to \p std::size_t, used to represent the
      * dimension of the vectors on which the class can operate.
      */
-    typedef std::size_t size_type;
+    using size_type = std::size_t;
 
 private:
     // Static vector of limits built at startup.
@@ -135,13 +137,13 @@ private:
         };
         // Build initial minmax and coding vectors: all elements in the [-1,1] range.
         std::vector<integer> m_vec, M_vec, c_vec, prev_c_vec, prev_m_vec, prev_M_vec;
-        c_vec.push_back(integer(1));
-        m_vec.push_back(integer(-1));
-        M_vec.push_back(integer(1));
+        c_vec.emplace_back(1);
+        m_vec.emplace_back(-1);
+        M_vec.emplace_back(1);
         for (size_type i = 1u; i < m; ++i) {
-            m_vec.push_back(integer(-1));
-            M_vec.push_back(integer(1));
-            c_vec.push_back(c_vec.back() * integer(3));
+            m_vec.emplace_back(-1);
+            M_vec.emplace_back(1);
+            c_vec.emplace_back(c_vec.back() * 3);
         }
         // Functor for scalar product of two vectors.
         auto dot_prod = [](const std::vector<integer> &v1, const std::vector<integer> &v2) -> integer {
@@ -153,19 +155,19 @@ private:
             integer h_min = dot_prod(c_vec, m_vec);
             integer h_max = dot_prod(c_vec, M_vec);
             integer diff = h_max - h_min;
-            piranha_assert(diff >= 0);
-            try {
-                // Try to cast everything to hardware integers.
-                (void)static_cast<int_type>(h_min);
-                (void)static_cast<int_type>(h_max);
-                // Here it is +1 because h_max - h_min must be strictly less than the maximum value
-                // of int_type. In the paper, in eq. (7), the Delta_i product appearing in the
-                // decoding of the last component of a vector is equal to (h_max - h_min + 1) so we need
-                // to be able to represent it.
-                (void)static_cast<int_type>(diff + 1);
-                // NOTE: we do not need to cast the individual elements of m/M vecs, as the representability
-                // of h_min/max ensures the representability of m/M as well.
-            } catch (const std::overflow_error &) {
+            piranha_assert(diff.sgn() >= 0);
+            // Try to cast everything to hardware integers.
+            int_type tmp_int;
+            bool fits_int_type = mppp::get(tmp_int, h_min);
+            fits_int_type = fits_int_type && mppp::get(tmp_int, h_max);
+            // NOTE: here it is +1 because h_max - h_min must be strictly less than the maximum value
+            // of int_type. In the paper, in eq. (7), the Delta_i product appearing in the
+            // decoding of the last component of a vector is equal to (h_max - h_min + 1) so we need
+            // to be able to represent it.
+            fits_int_type = fits_int_type && mppp::get(tmp_int, diff + 1);
+            // NOTE: we do not need to cast the individual elements of m/M vecs, as the representability
+            // of h_min/max ensures the representability of m/M as well.
+            if (!fits_int_type) {
                 std::vector<int_type> tmp;
                 // Check if we are at the first iteration.
                 if (prev_c_vec.size()) {
@@ -173,12 +175,12 @@ private:
                     h_max = dot_prod(prev_c_vec, prev_M_vec);
                     std::transform(prev_M_vec.begin(), prev_M_vec.end(), std::back_inserter(tmp),
                                    [](const integer &n) { return static_cast<int_type>(n); });
-                    return std::make_tuple(tmp, static_cast<int_type>(h_min), static_cast<int_type>(h_max),
+                    return std::make_tuple(std::move(tmp), static_cast<int_type>(h_min), static_cast<int_type>(h_max),
                                            static_cast<int_type>(h_max - h_min));
                 } else {
                     // Here it means m variables are too many, and we stopped at the first iteration
                     // of the cycle. Return tuple filled with zeroes.
-                    return std::make_tuple(tmp, int_type(0), int_type(0), int_type(0));
+                    return std::make_tuple(std::move(tmp), int_type(0), int_type(0), int_type(0));
                 }
             }
             // Store old vectors.
@@ -220,7 +222,7 @@ private:
             if (std::get<0u>(tmp).empty()) {
                 break;
             } else {
-                retval.push_back(std::move(tmp));
+                retval.emplace_back(std::move(tmp));
             }
         }
         return retval;
@@ -231,10 +233,8 @@ public:
     /**
      * Will return a const reference to an \p std::vector of tuples describing the limits for the Kronecker
      * codification of arrays of integer. The indices in this vector correspond to the dimension of the array to be
-     * encoded,
-     * so that the object at index \f$i\f$ in the returned vector describes the limits for the codification of
-     * \f$i\f$-dimensional arrays
-     * of integers.
+     * encoded, so that the object at index \f$i\f$ in the returned vector describes the limits for the codification of
+     * \f$i\f$-dimensional arrays of integers.
      *
      * Each element of the returned vector is an \p std::tuple of 4 elements built as follows:
      *
@@ -244,8 +244,7 @@ public:
      * - position 3: \f$h_\textnormal{max}-h_\textnormal{min}\f$.
      *
      * The tuple at index 0 of the returned vector is filled with zeroes. The size of the returned vector determines the
-     * maximum
-     * dimension of the vectors to be encoded.
+     * maximum dimension of the vectors to be encoded.
      *
      * @return const reference to an \p std::vector of limits for the Kronecker codification of arrays of integers.
      */
