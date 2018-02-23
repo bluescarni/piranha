@@ -56,7 +56,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
@@ -98,7 +100,7 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
  * This class represents a multivariate monomial with integral exponents. The values of the exponents are packed in a
  * signed integer using Kronecker substitution, using the facilities provided by piranha::kronecker_array.
  *
- * This class satisfies the piranha::is_key, piranha::key_has_degree, piranha::key_has_ldegree and
+ * This class satisfies the piranha::is_key, piranha::is_key_degree_type, piranha::is_key_ldegree_type and
  * piranha::key_is_differentiable type traits.
  *
  * ## Type requirements ##
@@ -297,8 +299,8 @@ public:
     ~kronecker_monomial()
     {
         PIRANHA_TT_CHECK(is_key, kronecker_monomial);
-        PIRANHA_TT_CHECK(key_has_degree, kronecker_monomial);
-        PIRANHA_TT_CHECK(key_has_ldegree, kronecker_monomial);
+        PIRANHA_TT_CHECK(is_key_degree_type, kronecker_monomial);
+        PIRANHA_TT_CHECK(is_key_ldegree_type, kronecker_monomial);
         PIRANHA_TT_CHECK(key_is_differentiable, kronecker_monomial);
     }
     /// Copy assignment operator.
@@ -394,37 +396,6 @@ public:
     kronecker_monomial merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         return kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value));
-    }
-
-private:
-    // Degree utils.
-    using degree_type = add_t<T, T>;
-
-public:
-    /// Degree.
-    /**
-     * The type returned by this method is the type resulting from the addition of two instances
-     * of \p T.
-     *
-     * @param args the reference piranha::symbol_fset.
-     *
-     * @return the degree of the monomial.
-     *
-     * @throws std::overflow_error if the computation of the degree overflows.
-     * @throws unspecified any exception thrown by unpack().
-     */
-    degree_type degree(const symbol_fset &args) const
-    {
-        const auto tmp = unpack(args);
-        // NOTE: this should be guaranteed by the unpack function.
-        piranha_assert(tmp.size() == args.size());
-        degree_type retval(0);
-        for (const auto &x : tmp) {
-            // NOTE: here it might be possible to demonstrate that overflow can
-            // never occur, and that we can use a normal integral addition.
-            retval = safe_int_add(retval, static_cast<degree_type>(x));
-        }
-        return retval;
     }
     /// Low degree (equivalent to the degree).
     /**
@@ -1160,6 +1131,38 @@ public:
         // A zero kronecker code means all exponents are zero, and thus
         // the monomial is unitary.
         return !k.get_int();
+    }
+};
+
+// Implementation of piranha::key_degree() for kronecker_monomial.
+template <typename T>
+class key_degree<kronecker_monomial<T>>
+{
+public:
+    /// Degree.
+    /**
+     * The type returned by this method is the type resulting from the addition of two instances
+     * of \p T.
+     *
+     * @param args the reference piranha::symbol_fset.
+     *
+     * @return the degree of the monomial.
+     *
+     * @throws std::overflow_error if the computation of the degree overflows.
+     * @throws unspecified any exception thrown by unpack().
+     */
+    add_t<T, T> operator()(const kronecker_monomial<T> &k, const symbol_fset &args) const
+    {
+        const auto tmp = k.unpack(args);
+        // NOTE: this should be guaranteed by the unpack function.
+        piranha_assert(tmp.size() == args.size());
+        add_t<T, T> retval(0);
+        for (const auto &x : tmp) {
+            // NOTE: here it might be possible to demonstrate that overflow can
+            // never occur, and that we can use a normal integral addition.
+            retval = safe_int_add(retval, static_cast<add_t<T, T>>(x));
+        }
+        return retval;
     }
 };
 }
