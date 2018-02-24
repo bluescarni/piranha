@@ -161,7 +161,7 @@ if(PIRANHA_WITH_BOOST_STACKTRACE)
 endif()
 
 # Find mp++.
-set(PIRANHA_MINIMUM_MPPP_VERSION 0.8)
+set(PIRANHA_MINIMUM_MPPP_VERSION 0.9)
 find_package(mp++ ${PIRANHA_MINIMUM_MPPP_VERSION} REQUIRED)
 target_link_libraries(piranha INTERFACE mp++::mp++)
 
