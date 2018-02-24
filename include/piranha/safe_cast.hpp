@@ -29,33 +29,80 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SAFE_CAST_HPP
 #define PIRANHA_SAFE_CAST_HPP
 
-#include <cmath>
-#include <stdexcept>
-#include <string>
+// #include <cmath>
+// #include <stdexcept>
+// #include <string>
 #include <type_traits>
 #include <utility>
 
-#include <boost/numeric/conversion/cast.hpp>
-
 #include <piranha/config.hpp>
-#include <piranha/detail/demangle.hpp>
+// #include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
-#include <piranha/exceptions.hpp>
+// #include <piranha/exceptions.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-/// Exception to signal failure in piranha::safe_cast().
-/**
- * This exception should be thrown by specialisations of piranha::safe_cast() in case a value-preserving type
- * conversion cannot be performed.
- *
- * This exception inherits the constructors from \p std::invalid_argument.
- */
+// Default implementation of safe_cast().
+template <typename To, typename From
+#if !defined(PIRANHA_HAVE_CONCEPTS)
+          ,
+          typename = void
+#endif
+          >
+class safe_cast_impl
+{
+};
+
+inline namespace impl
+{
+
+// Enabler for safe_cast().
+template <typename To, typename From>
+using safe_cast2_type_ = decltype(safe_cast_impl<To, uncvref_t<From>>{}(std::declval<To &>(), std::declval<From>()));
+
+template <typename To, typename From>
+using safe_cast2_type = enable_if_t<std::is_convertible<safe_cast2_type_<To, From>, bool>::value, bool>;
+}
+
+// Safe conversion.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <NonConst To, typename From>
+#else
+template <typename To, typename From, enable_if_t<!std::is_const<T>::value, int> = 0>
+#endif
+inline safe_cast2_type<To, From &&> safe_cast(To &dest, From &&x)
+{
+    return safe_cast_impl<To, uncvref_t<From>>{}(dest, std::forward<From>(x));
+}
+
+// Exception to signal failure in piranha::safe_cast().
 struct safe_cast_failure final : std::invalid_argument {
     using std::invalid_argument::invalid_argument;
 };
+
+inline namespace impl
+{
+
+template <typename To, typename From>
+using safe_cast2_t = decltype(piranha::safe_cast(std::declval<To &>(), std::declval<const From &>()));
+
+template <typename To, typename From>
+using safe_cast1_type = enable_if_t<conjunction<std::is_same<To, uncvref_t<To>>, std::is_default_constructible<To>,
+                                                is_returnable<To>, is_detected<safe_cast2_t<To, From>>>::value,
+                                    To>;
+}
+
+template <typename To>
+inline auto safe_cast(From &&x)
+{
+    To retval;
+    if (unlikely(!safe_cast(retval, std::forward<From>(x)))) {
+        piranha_throw(safe_cast_failure, "");
+    }
+    return retval;
+}
 
 /// Default implementation of piranha::safe_cast().
 /**
