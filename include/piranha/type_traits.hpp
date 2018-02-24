@@ -192,6 +192,9 @@ concept bool CppFloatingPoint = std::is_floating_point<T>::value;
 template <typename T, typename... Args>
 concept bool Constructible = std::is_constructible<T, Args...>::value;
 
+template <typename T>
+concept bool DefaultConstructible = std::is_default_constructible<T>::value;
+
 template <typename From, typename To>
 concept bool Convertible = std::is_convertible<From, To>::value;
 

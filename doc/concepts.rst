@@ -46,8 +46,8 @@ Type categories
 
 .. cpp:concept:: template <typename T> piranha::StringType
 
-   This concept is satisfied if ``T`` is a string-like entity. The types satisfying this concept are listed in the documentation
-   of :cpp:concept:`mppp::StringType <mppp::StringType>`.
+   This concept is satisfied if ``T`` is a string-like entity, or a cv-qualified version thereof. The types satisfying
+   this concept are listed in the documentation of :cpp:concept:`mppp::StringType <mppp::StringType>`.
 
 Type properties
 ---------------
@@ -56,6 +56,11 @@ Type properties
 
    This concept is satisfied if an instance of type ``T`` can be constructed from a set of arguments
    of types ``Args...``, as established by the standard ``std::is_constructible`` type trait.
+
+.. cpp:concept:: template <typename T> piranha::DefaultConstructible
+
+   This concept is satisfied if an instance of type ``T`` can be constructed from an empty set of arguments,
+   as established by the standard ``std::is_default_constructible`` type trait.
 
 .. cpp:concept:: template <typename From, typename To> piranha::Convertible
 
