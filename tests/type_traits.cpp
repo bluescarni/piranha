@@ -1933,7 +1933,7 @@ BOOST_AUTO_TEST_CASE(type_traits_is_string_type_test)
     BOOST_CHECK(!is_string_type<std::string &>::value);
     BOOST_CHECK(!is_string_type<std::string &&>::value);
     BOOST_CHECK(!is_string_type<const std::string &>::value);
-    BOOST_CHECK(!is_string_type<const std::string>::value);
+    BOOST_CHECK(is_string_type<const std::string>::value);
     BOOST_CHECK(!is_string_type<void>::value);
     BOOST_CHECK(!is_string_type<int>::value);
 }
