@@ -70,6 +70,10 @@ Type properties
    * ``void``, or
    * destructible and copy or move constructible.
 
+.. cpp:concept:: template <typename T, typename... Args> piranha::Same
+
+   This concept is satisfied if ``T`` and ``Args...`` are all the same type.
+
 Arithmetic and logical operators
 --------------------------------
 

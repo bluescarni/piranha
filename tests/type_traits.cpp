@@ -1937,3 +1937,23 @@ BOOST_AUTO_TEST_CASE(type_traits_is_string_type_test)
     BOOST_CHECK(!is_string_type<void>::value);
     BOOST_CHECK(!is_string_type<int>::value);
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_same_test)
+{
+    BOOST_CHECK((are_same<void>::value));
+    BOOST_CHECK((are_same<int>::value));
+    BOOST_CHECK((are_same<const int>::value));
+    BOOST_CHECK((are_same<int &>::value));
+    BOOST_CHECK((are_same<const int &>::value));
+    BOOST_CHECK((are_same<int, int>::value));
+    BOOST_CHECK((!are_same<const int, int>::value));
+    BOOST_CHECK((!are_same<int, int &>::value));
+    BOOST_CHECK((!are_same<int, double>::value));
+    BOOST_CHECK((are_same<int, int, int>::value));
+    BOOST_CHECK((are_same<double, double, double>::value));
+    BOOST_CHECK((!are_same<int, int, const int>::value));
+    BOOST_CHECK((!are_same<const int, int, int>::value));
+    BOOST_CHECK((!are_same<const int, double &, void>::value));
+    BOOST_CHECK((!are_same<double, int, const int>::value));
+    BOOST_CHECK((!are_same<int, volatile int, const int>::value));
+}

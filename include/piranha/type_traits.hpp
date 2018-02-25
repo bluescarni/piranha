@@ -177,6 +177,9 @@ template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
 }
 
+template <typename T, typename... Args>
+using are_same = conjunction<std::is_same<T, Args>...>;
+
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 // Provide concept versions of a few C++ type traits.
@@ -197,6 +200,9 @@ concept bool Convertible = std::is_convertible<From, To>::value;
 
 template <typename T>
 concept bool NonConst = !std::is_const<T>::value;
+
+template <typename T, typename... Args>
+concept bool Same = are_same<T, Args...>::value;
 
 #endif
 
