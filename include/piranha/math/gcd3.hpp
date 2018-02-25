@@ -40,6 +40,14 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
+inline namespace impl
+{
+
+// Detection for the default implementation of gcd3.
+template <typename T, typename U, typename V>
+using default_gcd3_t = decltype(std::declval<T>() = piranha::gcd(std::declval<U>(), std::declval<V>()));
+}
+
 // The default implementation.
 template <typename T, typename U, typename V
 #if !defined(PIRANHA_HAVE_CONCEPTS)
@@ -49,12 +57,9 @@ template <typename T, typename U, typename V
           >
 class gcd3_impl
 {
-    template <typename T1, typename U1, typename V1>
-    using p_gcd_t = decltype(std::declval<T1>() = piranha::gcd(std::declval<U1>(), std::declval<V1>()));
-
 public:
     template <typename T1, typename U1, typename V1,
-              enable_if_t<is_detected<p_gcd_t, T1 &, U1 &&, V1 &&>::value, int> = 0>
+              enable_if_t<is_detected<default_gcd3_t, T1 &, U1 &&, V1 &&>::value, int> = 0>
     void operator()(T1 &x, U1 &&y, V1 &&z) const
     {
         x = piranha::gcd(std::forward<U1>(y), std::forward<V1>(z));
