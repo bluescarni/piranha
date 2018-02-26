@@ -54,15 +54,39 @@ inline namespace impl
 
 // Enabler+result type for cos().
 template <typename T>
-using cos_type_ = decltype(cos_impl<uncvref_t<T>>{}(std::declval<T>()));
+using cos_t_ = decltype(cos_impl<uncvref_t<T>>{}(std::declval<T>()));
 
 template <typename T>
-using cos_type = enable_if_t<is_returnable<cos_type_<T>>::value, cos_type_<T>>;
+using cos_t = enable_if_t<is_returnable<cos_t_<T>>::value, cos_t_<T>>;
 }
 
-// Cosine.
+// NOTE: when we use this TT/concept in conjunction with the perfect
+// forwarding cos() function below, there are two possibilities:
+// - cos() is called on an lvalue of type A, in which case T resolves to A &
+//   and, in cos_t_(), we end up calling the call operator of cos_impl
+//   with type A & && -> A & thanks to the collapsing rules;
+// - cos() is called on an rvalue of type A, in which case T resolves to
+//   A and, in cos_t_(), we end up calling the call operator of cos_impl
+//   with type A &&.
 template <typename T>
-inline cos_type<T &&> cos(T &&x)
+using is_cosine_type = is_detected<cos_t, T>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool CosineType = is_cosine_type<T>::value;
+
+#endif
+
+// Cosine.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <CosineType T>
+inline auto
+#else
+template <typename T>
+inline cos_t<T>
+#endif
+cos(T &&x)
 {
     return cos_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
@@ -99,24 +123,6 @@ public:
         return impl(x, std::is_floating_point<T>{});
     }
 };
-
-// Implementation of the type trait to detect the availability of cos().
-inline namespace impl
-{
-
-template <typename T>
-using cos_t = decltype(piranha::cos(std::declval<const T &>()));
-}
-
-template <typename T>
-using is_cosine_type = is_detected<cos_t, T>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool CosineType = is_cosine_type<T>::value;
-
-#endif
 }
 
 #endif

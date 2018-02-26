@@ -909,11 +909,20 @@ public:
 
 private:
     // The candidate type, resulting from piranha::cos()/piranha::sin() on T * U.
+    // NOTE: we need to verify the availability of these expressions in multiple variations,
+    // as many as are used in the implementation.
     template <typename U>
-    using eval_t_cos = cos_t<mul_t<T, U>>;
+    using e_cos1_t = cos_t<mul_t<T, U> &>;
     template <typename U>
-    using eval_t_sin = sin_t<mul_t<T, U>>;
-    // Definition of the evaluation type.
+    using e_cos2_t = cos_t<mul_t<T, U> &&>;
+    template <typename U>
+    using eval_t_cos = enable_if_t<std::is_same<e_cos1_t<U>, e_cos2_t<U>>::value, e_cos1_t<U>>;
+    template <typename U>
+    using e_sin1_t = sin_t<mul_t<T, U> &>;
+    template <typename U>
+    using e_sin2_t = sin_t<mul_t<T, U> &&>;
+    template <typename U>
+    using eval_t_sin = enable_if_t<std::is_same<e_sin1_t<U>, e_sin2_t<U>>::value, e_sin1_t<U>>;
     template <typename U>
     using eval_type
         = enable_if_t<conjunction<
