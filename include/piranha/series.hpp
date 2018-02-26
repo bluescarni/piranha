@@ -117,9 +117,9 @@ inline std::pair<typename Term::cf_type, Derived> pair_from_term(const symbol_fs
 template <typename Functor, typename RetT, typename T>
 inline RetT apply_cf_functor(const T &s)
 {
-    using term_type = typename RetT::term_type;
-    using cf_type = typename term_type::cf_type;
-    using key_type = typename term_type::key_type;
+    using ret_term_type = typename RetT::term_type;
+    using orig_cf_type = typename T::term_type::cf_type;
+    using ret_key_type = typename ret_term_type::key_type;
     if (!s.is_single_coefficient()) {
         piranha_throw(std::invalid_argument,
                       std::string("cannot compute ") + Functor::name + ", series is not single-coefficient");
@@ -127,9 +127,9 @@ inline RetT apply_cf_functor(const T &s)
     RetT retval;
     Functor f;
     if (s.empty()) {
-        retval.insert(term_type(f(cf_type(0)), key_type(symbol_fset{})));
+        retval.insert(ret_term_type(f(orig_cf_type(0)), ret_key_type(symbol_fset{})));
     } else {
-        retval.insert(term_type(f(s._container().begin()->m_cf), key_type(symbol_fset{})));
+        retval.insert(ret_term_type(f(s._container().begin()->m_cf), ret_key_type(symbol_fset{})));
     }
     return retval;
 }
