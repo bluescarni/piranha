@@ -48,7 +48,7 @@ Concepts
       piranha::sin_impl<Tp>{}(std::declval<T>())
 
    (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) is a valid expression whose
-   type satisfies the :cpp:concept:`piranha::Returnable` concept.
+   type is :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_sin_impls:
 

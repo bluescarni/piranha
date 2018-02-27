@@ -95,4 +95,4 @@ Arithmetic and logical operators
 
       std::declval<T>() != std::declval<U>()
 
-   are valid expressions whose types are :cpp:concept:`~piranha::Convertible` to ``bool``.
+   are valid expressions whose types are :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
