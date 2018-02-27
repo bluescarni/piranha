@@ -105,7 +105,7 @@ namespace piranha
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
 {
-    PIRANHA_TT_CHECK(is_is_one_type, T);
+    PIRANHA_TT_CHECK(is_is_one_type, addlref_t<const T>);
     PIRANHA_TT_CHECK(is_ostreamable, T);
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
