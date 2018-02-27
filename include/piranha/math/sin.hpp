@@ -52,16 +52,13 @@ class sin_impl
 inline namespace impl
 {
 
-// Enabler+result type for piranha::sin().
+// Candidate result type for piranha::sin().
 template <typename T>
 using sin_t_ = decltype(sin_impl<uncvref_t<T>>{}(std::declval<T>()));
-
-template <typename T>
-using sin_t = enable_if_t<is_returnable<sin_t_<T>>::value, sin_t_<T>>;
 }
 
 template <typename T>
-using is_sine_type = is_detected<sin_t, T>;
+using is_sine_type = is_returnable<detected_t<sin_t_, T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -69,6 +66,13 @@ template <typename T>
 concept bool SineType = is_sine_type<T>::value;
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using sin_t = enable_if_t<is_sine_type<T>::value, sin_t_<T>>;
+}
 
 // Sine.
 #if defined(PIRANHA_HAVE_CONCEPTS)

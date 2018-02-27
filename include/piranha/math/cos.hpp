@@ -52,12 +52,9 @@ class cos_impl
 inline namespace impl
 {
 
-// Enabler+result type for cos().
+// Candidate result type for piranha::cos().
 template <typename T>
 using cos_t_ = decltype(cos_impl<uncvref_t<T>>{}(std::declval<T>()));
-
-template <typename T>
-using cos_t = enable_if_t<is_returnable<cos_t_<T>>::value, cos_t_<T>>;
 }
 
 // NOTE: when we use this TT/concept in conjunction with the perfect
@@ -69,7 +66,7 @@ using cos_t = enable_if_t<is_returnable<cos_t_<T>>::value, cos_t_<T>>;
 //   A and, in cos_t_(), we end up calling the call operator of cos_impl
 //   with type A &&.
 template <typename T>
-using is_cosine_type = is_detected<cos_t, T>;
+using is_cosine_type = is_returnable<detected_t<cos_t_, T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -77,6 +74,16 @@ template <typename T>
 concept bool CosineType = is_cosine_type<T>::value;
 
 #endif
+
+inline namespace impl
+{
+
+// NOTE: this is needed for the non-concept implementation, and
+// useful as a shortcut to the type of piranha::cos() in various
+// internal implementation details.
+template <typename T>
+using cos_t = enable_if_t<is_cosine_type<T>::value, cos_t_<T>>;
+}
 
 // Cosine.
 #if defined(PIRANHA_HAVE_CONCEPTS)
