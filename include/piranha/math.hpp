@@ -804,10 +804,11 @@ namespace detail
 {
 
 template <typename T>
-using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<pbracket_type<T>>::value
-                                                         && std::is_constructible<pbracket_type<T>, int>::value
-                                                         && is_equality_comparable<const pbracket_type<T> &>::value,
-                                                     int>::type;
+using is_canonical_enabler =
+    typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<pbracket_type<T>>::value
+                                && std::is_constructible<pbracket_type<T>, int>::value
+                                && is_equality_comparable<addlref_t<const pbracket_type<T>>>::value,
+                            int>::type;
 
 template <typename T>
 inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,

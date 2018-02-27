@@ -92,7 +92,7 @@ class array_key
     // requirements which are optional and checked in the member functions.
     PIRANHA_TT_CHECK(std::is_constructible, T, int);
     PIRANHA_TT_CHECK(is_less_than_comparable, T);
-    PIRANHA_TT_CHECK(is_equality_comparable, const T &);
+    PIRANHA_TT_CHECK(is_equality_comparable, addlref_t<const T>);
     PIRANHA_TT_CHECK(is_hashable, T);
     PIRANHA_TT_CHECK(is_is_zero_type, T);
 

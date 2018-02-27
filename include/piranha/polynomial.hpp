@@ -374,7 +374,7 @@ class polynomial
         std::is_same<degree_type<T>, pdegree_type<T>>::value && has_truncate_degree<T, degree_type<T>>::value
             && std::is_same<decltype(std::declval<const degree_type<T> &>() - std::declval<const degree_type<T> &>()),
                             degree_type<T>>::value
-            && is_equality_comparable<const degree_type<T> &>::value,
+            && is_equality_comparable<addlref_t<const degree_type<T>>>::value,
         int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>

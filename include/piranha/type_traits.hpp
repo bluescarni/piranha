@@ -971,7 +971,7 @@ template <typename T>
 struct is_input_iterator_impl<
     T,
     enable_if_t<conjunction<
-        is_iterator<T>, is_equality_comparable<const T &>,
+        is_iterator<T>, is_equality_comparable<addlref_t<const T>>,
         std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
         std::is_same<decltype(++std::declval<T &>()), T &>,
         std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,
