@@ -1104,10 +1104,12 @@ template <typename T>
 const bool has_input_begin_end<T>::value;
 
 // Detect if type can be returned from a function.
+// NOTE: constructability implies destructability:
+// https://cplusplus.github.io/LWG/issue2116
+// NOTE: checking for void should be enough, cv void
+// as return type of a function is same as void.
 template <typename T>
-using is_returnable = disjunction<
-    std::is_same<T, void>,
-    conjunction<std::is_destructible<T>, disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>;
+using is_returnable = disjunction<std::is_same<T, void>, std::is_copy_constructible<T>, std::is_move_constructible<T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 

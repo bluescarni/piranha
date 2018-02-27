@@ -68,7 +68,8 @@ Type properties
    Specifically, this concept is satisfied if ``T`` is either:
 
    * ``void``, or
-   * destructible and copy or move constructible.
+   * copy-constructible, or
+   * move-constructible.
 
 .. cpp:concept:: template <typename T, typename... Args> piranha::Same
 
