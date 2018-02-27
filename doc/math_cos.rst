@@ -81,7 +81,7 @@ Implementations
    Specialisation of the function object implementing :cpp:func:`piranha::cos()` for :cpp:class:`mppp::integer <mppp::integer>`.
 
    The operation is successful only if the input argument is zero, in which case the result will be an instance of
-   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from zero.
+   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from one.
 
    :exception std\:\:domain_error: if the input argument is not zero.
 
