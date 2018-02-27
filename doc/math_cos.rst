@@ -41,7 +41,7 @@ Concepts
 .. cpp:concept:: template <typename T> piranha::CosineType
 
    This concept is satisfied if :cpp:func:`piranha::cos()` can be called
-   with an argument of type ``T``. More specifically, this concept will be satisfied if
+   with an argument of type ``T``. Specifically, this concept will be satisfied if
 
    .. code-block:: c++
 

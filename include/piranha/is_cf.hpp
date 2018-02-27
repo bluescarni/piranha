@@ -59,7 +59,7 @@ class is_cf
 {
     static const bool implementation_defined
         = conjunction<is_container_element<T>, has_print_coefficient<T>, has_print_tex_coefficient<T>,
-                      is_is_zero_type<T>, has_negate<T>, is_equality_comparable<T>, is_addable<T>,
+                      is_is_zero_type<T>, has_negate<T>, is_equality_comparable<const T &>, is_addable<T>,
                       is_addable_in_place<T>, is_subtractable_in_place<T>, is_subtractable<T>,
                       std::is_constructible<T, const int &>>::value;
 

@@ -83,6 +83,16 @@ Arithmetic and logical operators
    This concept is satisfied if instances of type ``T`` can be compared to instances of type
    ``U`` via the equality and inequality operators.
 
-   Specifically, this concept is satisfied if the expressions ``a == b`` and ``a != b``,
-   where ``a`` and ``b`` are references to const ``T`` and ``U`` respectively, are both valid
-   and returning a type convertible to ``bool``.
+   Specifically, this concept is satisfied if
+
+   .. code-block:: c++
+
+      std::declval<T>() == std::declval<U>()
+
+   and
+
+   .. code-block:: c++
+
+      std::declval<T>() != std::declval<U>()
+
+   are valid expressions whose types are :cpp:concept:`~piranha::Convertible` to ``bool``.

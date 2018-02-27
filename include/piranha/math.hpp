@@ -806,7 +806,7 @@ namespace detail
 template <typename T>
 using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<pbracket_type<T>>::value
                                                          && std::is_constructible<pbracket_type<T>, int>::value
-                                                         && is_equality_comparable<pbracket_type<T>>::value,
+                                                         && is_equality_comparable<const pbracket_type<T> &>::value,
                                                      int>::type;
 
 template <typename T>

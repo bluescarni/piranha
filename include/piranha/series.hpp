@@ -1593,7 +1593,7 @@ private:
         int>::type;
     // Enabler for is_identical.
     template <typename T>
-    using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value, int>::type;
+    using is_identical_enabler = typename std::enable_if<is_equality_comparable<const T &>::value, int>::type;
     // Iterator utilities.
     typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type, Derived>(const term_type &)>,
                                       typename container_type::const_iterator>

@@ -511,13 +511,15 @@ inline namespace impl
 
 // Return types for the equality and inequality operators.
 template <typename T, typename U>
-using eq_t = decltype(std::declval<const T &>() == std::declval<const U &>());
+using eq_t = decltype(std::declval<T>() == std::declval<U>());
 
 template <typename T, typename U>
-using ineq_t = decltype(std::declval<const T &>() != std::declval<const U &>());
+using ineq_t = decltype(std::declval<T>() != std::declval<U>());
 }
 
 // Equality-comparable type trait.
+// NOTE: if the expressions above for eq/ineq return a type which is not bool,
+// the decltype() will also check that the returned type is destructible.
 template <typename T, typename U = T>
 struct is_equality_comparable : conjunction<std::is_convertible<detected_t<eq_t, T, U>, bool>,
                                             std::is_convertible<detected_t<ineq_t, T, U>, bool>> {
@@ -969,7 +971,7 @@ template <typename T>
 struct is_input_iterator_impl<
     T,
     enable_if_t<conjunction<
-        is_iterator<T>, is_equality_comparable<T>,
+        is_iterator<T>, is_equality_comparable<const T &>,
         std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
         std::is_same<decltype(++std::declval<T &>()), T &>,
         std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,
