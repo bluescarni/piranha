@@ -94,7 +94,7 @@ class array_key
     PIRANHA_TT_CHECK(is_less_than_comparable, T);
     PIRANHA_TT_CHECK(is_equality_comparable, addlref_t<const T>);
     PIRANHA_TT_CHECK(is_hashable, T);
-    PIRANHA_TT_CHECK(is_is_zero_type, T);
+    PIRANHA_TT_CHECK(is_is_zero_type, addlref_t<const T>);
 
 public:
     /// The internal container type.

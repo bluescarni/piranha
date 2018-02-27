@@ -884,9 +884,10 @@ class series_operators
     // seen, and GCC errors out. I *think* the nullptr syntax works because the bso_type enable_if disables the function
     // before is_is_zero_type is encountered, or maybe because it does not participate in template deduction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 3>::value == 4u, int>::type = 0>
-    static series_common_type<T, U, 3>
-    dispatch_binary_div(T &&x, U &&y,
-                        typename std::enable_if<is_is_zero_type<typename std::decay<U>::type>::value>::type * = nullptr)
+    static series_common_type<T, U, 3> dispatch_binary_div(
+        T &&x, U &&y,
+        typename std::enable_if<is_is_zero_type<addlref_t<const typename std::decay<U>::type>>::value>::type
+            * = nullptr)
     {
         using ret_type = series_common_type<T, U, 3>;
         if (x.empty()) {
@@ -1933,7 +1934,8 @@ private:
     // Common checks on the exponent.
     template <typename T>
     using pow_expo_checks
-        = std::integral_constant<bool, conjunction<is_is_zero_type<T>, has_safe_cast<integer, T>>::value>;
+        = std::integral_constant<bool,
+                                 conjunction<is_is_zero_type<addlref_t<const T>>, has_safe_cast<integer, T>>::value>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>
