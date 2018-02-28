@@ -1208,20 +1208,19 @@ public:
             s_map[static_cast<T>(k + 1)] = s_map[k] * s;
         }
         // Init with the first element in the summation.
-        // NOTE: we promote abs_n to integer in these formulae in order to force
-        // the use of the binomial() overload for integer. In the future we might want
-        // to disable the binomial() overload for integral C++ types.
+        // NOTE: binomial of two C++ integrals will produce an integer.
         // TREQ: t_subs_type<U> move-ctible, dtible.
-        t_subs_type<U> cos_nx(cos_phase(abs_n) * piranha::binomial(integer(abs_n), T(0))
-                              * (c_map[T(0)] * s_map[abs_n])),
-            sin_nx(sin_phase(abs_n) * piranha::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n]));
+        static_assert(std::is_same<decltype(piranha::binomial(abs_n, T(0))), integer>::value,
+                      "Invalid type: the result should be an integer.");
+        t_subs_type<U> cos_nx(cos_phase(abs_n) * piranha::binomial(abs_n, T(0)) * (c_map[T(0)] * s_map[abs_n])),
+            sin_nx(sin_phase(abs_n) * piranha::binomial(abs_n, T(0)) * (c_map[T(0)] * s_map[abs_n]));
         // Run the main iteration.
         for (T k = 0; k < abs_n; ++k) {
             const auto p = static_cast<T>(abs_n - (k + 1));
             piranha_assert(p >= T(0));
             // TREQ: mult_t<U,U> move ctible.
             const auto tmp = c_map[static_cast<T>(k + 1)] * s_map[p];
-            const auto tmp_bin = piranha::binomial(integer(abs_n), k + T(1));
+            const auto tmp_bin = piranha::binomial(abs_n, static_cast<T>(k + 1));
             // TREQ: t_subs_type<U> addable in-place.
             cos_nx += cos_phase(p) * tmp_bin * tmp;
             sin_nx += sin_phase(p) * tmp_bin * tmp;
