@@ -697,7 +697,7 @@ class is_hash_function_object
 {
     // NOTE: use addlref_t to avoid forming a ref to void.
     static const bool implementation_defined
-        = conjunction<is_function_object<const T, std::size_t, const addlref_t<U>>, is_container_element<T>>::value;
+        = conjunction<is_function_object<const T, std::size_t, addlref_t<const U>>, is_container_element<T>>::value;
 
 public:
     /// Value of the type trait.
@@ -717,7 +717,7 @@ template <typename T, typename U>
 class is_equality_function_object
 {
     static const bool implementation_defined
-        = conjunction<is_function_object<const T, bool, const addlref_t<U>, const addlref_t<U>>,
+        = conjunction<is_function_object<const T, bool, addlref_t<const U>, addlref_t<const U>>,
                       is_container_element<T>>::value;
 
 public:
@@ -971,7 +971,7 @@ template <typename T>
 struct is_input_iterator_impl<
     T,
     enable_if_t<conjunction<
-        is_iterator<T>, is_equality_comparable<addlref_t<const T>>,
+        is_iterator<T>, is_equality_comparable<const T &>,
         std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
         std::is_same<decltype(++std::declval<T &>()), T &>,
         std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,

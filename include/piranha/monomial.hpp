@@ -105,7 +105,7 @@ namespace piranha
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
 {
-    PIRANHA_TT_CHECK(is_is_one_type, addlref_t<const T>);
+    PIRANHA_TT_CHECK(is_is_one_type, const T &);
     PIRANHA_TT_CHECK(is_ostreamable, T);
     PIRANHA_TT_CHECK(has_negate, T);
     PIRANHA_TT_CHECK(std::is_copy_assignable, T);
@@ -786,10 +786,11 @@ public:
 private:
     // Eval type definition.
     template <typename U>
-    using eval_type
-        = enable_if_t<conjunction<is_multipliable_in_place<pow_t<U, T>>, std::is_constructible<pow_t<U, T>, int>,
-                                  is_returnable<pow_t<U, T>>>::value,
-                      pow_t<U, T>>;
+    using eval_t_ = pow_t<const U &, const T &>;
+    template <typename U>
+    using eval_type = enable_if_t<conjunction<is_multipliable_in_place<eval_t_<U>>,
+                                              std::is_constructible<eval_t_<U>, int>, is_returnable<eval_t_<U>>>::value,
+                                  eval_t_<U>>;
 
 public:
     /// Evaluation.
@@ -967,10 +968,13 @@ private:
     }
     // Definition of the return type.
     template <typename U>
-    using ipow_subs_type = enable_if_t<
-        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value
-            && (ipow_subs_d_assign_dispatcher<T>::value < 2u) && (ipow_subs_expo_assign_dispatcher<T>::value < 2u),
-        pow_t<U, integer>>;
+    using ipow_t_ = pow_t<const U &, const integer &>;
+    template <typename U>
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ipow_t_<U>, int>, is_returnable<ipow_t_<U>>>::value
+                          && (ipow_subs_d_assign_dispatcher<T>::value < 2u)
+                          && (ipow_subs_expo_assign_dispatcher<T>::value < 2u),
+                      ipow_t_<U>>;
 
 public:
     /// Substitution of integral power.

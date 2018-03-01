@@ -277,8 +277,8 @@ class poisson_series
         T, ResT,
         typename std::enable_if<
             // Coefficient differentiable, and can call is_zero on the result.
-            is_is_zero_type<addlref_t<const decltype(math::partial(
-                std::declval<const typename T::term_type::cf_type &>(), std::declval<const std::string &>()))>>::value
+            is_is_zero_type<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                                         std::declval<const std::string &>())) &>::value
             &&
             // The result needs to be addable in-place.
             is_addable_in_place<ResT>::value &&

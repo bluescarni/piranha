@@ -910,9 +910,9 @@ public:
 private:
     // The candidate type, resulting from piranha::cos()/piranha::sin() on T * U.
     template <typename U>
-    using eval_t_cos = cos_t<addlref_t<const mul_t<T, U>>>;
+    using eval_t_cos = cos_t<const mul_t<T, U> &>;
     template <typename U>
-    using eval_t_sin = sin_t<addlref_t<const mul_t<T, U>>>;
+    using eval_t_sin = sin_t<const mul_t<T, U> &>;
     // Definition of the evaluation type.
     template <typename U>
     using eval_type

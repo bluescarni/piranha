@@ -229,17 +229,17 @@ class polynomial
     // Basic integration requirements for series T, to be satisfied both when the coefficient is integrable
     // and when it is not. ResT is the type of the result of the integration.
     template <typename T, typename ResT>
-    using basic_integrate_requirements = typename std::enable_if<
+    using basic_integrate_requirements = enable_if_t<
         // Coefficient differentiable, and can call is_zero on the result.
-        is_is_zero_type<addlref_t<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
-                                                               std::declval<const std::string &>()))>>::value
+        is_is_zero_type<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                                     std::declval<const std::string &>())) &>::value
         &&
         // The key is integrable.
         detail::true_tt<key_integrate_type<T>>::value &&
         // The result needs to be addable in-place.
         is_addable_in_place<ResT>::value &&
         // It also needs to be ctible from zero.
-        std::is_constructible<ResT, int>::value>::type;
+        std::is_constructible<ResT, int>::value>;
     // Non-integrable coefficient.
     template <typename T>
     using nic_res_type = decltype((std::declval<const T &>() * std::declval<const typename T::term_type::cf_type &>())
@@ -374,7 +374,7 @@ class polynomial
         std::is_same<degree_type<T>, pdegree_type<T>>::value && has_truncate_degree<T, degree_type<T>>::value
             && std::is_same<decltype(std::declval<const degree_type<T> &>() - std::declval<const degree_type<T> &>()),
                             degree_type<T>>::value
-            && is_equality_comparable<addlref_t<const degree_type<T>>>::value,
+            && is_equality_comparable<const degree_type<T> &>::value,
         int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>

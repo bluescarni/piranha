@@ -87,6 +87,8 @@ class is_key
     template <typename U>
     using trim_t = decltype(
         std::declval<const U &>().trim(std::declval<const std::vector<char> &>(), std::declval<symbol_fset const &>()));
+    // NOTE: we have to use addlref_t here as we cannot rely on sfinae in case
+    // "const T &" turns out to be a malformed expression (e.g., for T void).
     static const bool implementation_defined = conjunction<
         is_container_element<T>, std::is_constructible<T, const symbol_fset &>,
         is_equality_comparable<addlref_t<const T>>, is_hashable<T>, std::is_same<detected_t<is_compatible_t, T>, bool>,

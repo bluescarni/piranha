@@ -942,9 +942,11 @@ public:
 private:
     // ipow subs utilities.
     template <typename U>
-    using ipow_subs_type = enable_if_t<
-        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value,
-        pow_t<U, integer>>;
+    using ipow_subs_t_ = pow_t<const U &, const integer &>;
+    template <typename U>
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ipow_subs_t_<U>, int>, is_returnable<ipow_subs_t_<U>>>::value,
+                      ipow_subs_t_<U>>;
 
 public:
     /// Substitution of integral power.

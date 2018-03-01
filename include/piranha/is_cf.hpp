@@ -57,6 +57,8 @@ namespace piranha
 template <typename T>
 class is_cf
 {
+    // NOTE: we have to use addlref_t here as we cannot rely on sfinae in case
+    // "const T &" turns out to be a malformed expression (e.g., for T void).
     static const bool implementation_defined
         = conjunction<is_container_element<T>, has_print_coefficient<T>, has_print_tex_coefficient<T>,
                       is_is_zero_type<addlref_t<const T>>, has_negate<T>, is_equality_comparable<addlref_t<const T>>,

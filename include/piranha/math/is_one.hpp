@@ -46,9 +46,9 @@ class is_one_impl
 public:
     // NOTE: the equality comparable requirement already implies that the return type of
     // the comparison must be convertible to bool.
-    template <typename U,
-              enable_if_t<conjunction<std::is_constructible<U, int>, is_equality_comparable<addlref_t<const U>>>::value,
-                          int> = 0>
+    template <
+        typename U,
+        enable_if_t<conjunction<std::is_constructible<U, int>, is_equality_comparable<const U &>>::value, int> = 0>
     bool operator()(const U &x) const
     {
         return x == U(1);
