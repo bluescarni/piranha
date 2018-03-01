@@ -43,6 +43,9 @@ struct bar {
 struct baz {
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
@@ -62,6 +65,14 @@ class key_is_one_impl<baz>
 public:
     std::string operator()(const baz &, const symbol_fset &) const;
 };
+
+template <>
+class key_is_one_impl<foo>
+{
+public:
+    bool operator()(const foo &, const symbol_fset &) const;
+    bool operator()(foo &, const symbol_fset &) const = delete;
+};
 }
 
 BOOST_AUTO_TEST_CASE(key_is_one_test_00)
@@ -78,5 +89,11 @@ BOOST_AUTO_TEST_CASE(key_is_one_test_00)
     BOOST_CHECK(!is_key_is_one_type<const baz>::value);
     BOOST_CHECK(!is_key_is_one_type<const baz &>::value);
     BOOST_CHECK(!is_key_is_one_type<baz &&>::value);
+    BOOST_CHECK(!is_key_is_one_type<void>::value);
+    BOOST_CHECK(is_key_is_one_type<foo>::value);
+    BOOST_CHECK(is_key_is_one_type<const foo>::value);
+    BOOST_CHECK(is_key_is_one_type<const foo &>::value);
+    BOOST_CHECK(is_key_is_one_type<foo &&>::value);
+    BOOST_CHECK(!is_key_is_one_type<foo &>::value);
     BOOST_CHECK(!is_key_is_one_type<void>::value);
 }

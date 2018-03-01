@@ -94,7 +94,7 @@ class is_key
         is_equality_comparable<addlref_t<const T>>, is_hashable<T>, std::is_same<detected_t<is_compatible_t, T>, bool>,
         std::is_same<detected_t<merge_symbols_t, T>, T>, std::is_same<detected_t<print_t, T>, void>,
         std::is_same<detected_t<print_tex_t, T>, void>, std::is_same<detected_t<trim_identify_t, T>, void>,
-        std::is_same<detected_t<trim_t, T>, T>, is_key_is_zero_type<T>, is_key_is_one_type<T>>::value;
+        std::is_same<detected_t<trim_t, T>, T>, is_key_is_zero_type<T>, is_key_is_one_type<addlref_t<const T>>>::value;
 
 public:
     /// Value of the type trait.
