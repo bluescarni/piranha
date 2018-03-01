@@ -170,7 +170,7 @@ struct pow_tester {
         BOOST_CHECK_THROW(piranha::pow(int_type(2), q_type(1, radix)), std::domain_error);
         BOOST_CHECK_EQUAL(piranha::pow(2, q_type(2)), 4);
         BOOST_CHECK_EQUAL(piranha::pow(int_type(3), q_type(2)), 9);
-#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
+#if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((is_exponentiable<__int128_t, q_type>::value));
         BOOST_CHECK((is_exponentiable<__uint128_t, q_type>::value));
         BOOST_CHECK((is_exponentiable<q_type, __int128_t>::value));
@@ -300,7 +300,7 @@ struct sep_tester {
         BOOST_CHECK(
             (std::is_same<q_type, decltype(math::evaluate(q_type{10}, edict<long double>{{"", 1.321l}}))>::value));
 #endif
-#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
+#if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK(
             (std::is_same<q_type, decltype(math::evaluate(q_type{10}, edict<__int128_t>{{"", __int128_t()}}))>::value));
         BOOST_CHECK((std::is_same<q_type, decltype(math::evaluate(q_type{10},
@@ -364,7 +364,7 @@ struct safe_cast_tester {
         BOOST_CHECK_EQUAL(safe_cast<unsigned>(q_type{42}), 42u);
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{0} / 2), 0);
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{-42} / 2), -21);
-#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
+#if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((has_safe_cast<__int128_t, q_type>::value));
         BOOST_CHECK((has_safe_cast<__uint128_t, q_type>::value));
         BOOST_CHECK((has_safe_cast<q_type, __int128_t>::value));
@@ -502,7 +502,7 @@ struct rational_binomial_tester {
         BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, 4), (rat_type{-7, 243}));
         BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, -3}, int_type{4}), (rat_type{1820, 243}));
         BOOST_CHECK_EQUAL(piranha::binomial(rat_type{7, 3}, static_cast<signed char>(-4)), 0);
-#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
+#if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((are_binomial_types<rat_type, __int128_t>::value));
         BOOST_CHECK((are_binomial_types<rat_type, __uint128_t>::value));
         BOOST_CHECK((!are_binomial_types<__int128_t, rat_type>::value));
