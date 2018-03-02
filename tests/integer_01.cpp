@@ -400,15 +400,13 @@ struct gcd_tester {
         BOOST_CHECK((are_gcd3_types<int_type &, int_type>::value));
         BOOST_CHECK((are_gcd3_types<int_type &, int_type &&, const int_type &>::value));
         BOOST_CHECK((are_gcd3_types<int_type &, int, long>::value));
+        BOOST_CHECK((!are_gcd3_types<int_type, int_type, int_type>::value));
         BOOST_CHECK((!are_gcd3_types<const int_type &, int_type &>::value));
         BOOST_CHECK((!are_gcd3_types<const int_type, int_type const>::value));
         BOOST_CHECK((are_gcd_types<int_type, wchar_t>::value));
         BOOST_CHECK((are_gcd_types<wchar_t, int_type>::value));
         BOOST_CHECK((!are_gcd_types<int_type, void>::value));
         BOOST_CHECK((!are_gcd_types<void, int_type>::value));
-        // NOTE: the demangler in mp++ earlier than 0.9 does not support
-        // correctly 128bit types on OSX. Once we bump up the mp++ version,
-        // we can remove the second check.
 #if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((are_gcd_types<int_type, __int128_t>::value));
         BOOST_CHECK((are_gcd_types<__int128_t, int_type>::value));
