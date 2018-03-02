@@ -40,14 +40,6 @@ see https://www.gnu.org/licenses/. */
 namespace piranha
 {
 
-inline namespace impl
-{
-
-// Detection for the default implementation of gcd3.
-template <typename T, typename U, typename V>
-using default_gcd3_t = decltype(std::declval<T>() = piranha::gcd(std::declval<U>(), std::declval<V>()));
-}
-
 // The default implementation.
 template <typename T, typename U, typename V
 #if !defined(PIRANHA_HAVE_CONCEPTS)
