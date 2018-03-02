@@ -131,9 +131,9 @@ class poisson_series
     // Sin/cos utils.
     // Types coming out of sin()/cos() for the base type. These will also be the final types.
     template <typename T>
-    using sin_type = sin_t<typename T::base>;
+    using sin_type = sin_t<const typename T::base &>;
     template <typename T>
-    using cos_type = cos_t<typename T::base>;
+    using cos_type = cos_t<const typename T::base &>;
     // Case 0: Poisson series is not suitable for special sin() implementation. Just forward to the base one, via
     // casting.
     template <typename T = poisson_series, typename std::enable_if<!detail::poly_in_cf<T>::value, int>::type = 0>
@@ -277,8 +277,8 @@ class poisson_series
         T, ResT,
         typename std::enable_if<
             // Coefficient differentiable, and can call is_zero on the result.
-            is_is_zero_type<decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
-                                                   std::declval<const std::string &>()))>::value
+            is_is_zero_type<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                                         std::declval<const std::string &>())) &>::value
             &&
             // The result needs to be addable in-place.
             is_addable_in_place<ResT>::value &&

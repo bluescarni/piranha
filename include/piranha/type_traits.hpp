@@ -177,6 +177,9 @@ template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
 }
 
+template <typename T, typename... Args>
+using are_same = conjunction<std::is_same<T, Args>...>;
+
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 // Provide concept versions of a few C++ type traits.
@@ -197,6 +200,9 @@ concept bool Convertible = std::is_convertible<From, To>::value;
 
 template <typename T>
 concept bool NonConst = !std::is_const<T>::value;
+
+template <typename T, typename... Args>
+concept bool Same = are_same<T, Args...>::value;
 
 #endif
 
@@ -505,13 +511,15 @@ inline namespace impl
 
 // Return types for the equality and inequality operators.
 template <typename T, typename U>
-using eq_t = decltype(std::declval<const T &>() == std::declval<const U &>());
+using eq_t = decltype(std::declval<T>() == std::declval<U>());
 
 template <typename T, typename U>
-using ineq_t = decltype(std::declval<const T &>() != std::declval<const U &>());
+using ineq_t = decltype(std::declval<T>() != std::declval<U>());
 }
 
 // Equality-comparable type trait.
+// NOTE: if the expressions above for eq/ineq return a type which is not bool,
+// the decltype() will also check that the returned type is destructible.
 template <typename T, typename U = T>
 struct is_equality_comparable : conjunction<std::is_convertible<detected_t<eq_t, T, U>, bool>,
                                             std::is_convertible<detected_t<ineq_t, T, U>, bool>> {
@@ -689,7 +697,7 @@ class is_hash_function_object
 {
     // NOTE: use addlref_t to avoid forming a ref to void.
     static const bool implementation_defined
-        = conjunction<is_function_object<const T, std::size_t, const addlref_t<U>>, is_container_element<T>>::value;
+        = conjunction<is_function_object<const T, std::size_t, addlref_t<const U>>, is_container_element<T>>::value;
 
 public:
     /// Value of the type trait.
@@ -709,7 +717,7 @@ template <typename T, typename U>
 class is_equality_function_object
 {
     static const bool implementation_defined
-        = conjunction<is_function_object<const T, bool, const addlref_t<U>, const addlref_t<U>>,
+        = conjunction<is_function_object<const T, bool, addlref_t<const U>, addlref_t<const U>>,
                       is_container_element<T>>::value;
 
 public:
@@ -963,7 +971,7 @@ template <typename T>
 struct is_input_iterator_impl<
     T,
     enable_if_t<conjunction<
-        is_iterator<T>, is_equality_comparable<T>,
+        is_iterator<T>, is_equality_comparable<const T &>,
         std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
         std::is_same<decltype(++std::declval<T &>()), T &>,
         std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,
@@ -1098,10 +1106,12 @@ template <typename T>
 const bool has_input_begin_end<T>::value;
 
 // Detect if type can be returned from a function.
+// NOTE: constructability implies destructability:
+// https://cplusplus.github.io/LWG/issue2116
+// NOTE: checking for void should be enough, cv void
+// as return type of a function is same as void.
 template <typename T>
-using is_returnable = disjunction<
-    std::is_same<T, void>,
-    conjunction<std::is_destructible<T>, disjunction<std::is_copy_constructible<T>, std::is_move_constructible<T>>>>;
+using is_returnable = disjunction<std::is_same<T, void>, std::is_copy_constructible<T>, std::is_move_constructible<T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 

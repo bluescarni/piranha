@@ -61,6 +61,9 @@ struct b_01 {
     ~b_01() = delete;
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
@@ -84,6 +87,12 @@ struct gcd_impl<mock_type, mock_type> {
 };
 
 template <>
+struct gcd_impl<foo, foo> {
+    foo operator()(const foo &, const foo &) const;
+    foo operator()(foo &, foo &) const = delete;
+};
+
+template <>
 struct gcd3_impl<mock_type, mock_type, mock_type> {
     void operator()(mock_type &, const mock_type &, const mock_type &) const;
 };
@@ -100,9 +109,9 @@ BOOST_AUTO_TEST_CASE(gcd_test_00)
     BOOST_CHECK((!are_gcd_types<b_00>::value));
     BOOST_CHECK((!are_gcd_types<b_01, b_01>::value));
     BOOST_CHECK((!are_gcd_types<b_01>::value));
-    BOOST_CHECK((!are_gcd3_types<double, double, double>::value));
-    BOOST_CHECK((!are_gcd3_types<double>::value));
-    BOOST_CHECK((!are_gcd3_types<double, void, int>::value));
+    BOOST_CHECK((!are_gcd3_types<double &, double, double>::value));
+    BOOST_CHECK((!are_gcd3_types<double &, double>::value));
+    BOOST_CHECK((!are_gcd3_types<double &, void, int>::value));
     BOOST_CHECK((!are_gcd3_types<void, void, int>::value));
     BOOST_CHECK((are_gcd_types<int, int>::value));
     BOOST_CHECK((are_gcd_types<int>::value));
@@ -120,21 +129,30 @@ BOOST_AUTO_TEST_CASE(gcd_test_00)
     BOOST_CHECK((are_gcd_types<mock_type>::value));
     BOOST_CHECK((are_gcd_types<const mock_type, mock_type &>::value));
     BOOST_CHECK((are_gcd_types<mock_type &&, const mock_type &>::value));
-    BOOST_CHECK((are_gcd3_types<mock_type, mock_type, mock_type>::value));
+    BOOST_CHECK((are_gcd_types<foo, foo>::value));
+    BOOST_CHECK((are_gcd_types<const foo, foo>::value));
+    BOOST_CHECK((are_gcd_types<const foo, const foo>::value));
+    BOOST_CHECK((are_gcd_types<foo, const foo>::value));
+    BOOST_CHECK((are_gcd_types<const foo &, foo>::value));
+    BOOST_CHECK((are_gcd_types<const foo &, const foo &>::value));
+    BOOST_CHECK((are_gcd_types<foo, const foo &>::value));
+    BOOST_CHECK((!are_gcd_types<foo &, foo &>::value));
+    BOOST_CHECK((are_gcd_types<foo &, const foo &>::value));
+    BOOST_CHECK((!are_gcd3_types<mock_type, mock_type, mock_type>::value));
     BOOST_CHECK((are_gcd3_types<mock_type &, mock_type, mock_type>::value));
-    BOOST_CHECK((are_gcd3_types<mock_type, const mock_type, mock_type &>::value));
-    BOOST_CHECK((are_gcd3_types<mock_type, const mock_type &, mock_type &&>::value));
+    BOOST_CHECK((are_gcd3_types<mock_type &, const mock_type, mock_type &>::value));
+    BOOST_CHECK((are_gcd3_types<mock_type &, const mock_type &, mock_type &&>::value));
     BOOST_CHECK((!are_gcd3_types<const mock_type, mock_type, mock_type>::value));
     BOOST_CHECK((!are_gcd3_types<const mock_type &, mock_type, mock_type>::value));
     BOOST_CHECK((!are_gcd3_types<mock_type &&, mock_type, mock_type>::value));
     BOOST_CHECK((!are_gcd3_types<b_00, b_00, b_00>::value));
     BOOST_CHECK((!are_gcd3_types<b_01, b_01, b_01>::value));
     BOOST_CHECK((!are_gcd3_types<b_01, b_01, b_01>::value));
-    BOOST_CHECK((!are_gcd3_types<std::string>::value));
-    BOOST_CHECK((are_gcd3_types<int>::value));
-    BOOST_CHECK((are_gcd3_types<int, int, int>::value));
+    BOOST_CHECK((!are_gcd3_types<std::string &, const std::string>::value));
+    BOOST_CHECK((!are_gcd3_types<int, int>::value));
+    BOOST_CHECK((are_gcd3_types<int &, int, int>::value));
     BOOST_CHECK((are_gcd3_types<int &, int &&, const int &&>::value));
-    BOOST_CHECK((are_gcd3_types<int, const int &, int &&>::value));
+    BOOST_CHECK((are_gcd3_types<int &, const int &, int &&>::value));
     BOOST_CHECK((!are_gcd3_types<const int, const int &, int &&>::value));
     BOOST_CHECK((!are_gcd3_types<const int &, const int &, int &&>::value));
     BOOST_CHECK((!are_gcd3_types<int &&, const int &, int &&>::value));

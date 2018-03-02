@@ -423,7 +423,7 @@ struct type_traits_tester {
             typedef static_vector<T, U::value> vector_type;
             BOOST_CHECK(is_container_element<vector_type>::value);
             BOOST_CHECK(is_ostreamable<vector_type>::value);
-            BOOST_CHECK(is_equality_comparable<vector_type>::value);
+            BOOST_CHECK(is_equality_comparable<const vector_type &>::value);
             BOOST_CHECK(!is_addable<vector_type>::value);
         }
     };

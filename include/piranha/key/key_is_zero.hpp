@@ -50,32 +50,29 @@ template <typename T
 class key_is_zero_impl
 {
 public:
-    bool operator()(const T &, const symbol_fset &) const
+    // NOTE: let's make this a template, for handling the case in which
+    // T is void. In such case, we would be constructing a reference
+    // to void in key_is_zero_t_, if this weren't a template. With a
+    // templated implementation, we trigger SFINAE and the overload
+    // is discarded. This is only a concern when using the TT/concept.
+    template <typename U>
+    bool operator()(const U &, const symbol_fset &) const
     {
         return false;
     }
 };
 
-template <typename T,
-          enable_if_t<std::is_convertible<decltype(key_is_zero_impl<T>{}(std::declval<const T &>(),
-                                                                         std::declval<const symbol_fset &>())),
-                                          bool>::value,
-                      int> = 0>
-inline bool key_is_zero(const T &x, const symbol_fset &s)
-{
-    return key_is_zero_impl<T>{}(x, s);
-}
-
 inline namespace impl
 {
 
+// Candidate type for piranha::key_is_zero().
 template <typename T>
-using key_is_zero_t = decltype(piranha::key_is_zero(std::declval<const T &>(), std::declval<const symbol_fset &>()));
+using key_is_zero_t_
+    = decltype(key_is_zero_impl<uncvref_t<T>>{}(std::declval<T>(), std::declval<const symbol_fset &>()));
 }
 
-// Type trait to detect the presence of the piranha::key_is_zero() function.
 template <typename T>
-using is_key_is_zero_type = is_detected<key_is_zero_t, T>;
+using is_key_is_zero_type = std::is_convertible<detected_t<key_is_zero_t_, T>, bool>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -83,6 +80,17 @@ template <typename T>
 concept bool KeyIsZeroType = is_key_is_zero_type<T>::value;
 
 #endif
+
+// Zero detection for keys.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <KeyIsZeroType T>
+#else
+template <typename T, enable_if_t<is_key_is_zero_type<T>::value, int> = 0>
+#endif
+inline bool key_is_zero(T &&x, const symbol_fset &s)
+{
+    return key_is_zero_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
+}
 }
 
 #endif

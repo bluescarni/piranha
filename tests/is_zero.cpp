@@ -49,35 +49,46 @@ struct trivial_c {
 struct trivial_d {
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
 template <>
-class is_zero_impl<trivial_a, void>
+class is_zero_impl<trivial_a>
 {
 public:
-    char operator()(const trivial_a &);
+    char operator()(const trivial_a &) const;
 };
 
 template <>
-class is_zero_impl<trivial_b, void>
+class is_zero_impl<trivial_b>
 {
 public:
-    char operator()(const trivial_a &);
+    char operator()(const trivial_a &) const;
 };
 
 template <>
-class is_zero_impl<trivial_c, void>
+class is_zero_impl<trivial_c>
 {
 public:
-    std::string operator()(const trivial_c &);
+    std::string operator()(const trivial_c &) const;
 };
 
 template <>
-class is_zero_impl<trivial_d, void>
+class is_zero_impl<trivial_d>
 {
 public:
     trivial_d operator()(const trivial_d &) const;
+};
+
+template <>
+class is_zero_impl<foo>
+{
+public:
+    bool operator()(const foo &) const;
+    bool operator()(foo &) const = delete;
 };
 }
 
@@ -111,4 +122,8 @@ BOOST_AUTO_TEST_CASE(is_zero_test_00)
     BOOST_CHECK(!is_is_zero_type<trivial_b>::value);
     BOOST_CHECK(!is_is_zero_type<trivial_c>::value);
     BOOST_CHECK(!is_is_zero_type<trivial_d>::value);
+    BOOST_CHECK((is_is_zero_type<foo>::value));
+    BOOST_CHECK((is_is_zero_type<const foo>::value));
+    BOOST_CHECK((is_is_zero_type<const foo &>::value));
+    BOOST_CHECK((!is_is_zero_type<foo &>::value));
 }

@@ -444,28 +444,29 @@ bool operator!=(const frob_mix_not_eq &, const frob_mix_not_eq &);
 BOOST_AUTO_TEST_CASE(type_traits_is_equality_comparable_test)
 {
     BOOST_CHECK((!is_equality_comparable<void>::value));
-    BOOST_CHECK((!is_equality_comparable<void, int>::value));
+    BOOST_CHECK((!is_equality_comparable<void, const int &>::value));
     BOOST_CHECK((!is_equality_comparable<int, void>::value));
-    BOOST_CHECK(is_equality_comparable<int>::value);
-    BOOST_CHECK(!is_equality_comparable<trivial>::value);
-    BOOST_CHECK((is_equality_comparable<int, double>::value));
-    BOOST_CHECK((is_equality_comparable<double, int>::value));
-    BOOST_CHECK((!is_equality_comparable<double, trivial>::value));
-    BOOST_CHECK((!is_equality_comparable<trivial, double>::value));
+    BOOST_CHECK(is_equality_comparable<const int &>::value);
+    BOOST_CHECK(!is_equality_comparable<const trivial &>::value);
+    BOOST_CHECK((is_equality_comparable<const int &, const double &>::value));
+    BOOST_CHECK((is_equality_comparable<const double &, const int &>::value));
+    BOOST_CHECK((!is_equality_comparable<const double &, const trivial &>::value));
+    BOOST_CHECK((!is_equality_comparable<const trivial &, const double &>::value));
     BOOST_CHECK(is_equality_comparable<int &>::value);
-    BOOST_CHECK(is_equality_comparable<int *>::value);
+    BOOST_CHECK(is_equality_comparable<const int *&>::value);
     BOOST_CHECK((is_equality_comparable<int const *, int *>::value));
-    BOOST_CHECK((is_equality_comparable<int &, double>::value));
+    BOOST_CHECK((is_equality_comparable<int &, const double &>::value));
     BOOST_CHECK((is_equality_comparable<int const &, double &&>::value));
-    BOOST_CHECK(is_equality_comparable<frob>::value);
-    BOOST_CHECK(!is_equality_comparable<frob_nonconst>::value);
-    BOOST_CHECK(is_equality_comparable<frob_nonbool>::value);
-    BOOST_CHECK(!is_equality_comparable<frob_void>::value);
-    BOOST_CHECK(is_equality_comparable<frob_copy>::value);
-    BOOST_CHECK(is_equality_comparable<frob_mix>::value);
-    BOOST_CHECK(!is_equality_comparable<frob_mix_wrong>::value);
-    BOOST_CHECK(!is_equality_comparable<frob_mix_not_ineq>::value);
-    BOOST_CHECK(!is_equality_comparable<frob_mix_not_eq>::value);
+    BOOST_CHECK(is_equality_comparable<const frob &>::value);
+    BOOST_CHECK(!is_equality_comparable<const frob_nonconst &>::value);
+    BOOST_CHECK(is_equality_comparable<frob_nonconst &>::value);
+    BOOST_CHECK(is_equality_comparable<const frob_nonbool &>::value);
+    BOOST_CHECK(!is_equality_comparable<const frob_void &>::value);
+    BOOST_CHECK(is_equality_comparable<const frob_copy &>::value);
+    BOOST_CHECK(is_equality_comparable<const frob_mix &>::value);
+    BOOST_CHECK(!is_equality_comparable<const frob_mix_wrong &>::value);
+    BOOST_CHECK(!is_equality_comparable<const frob_mix_not_ineq &>::value);
+    BOOST_CHECK(!is_equality_comparable<const frob_mix_not_eq &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_is_less_than_comparable_test)
@@ -1933,7 +1934,27 @@ BOOST_AUTO_TEST_CASE(type_traits_is_string_type_test)
     BOOST_CHECK(!is_string_type<std::string &>::value);
     BOOST_CHECK(!is_string_type<std::string &&>::value);
     BOOST_CHECK(!is_string_type<const std::string &>::value);
-    BOOST_CHECK(!is_string_type<const std::string>::value);
+    BOOST_CHECK(is_string_type<const std::string>::value);
     BOOST_CHECK(!is_string_type<void>::value);
     BOOST_CHECK(!is_string_type<int>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_same_test)
+{
+    BOOST_CHECK((are_same<void>::value));
+    BOOST_CHECK((are_same<int>::value));
+    BOOST_CHECK((are_same<const int>::value));
+    BOOST_CHECK((are_same<int &>::value));
+    BOOST_CHECK((are_same<const int &>::value));
+    BOOST_CHECK((are_same<int, int>::value));
+    BOOST_CHECK((!are_same<const int, int>::value));
+    BOOST_CHECK((!are_same<int, int &>::value));
+    BOOST_CHECK((!are_same<int, double>::value));
+    BOOST_CHECK((are_same<int, int, int>::value));
+    BOOST_CHECK((are_same<double, double, double>::value));
+    BOOST_CHECK((!are_same<int, int, const int>::value));
+    BOOST_CHECK((!are_same<const int, int, int>::value));
+    BOOST_CHECK((!are_same<const int, double &, void>::value));
+    BOOST_CHECK((!are_same<double, int, const int>::value));
+    BOOST_CHECK((!are_same<int, volatile int, const int>::value));
 }
