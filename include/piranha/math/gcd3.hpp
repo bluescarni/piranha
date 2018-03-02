@@ -58,62 +58,46 @@ template <typename T, typename U, typename V
 class gcd3_impl
 {
 public:
-    template <typename T1, typename U1, typename V1,
-              enable_if_t<is_detected<default_gcd3_t, T1 &, U1 &&, V1 &&>::value, int> = 0>
-    void operator()(T1 &x, U1 &&y, V1 &&z) const
+    template <typename T1, typename U1, typename V1>
+    auto operator()(T1 &&x, U1 &&y, V1 &&z) const
+        -> decltype(void(std::forward<T1>(x) = piranha::gcd(std::forward<U1>(y), std::forward<V1>(z))))
     {
-        x = piranha::gcd(std::forward<U1>(y), std::forward<V1>(z));
+        std::forward<T1>(x) = piranha::gcd(std::forward<U1>(y), std::forward<V1>(z));
     }
 };
 
 inline namespace impl
 {
 
-// Enabler for gcd3().
+// Candidate type for piranha::gcd3().
 template <typename T, typename U, typename V>
-using gcd3_type_
-    = decltype(gcd3_impl<T, uncvref_t<U>, uncvref_t<V>>{}(std::declval<T &>(), std::declval<U>(), std::declval<V>()));
-
-template <typename T, typename U, typename V>
-using gcd3_type = enable_if_t<is_detected<gcd3_type_, T, U, V>::value>;
+using gcd3_t_ = decltype(
+    gcd3_impl<uncvref_t<T>, uncvref_t<U>, uncvref_t<V>>{}(std::declval<T>(), std::declval<U>(), std::declval<V>()));
 }
 
-// GCD, ternary form.
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <NonConst T, typename U, typename V>
-#else
-template <typename T, typename U, typename V, enable_if_t<!std::is_const<T>::value, int> = 0>
-#endif
-inline gcd3_type<T, U &&, V &&> gcd3(T &x, U &&y, V &&z)
-{
-    gcd3_impl<T, uncvref_t<U>, uncvref_t<V>>{}(x, std::forward<U>(y), std::forward<V>(z));
-}
-
-// Implementation of the type trait to detect the availability of gcd3().
-inline namespace impl
-{
-
-template <typename T, typename U, typename V>
-using gcd3_t = decltype(piranha::gcd3(std::declval<T &>(), std::declval<const U &>(), std::declval<const V &>()));
-}
-
-// NOTE: the pattern we want to detect here is:
-// piranha::gcd3(a, b, c)
-// where a is an lvalue reference to non-const, and b and c are references to const.
-// We need to do the explicit negation of is_rvalue_reference because otherwise, due to
-// the collapsing rules, T & above in gcd3_t becomes an lvalue ref, and we are then
-// testing for the wrong thing. We don't need to do further manipulations to U and V
-// because in gcd3_t we are using const lvalue refs, and everything can bind to them.
-template <typename T, typename U = T, typename V = T>
-struct are_gcd3_types : conjunction<negation<std::is_rvalue_reference<T>>, is_detected<gcd3_t, T, U, V>> {
+template <typename T, typename U, typename V = U>
+struct are_gcd3_types : is_detected<gcd3_t_, T, U, V> {
 };
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
-template <typename T, typename U = T, typename V = T>
+template <typename T, typename U, typename V = U>
 concept bool Gcd3Types = are_gcd3_types<T, U, V>::value;
 
 #endif
+
+// GCD, ternary form.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T, typename U>
+inline void gcd3(Gcd3Types<T, U> &&x, T &&y, U &&z)
+#else
+template <typename T, typename U, typename V, enable_if_t<are_gcd3_types<T, U, V>::value, int> = 0>
+inline void gcd3(T &&x, U &&y, V &&z)
+#endif
+{
+    gcd3_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>, uncvref_t<decltype(z)>>{}(
+        std::forward<decltype(x)>(x), std::forward<decltype(y)>(y), std::forward<decltype(z)>(z));
+}
 }
 
 #endif

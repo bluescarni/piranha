@@ -52,17 +52,37 @@ class sin_impl
 inline namespace impl
 {
 
-// Enabler+result type for piranha::sin().
+// Candidate result type for piranha::sin().
 template <typename T>
-using sin_type_ = decltype(sin_impl<uncvref_t<T>>{}(std::declval<T>()));
+using sin_t_ = decltype(sin_impl<uncvref_t<T>>{}(std::declval<T>()));
+}
 
 template <typename T>
-using sin_type = enable_if_t<is_returnable<sin_type_<T>>::value, sin_type_<T>>;
+using is_sine_type = is_returnable<detected_t<sin_t_, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool SineType = is_sine_type<T>::value;
+
+#endif
+
+inline namespace impl
+{
+
+template <typename T>
+using sin_t = enable_if_t<is_sine_type<T>::value, sin_t_<T>>;
 }
 
 // Sine.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <SineType T>
+inline auto
+#else
 template <typename T>
-inline sin_type<T &&> sin(T &&x)
+inline sin_t<T>
+#endif
+sin(T &&x)
 {
     return sin_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
@@ -99,24 +119,6 @@ public:
         return impl(x, std::is_floating_point<T>{});
     }
 };
-
-// Implementation of the type trait to detect the availability of sin().
-inline namespace impl
-{
-
-template <typename T>
-using sin_t = decltype(piranha::sin(std::declval<const T &>()));
-}
-
-template <typename T>
-using is_sine_type = is_detected<sin_t, T>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool SineType = is_sine_type<T>::value;
-
-#endif
 }
 
 #endif

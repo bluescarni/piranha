@@ -65,27 +65,6 @@ see https://www.gnu.org/licenses/. */
 
 #define PIRANHA_CPLUSPLUS MPPP_CPLUSPLUS
 
-// Assertion macro. If we have stacktrace support and we are in debug mode,
-// then we will print the current stacktrace on assertion failure and then hand over
-// to the standard assert(). Otherwise, just call the standard assert() macro.
-#if defined(PIRANHA_WITH_BOOST_STACKTRACE) && !defined(NDEBUG)
-
-#include <iostream>
-
-#include <piranha/detail/stacktrace.hpp>
-
-#define piranha_assert(x)                                                                                              \
-    if (!static_cast<bool>(x)) {                                                                                       \
-        piranha::stream_stacktrace(std::cerr, piranha::stacktrace{});                                                  \
-    }                                                                                                                  \
-    assert(x);
-
-#else
-
-#define piranha_assert(x) assert(x)
-
-#endif
-
 // NOTE: clang has to go first, as it might define __GNUC__ internally.
 // Same thing could happen with ICC.
 #if defined(__clang__)
@@ -96,6 +75,39 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/config_gcc.hpp>
 #else
 // NOTE: additional compiler configurations go here or in separate files as above.
+#define PIRANHA_PRETTY_FUNCTION __func__
+#endif
+
+// Assertion macro. If we have stacktrace support and we are in debug mode,
+// then we will print the current stacktrace on assertion failure and then abort().
+// Otherwise, just call the standard assert() macro.
+#if defined(PIRANHA_WITH_BOOST_STACKTRACE) && !defined(NDEBUG)
+
+#include <cstdlib>
+#include <iostream>
+#include <ostream>
+
+#include <piranha/detail/stacktrace.hpp>
+
+// NOTE: here we want to:
+// - make sure the x argument is evaluated only once,
+// - make sure we print the file/line/function as specified in the standard:
+// http://en.cppreference.com/w/cpp/error/assert
+// Note that we may end up using something else than __func__, and we don't have the
+// constant subexpression guarantee (may implement it down the line).
+#define piranha_assert(x)                                                                                              \
+    if (!static_cast<bool>(x)) {                                                                                       \
+        piranha::stream_stacktrace(std::cerr, piranha::stacktrace{});                                                  \
+        std::cerr << '\n'                                                                                              \
+                  << __FILE__ << ':' << __LINE__ << ": " << PIRANHA_PRETTY_FUNCTION << ": Assertion `" << #x           \
+                  << "' failed." << std::endl;                                                                         \
+        std::abort();                                                                                                  \
+    }
+
+#else
+
+#define piranha_assert(x) assert(x)
+
 #endif
 
 #endif

@@ -67,6 +67,9 @@ struct b_01 {
     ~b_01() = delete;
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
@@ -83,6 +86,14 @@ class binomial_impl<b_01, b_01>
 public:
     b_01 operator()(const b_01 &, const b_01 &) const;
 };
+
+template <>
+class binomial_impl<foo, foo>
+{
+public:
+    foo operator()(const foo &, const foo &) const;
+    foo operator()(foo &, foo &) const = delete;
+};
 }
 
 BOOST_AUTO_TEST_CASE(binomial_test_00)
@@ -96,6 +107,15 @@ BOOST_AUTO_TEST_CASE(binomial_test_00)
     BOOST_CHECK((!are_binomial_types<b_00>::value));
     BOOST_CHECK((!are_binomial_types<b_01, b_01>::value));
     BOOST_CHECK((!are_binomial_types<b_01>::value));
+    BOOST_CHECK((are_binomial_types<foo, foo>::value));
+    BOOST_CHECK((are_binomial_types<const foo, foo>::value));
+    BOOST_CHECK((are_binomial_types<const foo, const foo>::value));
+    BOOST_CHECK((are_binomial_types<foo, const foo>::value));
+    BOOST_CHECK((are_binomial_types<const foo &, foo>::value));
+    BOOST_CHECK((are_binomial_types<const foo &, const foo &>::value));
+    BOOST_CHECK((are_binomial_types<foo, const foo &>::value));
+    BOOST_CHECK((!are_binomial_types<foo &, foo &>::value));
+    BOOST_CHECK((are_binomial_types<foo &, const foo &>::value));
 }
 
 struct binomial_tester {

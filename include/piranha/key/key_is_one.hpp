@@ -51,26 +51,16 @@ class key_is_one_impl
 {
 };
 
-template <typename T,
-          enable_if_t<std::is_convertible<decltype(key_is_one_impl<T>{}(std::declval<const T &>(),
-                                                                        std::declval<const symbol_fset &>())),
-                                          bool>::value,
-                      int> = 0>
-inline bool key_is_one(const T &x, const symbol_fset &s)
-{
-    return key_is_one_impl<T>{}(x, s);
-}
-
 inline namespace impl
 {
 
+// Candidate type for piranha::key_is_one().
 template <typename T>
-using key_is_one_t = decltype(piranha::key_is_one(std::declval<const T &>(), std::declval<const symbol_fset &>()));
+using key_is_one_t_ = decltype(key_is_one_impl<uncvref_t<T>>{}(std::declval<T>(), std::declval<const symbol_fset &>()));
 }
 
-// Type trait to detect the presence of the piranha::key_is_one() function.
 template <typename T>
-using is_key_is_one_type = is_detected<key_is_one_t, T>;
+using is_key_is_one_type = std::is_convertible<detected_t<key_is_one_t_, T>, bool>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -78,6 +68,17 @@ template <typename T>
 concept bool KeyIsOneType = is_key_is_one_type<T>::value;
 
 #endif
+
+// One detection for keys.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <KeyIsOneType T>
+#else
+template <typename T, enable_if_t<is_key_is_one_type<T>::value, int> = 0>
+#endif
+inline bool key_is_one(T &&x, const symbol_fset &s)
+{
+    return key_is_one_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
+}
 }
 
 #endif

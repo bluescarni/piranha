@@ -46,6 +46,9 @@ struct bar {
 struct baz {
 };
 
+struct nab {
+};
+
 namespace piranha
 {
 
@@ -64,6 +67,14 @@ class key_is_zero_impl<baz>
 {
 public:
     std::string operator()(const baz &, const symbol_fset &) const;
+};
+
+template <>
+class key_is_zero_impl<nab>
+{
+public:
+    bool operator()(const nab &, const symbol_fset &) const;
+    bool operator()(nab &, const symbol_fset &) const = delete;
 };
 }
 
@@ -89,4 +100,9 @@ BOOST_AUTO_TEST_CASE(key_is_zero_test_00)
     BOOST_CHECK(!is_key_is_zero_type<const baz &>::value);
     BOOST_CHECK(!is_key_is_zero_type<baz &&>::value);
     BOOST_CHECK(!is_key_is_zero_type<void>::value);
+    BOOST_CHECK(is_key_is_zero_type<nab>::value);
+    BOOST_CHECK(is_key_is_zero_type<const nab>::value);
+    BOOST_CHECK(is_key_is_zero_type<const nab &>::value);
+    BOOST_CHECK(is_key_is_zero_type<nab &&>::value);
+    BOOST_CHECK(!is_key_is_zero_type<nab &>::value);
 }

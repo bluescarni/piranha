@@ -87,13 +87,16 @@ class is_key
     template <typename U>
     using trim_t = decltype(
         std::declval<const U &>().trim(std::declval<const std::vector<char> &>(), std::declval<symbol_fset const &>()));
+    // NOTE: we have to use addlref_t here as we cannot rely on sfinae in case
+    // "const T &" turns out to be a malformed expression (e.g., for T void).
     static const bool implementation_defined
-        = conjunction<is_container_element<T>, std::is_constructible<T, const symbol_fset &>, is_equality_comparable<T>,
-                      is_hashable<T>, std::is_same<detected_t<is_compatible_t, T>, bool>,
+        = conjunction<is_container_element<T>, std::is_constructible<T, const symbol_fset &>,
+                      is_equality_comparable<addlref_t<const T>>, is_hashable<T>,
+                      std::is_same<detected_t<is_compatible_t, T>, bool>,
                       std::is_same<detected_t<merge_symbols_t, T>, T>, std::is_same<detected_t<print_t, T>, void>,
                       std::is_same<detected_t<print_tex_t, T>, void>,
                       std::is_same<detected_t<trim_identify_t, T>, void>, std::is_same<detected_t<trim_t, T>, T>,
-                      is_key_is_zero_type<T>, is_key_is_one_type<T>>::value;
+                      is_key_is_zero_type<addlref_t<const T>>, is_key_is_one_type<addlref_t<const T>>>::value;
 
 public:
     /// Value of the type trait.

@@ -117,9 +117,9 @@ inline std::pair<typename Term::cf_type, Derived> pair_from_term(const symbol_fs
 template <typename Functor, typename RetT, typename T>
 inline RetT apply_cf_functor(const T &s)
 {
-    using term_type = typename RetT::term_type;
-    using cf_type = typename term_type::cf_type;
-    using key_type = typename term_type::key_type;
+    using ret_term_type = typename RetT::term_type;
+    using orig_cf_type = typename T::term_type::cf_type;
+    using ret_key_type = typename ret_term_type::key_type;
     if (!s.is_single_coefficient()) {
         piranha_throw(std::invalid_argument,
                       std::string("cannot compute ") + Functor::name + ", series is not single-coefficient");
@@ -127,9 +127,9 @@ inline RetT apply_cf_functor(const T &s)
     RetT retval;
     Functor f;
     if (s.empty()) {
-        retval.insert(term_type(f(cf_type(0)), key_type(symbol_fset{})));
+        retval.insert(ret_term_type(f(orig_cf_type(0)), ret_key_type(symbol_fset{})));
     } else {
-        retval.insert(term_type(f(s._container().begin()->m_cf), key_type(symbol_fset{})));
+        retval.insert(ret_term_type(f(s._container().begin()->m_cf), ret_key_type(symbol_fset{})));
     }
     return retval;
 }
@@ -884,9 +884,9 @@ class series_operators
     // seen, and GCC errors out. I *think* the nullptr syntax works because the bso_type enable_if disables the function
     // before is_is_zero_type is encountered, or maybe because it does not participate in template deduction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 3>::value == 4u, int>::type = 0>
-    static series_common_type<T, U, 3>
-    dispatch_binary_div(T &&x, U &&y,
-                        typename std::enable_if<is_is_zero_type<typename std::decay<U>::type>::value>::type * = nullptr)
+    static series_common_type<T, U, 3> dispatch_binary_div(
+        T &&x, U &&y,
+        typename std::enable_if<is_is_zero_type<const typename std::decay<U>::type &>::value>::type * = nullptr)
     {
         using ret_type = series_common_type<T, U, 3>;
         if (x.empty()) {
@@ -1593,7 +1593,7 @@ private:
         int>::type;
     // Enabler for is_identical.
     template <typename T>
-    using is_identical_enabler = typename std::enable_if<is_equality_comparable<T>::value, int>::type;
+    using is_identical_enabler = typename std::enable_if<is_equality_comparable<const T &>::value, int>::type;
     // Iterator utilities.
     typedef boost::transform_iterator<std::function<std::pair<typename term_type::cf_type, Derived>(const term_type &)>,
                                       typename container_type::const_iterator>
@@ -1926,14 +1926,13 @@ private:
     // Exponentiation machinery.
     // The type resulting from the exponentiation of the coefficient of a series U to the power of T.
     template <typename T, typename U>
-    using pow_cf_type = pow_t<typename U::term_type::cf_type, T>;
+    using pow_cf_type = pow_t<const typename U::term_type::cf_type &, const T &>;
     // Type resulting from exponentiation via multiplication.
     template <typename U>
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
     // Common checks on the exponent.
     template <typename T>
-    using pow_expo_checks
-        = std::integral_constant<bool, conjunction<is_is_zero_type<T>, has_safe_cast<integer, T>>::value>;
+    using pow_expo_checks = conjunction<is_is_zero_type<const T &>, has_safe_cast<integer, T>>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>

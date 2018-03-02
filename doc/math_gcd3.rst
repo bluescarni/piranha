@@ -5,7 +5,7 @@ Greatest common divisor (ternary version)
 
 *#include <piranha/math/gcd3.hpp>*
 
-.. cpp:function:: template <piranha::NonConst T, typename U, typename V> void piranha::gcd3(T &x, U &&y, V &&z)
+.. cpp:function:: template <typename T, typename U> void piranha::gcd3(piranha::Gcd3Types<T, U> &&x, T &&y, U &&z)
 
    This function writes into *x* the greatest common divisor (GCD) of *y* and *z*.
 
@@ -14,12 +14,10 @@ Greatest common divisor (ternary version)
 
    .. code-block:: c++
 
-      piranha::gcd3_impl<T, Up, Vp>{}(x, y, z);
+      piranha::gcd3_impl<Tp, Up, Vp>{}(x, y, z);
 
-   where ``Up`` and ``Vp`` are ``U`` and ``V`` after the removal of reference and cv-qualifiers,
-   and *y* and *z* are perfectly forwarded to the call operator of :cpp:class:`piranha::gcd3_impl`.
-   If the expression above is invalid, then this function will be disabled (i.e., it will not
-   participate in overload resolution).
+   where ``Tp``, ``Up`` and ``Vp`` are the types of *x*, *y* and *z* after the removal of reference and cv-qualifiers,
+   and *x*, *y* and *z* are perfectly forwarded to the call operator of :cpp:class:`piranha::gcd3_impl`.
 
    Piranha provides specialisations of :cpp:class:`piranha::gcd3_impl` for the following types:
 
@@ -38,18 +36,17 @@ Greatest common divisor (ternary version)
 Concepts
 --------
 
-.. cpp:concept:: template <typename T, typename U = T, typename V = T> piranha::Gcd3Types
+.. cpp:concept:: template <typename T, typename U , typename V = U> piranha::Gcd3Types
 
    This concept is satisfied if :cpp:func:`piranha::gcd3()` can be called
    with arguments of type ``T``, ``U`` and ``V``. Specifically, this concept will be satisfied if
 
    .. code-block:: c++
 
-      piranha::gcd3(x, y, z)
+      piranha::gcd3_impl<Tp, Up, Vp>{}(std::declval<T>(), std::declval<U>(), std::declval<V>())
 
-   is a valid expression, where ``x`` is an lvalue reference to ``T`` and ``y`` and ``z`` are
-   references to const ``U`` and ``V`` respectively. If ``T`` is an rvalue reference, this concept
-   is never satisfied.
+   (where ``Tp``, ``Up`` and ``Vp`` are ``T``, ``U`` and ``V`` after the removal of reference and cv-qualifiers) is a
+   valid expression.
 
 .. _math_gcd3_impls:
 
@@ -66,10 +63,10 @@ Implementations
 
       x = piranha::gcd(y, z);
    
-   That is, the input arguments *y* and *z* are perfectly forwarded to :cpp:func:`piranha::gcd()`,
-   and the result is then assigned to *x*. If the above expression is not valid, the call operator
-   is disabled (i.e., it will not participate in overload resolution), and no default implementation
-   of :cpp:func:`piranha::gcd3()` is available.
+   where *x*, *y* and *z* are perfectly forwarded.
+   If the above expression is not valid, the call operator is disabled (i.e., it will not
+   participate in overload resolution), and no default implementation of :cpp:func:`piranha::gcd3()`
+   is available.
 
 .. cpp:class:: template <std::size_t SSize> piranha::gcd3_impl<mppp::integer<SSize>, mppp::integer<SSize>, mppp::integer<SSize>>
 

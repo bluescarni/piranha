@@ -34,5 +34,6 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #define PIRANHA_COMPILER_IS_INTEL
+#define PIRANHA_PRETTY_FUNCTION __func__
 
 #endif

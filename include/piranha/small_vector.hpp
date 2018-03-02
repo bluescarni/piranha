@@ -612,7 +612,7 @@ private:
     using init_list_enabler = typename std::enable_if<has_safe_cast<T, U>::value, int>::type;
     // Enabler for equality operator.
     template <typename U>
-    using equality_enabler = typename std::enable_if<is_equality_comparable<U>::value, int>::type;
+    using equality_enabler = typename std::enable_if<is_equality_comparable<const U &>::value, int>::type;
     // Enabler for hash.
     template <typename U>
     using hash_enabler = typename std::enable_if<is_hashable<U>::value, int>::type;

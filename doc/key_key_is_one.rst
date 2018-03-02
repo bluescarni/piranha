@@ -5,7 +5,7 @@ Detect unitary keys
 
 *#include <piranha/key/key_is_one.hpp>*
 
-.. cpp:function:: template <typename T> bool piranha::key_is_one(const T &x, const piranha::symbol_fset &s)
+.. cpp:function:: template <piranha::KeyIsOneType T> bool piranha::key_is_one(T &&x, const piranha::symbol_fset &s)
 
    This function returns ``true`` if the input key *x* is equal to one, ``false`` otherwise.
 
@@ -14,11 +14,10 @@ Detect unitary keys
 
    .. code-block:: c++
 
-      return piranha::key_is_one_impl<T>{}(x, s);
+      return piranha::key_is_one_impl<Tp>{}(x, s);
 
-   If the expression above is invalid, or if it returns a type which is not
-   :cpp:concept:`~piranha::Convertible` to ``bool``,
-   then this function will be disabled (i.e., it will not participate in overload resolution).
+   where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
+   and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::key_is_one_impl`.
 
    Piranha provides specialisations of :cpp:class:`piranha::key_is_one_impl` for all the available key types.
    See the :ref:`implementation <key_key_is_one_impls>` section below for more details about the available
@@ -41,10 +40,10 @@ Concepts
 
    .. code-block:: c++
 
-      piranha::key_is_one(x, s)
+      piranha::key_is_one_impl<Tp>{}(std::declval<T>(), std::declval<const piranha::symbol_fset &>())
 
-   is a valid expression, where ``x`` is a reference to const ``T`` and ``s`` a reference to const
-   :cpp:type:`piranha::symbol_fset`.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) is a valid expression whose
+   type is :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
 
 .. _key_key_is_one_impls:
 

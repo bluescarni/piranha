@@ -39,11 +39,6 @@ Type categories
 
    This concept is satisfied if ``T`` is a C++ complex floating-point type, or a cv-qualified version thereof.
 
-.. cpp:concept:: template <typename T> piranha::NonConst
-
-   This concept is satisfied if ``T`` is *not* a const-qualified type, as established by the standard ``std::is_const``
-   type trait.
-
 .. cpp:concept:: template <typename T> piranha::StringType
 
    This concept is satisfied if ``T`` is a string-like entity, or a cv-qualified version thereof. The types satisfying
@@ -73,7 +68,12 @@ Type properties
    Specifically, this concept is satisfied if ``T`` is either:
 
    * ``void``, or
-   * destructible and copy or move constructible.
+   * copy-constructible, or
+   * move-constructible.
+
+.. cpp:concept:: template <typename T, typename... Args> piranha::Same
+
+   This concept is satisfied if ``T`` and ``Args...`` are all the same type.
 
 Arithmetic and logical operators
 --------------------------------
@@ -83,6 +83,16 @@ Arithmetic and logical operators
    This concept is satisfied if instances of type ``T`` can be compared to instances of type
    ``U`` via the equality and inequality operators.
 
-   Specifically, this concept is satisfied if the expressions ``a == b`` and ``a != b``,
-   where ``a`` and ``b`` are references to const ``T`` and ``U`` respectively, are both valid
-   and returning a type convertible to ``bool``.
+   Specifically, this concept is satisfied if
+
+   .. code-block:: c++
+
+      std::declval<T>() == std::declval<U>()
+
+   and
+
+   .. code-block:: c++
+
+      std::declval<T>() != std::declval<U>()
+
+   are valid expressions whose types are :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.

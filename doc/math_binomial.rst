@@ -5,7 +5,7 @@ Binomial coefficient
 
 *#include <piranha/math/binomial.hpp>*
 
-.. cpp:function:: template <typename T, typename U> auto piranha::binomial(T &&x, U &&y)
+.. cpp:function:: template <typename T> auto piranha::binomial(piranha::BinomialTypes<T> &&x, T &&y)
 
    This function computes the binomial coefficient :math:`{x \choose y}`.
 
@@ -16,11 +16,8 @@ Binomial coefficient
 
       return piranha::binomial_impl<Tp, Up>{}(x, y);
 
-   where ``Tp`` and ``Up`` are ``T`` and ``U`` after the removal of reference and cv-qualifiers,
+   where ``Tp`` and ``Up`` are the types of *x* and *y* after the removal of reference and cv-qualifiers,
    and *x* and *y* are perfectly forwarded to the call operator of :cpp:class:`piranha::binomial_impl`.
-   If the expression above is invalid, or if it returns a type which does not satisfy the
-   :cpp:concept:`piranha::Returnable` concept,
-   then this function will be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::binomial_impl` for the following types:
 
@@ -49,9 +46,10 @@ Concepts
 
    .. code-block:: c++
 
-      piranha::binomial(x, y)
+      piranha::binomial_impl<Tp, Up>{}(std::declval<T>(), std::declval<U>())
 
-   is a valid expression, where ``x`` and ``y`` are references to const ``T`` and ``U`` respectively.
+   (where ``Tp`` and ``Up`` are ``T`` and ``U`` after the removal of reference and cv-qualifiers) is a valid expression whose
+   type is :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_binomial_impls:
 

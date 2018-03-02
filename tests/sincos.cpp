@@ -54,6 +54,9 @@ struct b_01 {
     ~b_01() = delete;
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
@@ -69,6 +72,36 @@ class sin_impl<b_01>
 {
 public:
     b_01 operator()(const b_01 &) const;
+};
+
+template <>
+class cos_impl<b_00>
+{
+public:
+    b_00 operator()(const b_00 &) const;
+};
+
+template <>
+class cos_impl<b_01>
+{
+public:
+    b_01 operator()(const b_01 &) const;
+};
+
+template <>
+class cos_impl<foo>
+{
+public:
+    void operator()(const foo &) const;
+    void operator()(foo &) const = delete;
+};
+
+template <>
+class sin_impl<foo>
+{
+public:
+    void operator()(const foo &) const;
+    void operator()(foo &) const = delete;
 };
 }
 
@@ -105,6 +138,11 @@ BOOST_AUTO_TEST_CASE(sin_test_00)
     BOOST_CHECK_EXCEPTION(piranha::sin(42), std::domain_error, [](const std::domain_error &e) {
         return boost::contains(e.what(), "cannot compute the sine of the non-zero C++ integral 42");
     });
+    BOOST_CHECK(is_sine_type<foo>::value);
+    BOOST_CHECK(is_sine_type<const foo &>::value);
+    BOOST_CHECK(is_sine_type<const foo &&>::value);
+    BOOST_CHECK(is_sine_type<foo &&>::value);
+    BOOST_CHECK(!is_sine_type<foo &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(cos_test_00)
@@ -140,4 +178,9 @@ BOOST_AUTO_TEST_CASE(cos_test_00)
     BOOST_CHECK_EXCEPTION(piranha::cos(42), std::domain_error, [](const std::domain_error &e) {
         return boost::contains(e.what(), "cannot compute the cosine of the non-zero C++ integral 42");
     });
+    BOOST_CHECK(is_cosine_type<foo>::value);
+    BOOST_CHECK(is_cosine_type<const foo &>::value);
+    BOOST_CHECK(is_cosine_type<const foo &&>::value);
+    BOOST_CHECK(is_cosine_type<foo &&>::value);
+    BOOST_CHECK(!is_cosine_type<foo &>::value);
 }

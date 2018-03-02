@@ -5,7 +5,7 @@ Sine
 
 *#include <piranha/math/sin.hpp>*
 
-.. cpp:function:: template <typename T> auto piranha::sin(T &&x)
+.. cpp:function:: template <piranha::SineType T> auto piranha::sin(T &&x)
 
    This function computes :math:`\sin\left( x \right)`.
 
@@ -18,9 +18,6 @@ Sine
 
    where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
    and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::sin_impl`.
-   If the expression above is invalid, or if it returns a type which does not satisfy the
-   :cpp:concept:`piranha::Returnable` concept,
-   then this function will be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::sin_impl` for the following types:
 
@@ -44,14 +41,14 @@ Concepts
 .. cpp:concept:: template <typename T> piranha::SineType
 
    This concept is satisfied if :cpp:func:`piranha::sin()` can be called
-   with an argument of type ``T``. Specifically,
-   this concept will be satisfied if
+   with an argument of type ``T``. Specifically, this concept will be satisfied if
 
    .. code-block:: c++
 
-      piranha::sin(x)
+      piranha::sin_impl<Tp>{}(std::declval<T>())
 
-   is a valid expression, where ``x`` is a reference to const ``T``.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) is a valid expression whose
+   type is :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_sin_impls:
 
