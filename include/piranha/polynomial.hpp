@@ -231,8 +231,8 @@ class polynomial
     template <typename T, typename ResT>
     using basic_integrate_requirements = enable_if_t<
         // Coefficient differentiable, and can call is_zero on the result.
-        is_is_zero_type<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
-                                                     std::declval<const std::string &>())) &>::value
+        is_is_zero_type<addlref_t<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
+                                                               std::declval<const std::string &>()))>>::value
         &&
         // The key is integrable.
         detail::true_tt<key_integrate_type<T>>::value &&
@@ -269,22 +269,23 @@ class polynomial
     using ic_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
     template <typename T>
     struct integrate_type_<
-        T, typename std::enable_if<
-               is_integrable<typename T::term_type::cf_type>::value
-               && detail::true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
-               // We need to be able to add the non-integrable type.
-               is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
-               // We need to be able to compute the partial degree and cast it to integer.
-               is_safely_castable<const decltype(std::declval<const typename T::term_type::key_type &>().degree(
-                                      std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>())) &,
-                                  integer>::value
-               &&
-               // This is required in the initialisation of the return value.
-               std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
-               // We need to be able to assign the integrated coefficient times key partial.
-               std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
-               // Needs math::negate().
-               has_negate<i_cf_type_p<T>>::value>::type> {
+        T,
+        typename std::enable_if<
+            is_integrable<typename T::term_type::cf_type>::value
+            && detail::true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
+            // We need to be able to add the non-integrable type.
+            is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
+            // We need to be able to compute the partial degree and cast it to integer.
+            is_safely_castable<addlref_t<const decltype(std::declval<const typename T::term_type::key_type &>().degree(
+                                   std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()))>,
+                               integer>::value
+            &&
+            // This is required in the initialisation of the return value.
+            std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
+            // We need to be able to assign the integrated coefficient times key partial.
+            std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
+            // Needs math::negate().
+            has_negate<i_cf_type_p<T>>::value>::type> {
         using type = ic_res_type<T>;
     };
     // Final typedef.

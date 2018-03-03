@@ -277,8 +277,11 @@ class poisson_series
         T, ResT,
         typename std::enable_if<
             // Coefficient differentiable, and can call is_zero on the result.
-            is_is_zero_type<const decltype(math::partial(std::declval<const typename T::term_type::cf_type &>(),
-                                                         std::declval<const std::string &>())) &>::value
+            // NOTE: use addlref_t to avoid forming a cv-qualified reference. See this defect:
+            // http://www.open-std.org/jtc1/sc22/wg21/docs/cwg_defects.html#1510
+            // This should not be a concern in C++14 and later.
+            is_is_zero_type<addlref_t<const decltype(math::partial(
+                std::declval<const typename T::term_type::cf_type &>(), std::declval<const std::string &>()))>>::value
             &&
             // The result needs to be addable in-place.
             is_addable_in_place<ResT>::value &&
@@ -349,21 +352,21 @@ class poisson_series
     using pc_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
     template <typename T>
     struct integrate_type_<
-        T, typename std::enable_if<
-               std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value
-               && basic_integrate_requirements<T, pc_res_type<T>>::value &&
-               // We need to be able to add in the npc type.
-               is_addable_in_place<pc_res_type<T>, npc_res_type<T>>::value &&
-               // We need to be able to compute the degree of the polynomials and
-               // convert it safely to integer.
-               is_safely_castable<const decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),
-                                                              std::declval<const symbol_fset &>())) &,
-                                  integer>::value
-               &&
-               // We need this conversion in the algorithm below.
-               std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
-               // This type needs also to be negated.
-               has_negate<i_cf_type_p<T>>::value>::type> {
+        T, typename std::enable_if<std::is_base_of<detail::polynomial_tag, typename T::term_type::cf_type>::value
+                                   && basic_integrate_requirements<T, pc_res_type<T>>::value &&
+                                   // We need to be able to add in the npc type.
+                                   is_addable_in_place<pc_res_type<T>, npc_res_type<T>>::value &&
+                                   // We need to be able to compute the degree of the polynomials and
+                                   // convert it safely to integer.
+                                   is_safely_castable<addlref_t<const decltype(math::degree(
+                                                          std::declval<const typename T::term_type::cf_type &>(),
+                                                          std::declval<const symbol_fset &>()))>,
+                                                      integer>::value
+                                   &&
+                                   // We need this conversion in the algorithm below.
+                                   std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
+                                   // This type needs also to be negated.
+                                   has_negate<i_cf_type_p<T>>::value>::type> {
         using type = pc_res_type<T>;
     };
     // The final typedef.
