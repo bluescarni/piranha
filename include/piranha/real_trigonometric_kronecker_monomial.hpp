@@ -191,11 +191,12 @@ public:
 private:
     // Enabler for ctor from iterator.
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  is_safely_castable<addlref_t<const decltype(*std::declval<const Iterator &>())>,
-                                                     value_type>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<
+            is_input_iterator<Iterator>,
+            // A bit of trickery to avoid declaring a const reference, which GCC 4.8 does not like.
+            is_safely_castable<addlref_t<const uncvref_t<decltype(*std::declval<Iterator &>())>>, value_type>>::value,
+        int>;
 
 public:
     /// Constructor from range.
