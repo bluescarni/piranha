@@ -58,6 +58,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math/sin.hpp>
 #include <piranha/print_tex_coefficient.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -349,15 +350,30 @@ struct safe_cast_tester {
         using q_type = mppp::rational<T::value>;
         using z_type = typename q_type::int_t;
         // From q conversions.
-        BOOST_CHECK((has_safe_cast<int, q_type>::value));
-        BOOST_CHECK((has_safe_cast<int &, const q_type>::value));
-        BOOST_CHECK((has_safe_cast<int &&, const q_type &>::value));
-        BOOST_CHECK((!has_safe_cast<void, const q_type &>::value));
-        BOOST_CHECK((has_safe_cast<unsigned, q_type>::value));
-        BOOST_CHECK((has_safe_cast<unsigned &, const q_type>::value));
-        BOOST_CHECK((has_safe_cast<unsigned &&, const q_type &>::value));
-        BOOST_CHECK((has_safe_cast<const unsigned &, const q_type &>::value));
-        BOOST_CHECK((has_safe_cast<z_type, q_type>::value));
+        BOOST_CHECK((is_safely_convertible<q_type, int &>::value));
+        BOOST_CHECK((is_safely_convertible<const q_type &, int &>::value));
+        BOOST_CHECK((!is_safely_convertible<const q_type &, int &&>::value));
+        BOOST_CHECK((!is_safely_convertible<const q_type &, const int &>::value));
+        BOOST_CHECK((!is_safely_convertible<const q_type &, void>::value));
+        BOOST_CHECK((is_safely_convertible<q_type, z_type &>::value));
+        BOOST_CHECK((is_safely_convertible<const q_type &, z_type &>::value));
+        BOOST_CHECK((!is_safely_convertible<const q_type &, z_type &&>::value));
+        BOOST_CHECK((!is_safely_convertible<const q_type &, const z_type &>::value));
+        BOOST_CHECK((is_safely_castable<q_type, int>::value));
+        BOOST_CHECK((!is_safely_castable<q_type, int &>::value));
+        BOOST_CHECK((is_safely_castable<const q_type, int>::value));
+        BOOST_CHECK((is_safely_castable<const q_type &, int>::value));
+        BOOST_CHECK((!is_safely_castable<const q_type &, void>::value));
+        BOOST_CHECK((is_safely_castable<q_type, unsigned>::value));
+        BOOST_CHECK((is_safely_castable<const q_type, unsigned>::value));
+        BOOST_CHECK((is_safely_castable<const q_type &, unsigned>::value));
+        BOOST_CHECK((is_safely_castable<q_type &, unsigned>::value));
+        BOOST_CHECK((is_safely_castable<q_type, z_type>::value));
+        int tmp_n;
+        BOOST_CHECK(safe_convert(tmp_n, q_type{3}));
+        BOOST_CHECK_EQUAL(tmp_n, 3);
+        BOOST_CHECK((!safe_convert(tmp_n, q_type{3, 2})));
+        BOOST_CHECK_EQUAL(tmp_n, 3);
         BOOST_CHECK_EQUAL(safe_cast<int>(q_type{0}), 0);
         BOOST_CHECK_EQUAL(safe_cast<int>(q_type{-4}), -4);
         BOOST_CHECK_EQUAL(safe_cast<unsigned>(q_type{0}), 0u);
@@ -365,10 +381,10 @@ struct safe_cast_tester {
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{0} / 2), 0);
         BOOST_CHECK_EQUAL(safe_cast<z_type>(q_type{-42} / 2), -21);
 #if defined(MPPP_HAVE_GCC_INT128)
-        BOOST_CHECK((has_safe_cast<__int128_t, q_type>::value));
-        BOOST_CHECK((has_safe_cast<__uint128_t, q_type>::value));
-        BOOST_CHECK((has_safe_cast<q_type, __int128_t>::value));
-        BOOST_CHECK((has_safe_cast<q_type, __uint128_t>::value));
+        BOOST_CHECK((is_safely_castable<q_type, __int128_t>::value));
+        BOOST_CHECK((is_safely_castable<q_type, __uint128_t>::value));
+        BOOST_CHECK((is_safely_castable<__int128_t, q_type>::value));
+        BOOST_CHECK((is_safely_castable<__uint128_t, q_type>::value));
         BOOST_CHECK(safe_cast<__int128_t>(q_type{42}) == 42);
         BOOST_CHECK(safe_cast<__uint128_t>(q_type{42}) == 42u);
         BOOST_CHECK(safe_cast<q_type>(q_type{__int128_t(42)} == 42));
@@ -377,59 +393,76 @@ struct safe_cast_tester {
         // Various types of failures.
         BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{std::numeric_limits<int>::max()} + 1), safe_cast_failure,
                               [](const safe_cast_failure &e) {
-                                  return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  return boost::contains(e.what(), "the safe conversion of a value of type");
                               });
         BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{std::numeric_limits<int>::min()} - 1), safe_cast_failure,
                               [](const safe_cast_failure &e) {
-                                  return boost::contains(e.what(), "as the conversion would result in overflow");
+                                  return boost::contains(e.what(), "the safe conversion of a value of type");
                               });
         BOOST_CHECK_EXCEPTION(safe_cast<int>(q_type{-4} / 3), safe_cast_failure, [](const safe_cast_failure &e) {
-            return boost::contains(e.what(), "as the rational value has a non-unitary denominator");
+            return boost::contains(e.what(), "the safe conversion of a value of type");
         });
         BOOST_CHECK_EXCEPTION(safe_cast<z_type>(q_type{-4} / 3), safe_cast_failure, [](const safe_cast_failure &e) {
-            return boost::contains(e.what(), "as the rational value has a non-unitary denominator");
+            return boost::contains(e.what(), "the safe conversion of a value of type");
         });
         BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{-4}), safe_cast_failure);
         BOOST_CHECK_THROW(safe_cast<unsigned>(q_type{4} / 3), safe_cast_failure);
         BOOST_CHECK_THROW(safe_cast<z_type>(q_type{4} / 3), safe_cast_failure);
         // To q conversions.
-        BOOST_CHECK((has_safe_cast<q_type, int>::value));
-        BOOST_CHECK((has_safe_cast<const q_type, int &>::value));
-        BOOST_CHECK((has_safe_cast<const q_type &, int &&>::value));
-        BOOST_CHECK((has_safe_cast<const q_type &, const int &>::value));
-        BOOST_CHECK((!has_safe_cast<q_type, void>::value));
-        BOOST_CHECK((has_safe_cast<q_type, unsigned>::value));
-        BOOST_CHECK((has_safe_cast<q_type, z_type>::value));
-        BOOST_CHECK((has_safe_cast<q_type, double>::value));
+        BOOST_CHECK((is_safely_convertible<int, q_type &>::value));
+        BOOST_CHECK((is_safely_convertible<const int &, q_type &>::value));
+        BOOST_CHECK((!is_safely_convertible<int, const q_type &>::value));
+        BOOST_CHECK((!is_safely_convertible<const int &, const q_type>::value));
+        BOOST_CHECK((!is_safely_convertible<void, q_type &>::value));
+        BOOST_CHECK((is_safely_castable<int, q_type>::value));
+        BOOST_CHECK((!is_safely_castable<int, q_type &>::value));
+        BOOST_CHECK((is_safely_castable<int &, q_type>::value));
+        BOOST_CHECK((is_safely_castable<int &&, q_type>::value));
+        BOOST_CHECK((is_safely_castable<const int &, q_type>::value));
+        BOOST_CHECK((!is_safely_castable<void, q_type>::value));
+        BOOST_CHECK((is_safely_castable<unsigned, q_type>::value));
+        BOOST_CHECK((is_safely_castable<z_type, q_type>::value));
+        BOOST_CHECK((is_safely_castable<double, q_type>::value));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(-4), q_type{-4});
         BOOST_CHECK_EQUAL(safe_cast<q_type>(0), q_type{0});
         BOOST_CHECK_EQUAL(safe_cast<q_type>(4u), q_type{4});
         BOOST_CHECK_EQUAL(safe_cast<q_type>(0u), q_type{0u});
         BOOST_CHECK_EQUAL(safe_cast<q_type>(z_type{4}), q_type{4});
         BOOST_CHECK_EQUAL(safe_cast<q_type>(z_type{0}), q_type{0});
+        q_type tmp_q;
+        BOOST_CHECK(safe_convert(tmp_q, 32));
+        BOOST_CHECK_EQUAL(tmp_q, 32);
         // Floating point.
         static constexpr auto r = std::numeric_limits<double>::radix;
-        BOOST_CHECK((has_safe_cast<q_type, double>::value));
-        BOOST_CHECK((!has_safe_cast<double, q_type>::value));
+        BOOST_CHECK((is_safely_convertible<double, q_type &>::value));
+        BOOST_CHECK((!is_safely_convertible<double, const q_type &>::value));
+        BOOST_CHECK((is_safely_castable<double, q_type>::value));
+        BOOST_CHECK((!is_safely_castable<double, q_type &>::value));
+        BOOST_CHECK((!is_safely_castable<q_type, double>::value));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(1. / r), q_type(1, r));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(-13. / (r * r * r)), q_type(-13, r * r * r));
+        BOOST_CHECK(safe_convert(tmp_q, 1. / r));
+        BOOST_CHECK_EQUAL(tmp_q, (q_type{1, r}));
 #if defined(MPPP_WITH_MPFR)
         static constexpr auto rl = std::numeric_limits<long double>::radix;
-        BOOST_CHECK((has_safe_cast<q_type, long double>::value));
+        BOOST_CHECK((is_safely_convertible<long double, q_type &>::value));
+        BOOST_CHECK((is_safely_castable<long double, q_type>::value));
         BOOST_CHECK_EQUAL(safe_cast<q_type>(1.l / rl), q_type(1, r));
 #else
-        BOOST_CHECK((!has_safe_cast<q_type, long double>::value));
+        BOOST_CHECK((!is_safely_convertible<long double, q_type &>::value));
+        BOOST_CHECK((!is_safely_castable<long double, q_type>::value));
 #endif
         if (std::numeric_limits<double>::has_infinity && std::numeric_limits<double>::has_quiet_NaN) {
+            tmp_q = 1;
+            BOOST_CHECK(!safe_convert(tmp_q, std::numeric_limits<double>::infinity()));
+            BOOST_CHECK_EQUAL(tmp_q, 1);
             BOOST_CHECK_EXCEPTION(safe_cast<q_type>(std::numeric_limits<double>::infinity()), safe_cast_failure,
                                   [](const safe_cast_failure &e) {
-                                      return boost::contains(e.what(),
-                                                             "cannot convert the non-finite floating-point value ");
+                                      return boost::contains(e.what(), "the safe conversion of a value of type");
                                   });
             BOOST_CHECK_EXCEPTION(safe_cast<q_type>(std::numeric_limits<double>::quiet_NaN()), safe_cast_failure,
                                   [](const safe_cast_failure &e) {
-                                      return boost::contains(e.what(),
-                                                             "cannot convert the non-finite floating-point value ");
+                                      return boost::contains(e.what(), "the safe conversion of a value of type");
                                   });
         }
     }

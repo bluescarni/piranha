@@ -356,8 +356,9 @@ class poisson_series
                is_addable_in_place<pc_res_type<T>, npc_res_type<T>>::value &&
                // We need to be able to compute the degree of the polynomials and
                // convert it safely to integer.
-               has_safe_cast<integer, decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),
-                                                            std::declval<const symbol_fset &>()))>::value
+               is_safely_castable<const decltype(math::degree(std::declval<const typename T::term_type::cf_type &>(),
+                                                              std::declval<const symbol_fset &>())) &,
+                                  integer>::value
                &&
                // We need this conversion in the algorithm below.
                std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
@@ -377,7 +378,7 @@ class poisson_series
         typedef typename term_type::cf_type cf_type;
         integer degree;
         try {
-            degree = safe_cast<integer>(math::degree(term.m_cf, {s}));
+            degree = piranha::safe_cast<integer>(math::degree(term.m_cf, {s}));
         } catch (const safe_cast_failure &) {
             piranha_throw(
                 std::invalid_argument,

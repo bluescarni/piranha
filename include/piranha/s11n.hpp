@@ -633,7 +633,7 @@ struct msgpack_stream_wrapper : Stream {
     auto write(const typename Stream::char_type *p, std::size_t count)
         -> decltype(std::declval<Stream &>().write(p, std::streamsize(0)))
     {
-        return static_cast<Stream *>(this)->write(p, safe_cast<std::streamsize>(count));
+        return static_cast<Stream *>(this)->write(p, piranha::safe_cast<std::streamsize>(count));
     }
 };
 
@@ -767,8 +767,9 @@ struct msgpack_pack_impl<Stream, long double, msgpack_ld_enabler<Stream>> {
     void operator()(msgpack::packer<Stream> &packer, const long double &x, msgpack_format f) const
     {
         if (f == msgpack_format::binary) {
-            packer.pack_bin(safe_cast<std::uint32_t>(sizeof(long double)));
-            packer.pack_bin_body(reinterpret_cast<const char *>(&x), safe_cast<std::uint32_t>(sizeof(long double)));
+            packer.pack_bin(piranha::safe_cast<std::uint32_t>(sizeof(long double)));
+            packer.pack_bin_body(reinterpret_cast<const char *>(&x),
+                                 piranha::safe_cast<std::uint32_t>(sizeof(long double)));
         } else {
             if (std::isnan(x)) {
                 if (std::signbit(x)) {
@@ -1426,7 +1427,7 @@ inline void load_file_msgpack_compress_impl(T &x, const std::string &filename, m
     in.push(DecompressionFilter{});
     in.push(ifile);
     std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), std::back_inserter(vchar));
-    auto oh = msgpack::unpack(vchar.data(), safe_cast<std::size_t>(vchar.size()));
+    auto oh = msgpack::unpack(vchar.data(), piranha::safe_cast<std::size_t>(vchar.size()));
     msgpack_convert(x, oh.get(), mf);
 }
 
@@ -1505,7 +1506,7 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
             std::vector<char> vchar;
             std::copy(std::istreambuf_iterator<char>(ifile), std::istreambuf_iterator<char>(),
                       std::back_inserter(vchar));
-            auto oh = msgpack::unpack(vchar.data(), safe_cast<std::size_t>(vchar.size()));
+            auto oh = msgpack::unpack(vchar.data(), piranha::safe_cast<std::size_t>(vchar.size()));
             msgpack_convert(x, oh.get(), mf);
         }
     }
@@ -1772,7 +1773,7 @@ using boost_load_vector_enabler = enable_if_t<
 template <typename Stream, typename It, typename Size>
 inline void msgpack_pack_range(msgpack::packer<Stream> &p, It begin, It end, Size s, msgpack_format f)
 {
-    p.pack_array(safe_cast<std::uint32_t>(s));
+    p.pack_array(piranha::safe_cast<std::uint32_t>(s));
     for (; begin != end; ++begin) {
         msgpack_pack(p, *begin, f);
     }
@@ -1791,7 +1792,7 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
     // First extract a vector of objects from o.
     PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
     o.convert(tmp_obj);
-    v.resize(safe_cast<decltype(v.size())>(tmp_obj.size()));
+    v.resize(piranha::safe_cast<decltype(v.size())>(tmp_obj.size()));
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
@@ -1800,14 +1801,14 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
 template <typename Stream, typename V, typename T = void>
 using msgpack_pack_vector_enabler
     = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>,
-                              has_safe_cast<std::uint32_t, typename V::size_type>>::value,
+                              is_safely_castable<const typename V::size_type &, std::uint32_t>>::value,
                   T>;
 
 template <typename V, typename T = void>
-using msgpack_convert_array_enabler
-    = enable_if_t<conjunction<has_safe_cast<typename V::size_type, typename std::vector<msgpack::object>::size_type>,
-                              has_msgpack_convert<typename V::value_type>>::value,
-                  T>;
+using msgpack_convert_array_enabler = enable_if_t<
+    conjunction<is_safely_castable<const typename std::vector<msgpack::object>::size_type &, typename V::size_type>,
+                has_msgpack_convert<typename V::value_type>>::value,
+    T>;
 
 #endif
 }

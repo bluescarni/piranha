@@ -1501,9 +1501,10 @@ inline namespace impl
 
 // Enablers for msgpack s11n.
 template <typename Stream, typename T, typename Hash, typename Pred>
-using hash_set_msgpack_pack_enabler = enable_if_t<
-    conjunction<is_msgpack_stream<Stream>, has_safe_cast<std::uint32_t, typename hash_set<T, Hash, Pred>::size_type>,
-                has_msgpack_pack<Stream, T>>::value>;
+using hash_set_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>,
+                              is_safely_castable<const typename hash_set<T, Hash, Pred>::size_type &, std::uint32_t>,
+                              has_msgpack_pack<Stream, T>>::value>;
 
 template <typename T>
 using hash_set_msgpack_convert_enabler = enable_if_t<has_msgpack_convert<T>::value>;

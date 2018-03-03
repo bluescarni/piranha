@@ -45,7 +45,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/vector_hasher.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/s11n.hpp>
-#include <piranha/safe_cast.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha

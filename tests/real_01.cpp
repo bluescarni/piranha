@@ -52,6 +52,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/symbol_utils.hpp>
 
 using namespace piranha;
@@ -203,26 +204,50 @@ BOOST_AUTO_TEST_CASE(real_abs_test)
 
 BOOST_AUTO_TEST_CASE(real_safe_cast_test)
 {
-    BOOST_CHECK((has_safe_cast<int, real>::value));
-    BOOST_CHECK((has_safe_cast<int &, real &&>::value));
-    BOOST_CHECK((has_safe_cast<const int &, const real &>::value));
-    BOOST_CHECK((has_safe_cast<const int, const real>::value));
-    BOOST_CHECK((!has_safe_cast<void, real>::value));
-    BOOST_CHECK((has_safe_cast<unsigned, real>::value));
-    BOOST_CHECK((has_safe_cast<integer, real>::value));
-    BOOST_CHECK((has_safe_cast<rational, real>::value));
-    BOOST_CHECK((has_safe_cast<rational &, real>::value));
-    BOOST_CHECK((has_safe_cast<rational &&, const real>::value));
-    BOOST_CHECK((has_safe_cast<const rational &, const real &>::value));
-    BOOST_CHECK((!has_safe_cast<double, real>::value));
-    BOOST_CHECK((!has_safe_cast<float, real>::value));
-    BOOST_CHECK((!has_safe_cast<real, int>::value));
-    BOOST_CHECK((!has_safe_cast<real, float>::value));
-    BOOST_CHECK((!has_safe_cast<real, integer>::value));
-    BOOST_CHECK((!has_safe_cast<real, rational>::value));
-    BOOST_CHECK((!has_safe_cast<real, void>::value));
+    BOOST_CHECK((is_safely_castable<real, int>::value));
+    BOOST_CHECK((!is_safely_castable<real, int &>::value));
+    BOOST_CHECK((is_safely_castable<real &&, int>::value));
+    BOOST_CHECK((is_safely_castable<const real &, int>::value));
+    BOOST_CHECK((is_safely_castable<const real, int>::value));
+    BOOST_CHECK((!is_safely_castable<real, void>::value));
+    BOOST_CHECK((is_safely_castable<real, unsigned>::value));
+    BOOST_CHECK((is_safely_castable<real, integer>::value));
+    BOOST_CHECK((is_safely_castable<real, rational>::value));
+    BOOST_CHECK((is_safely_castable<real, rational>::value));
+    BOOST_CHECK((is_safely_castable<const real, rational>::value));
+    BOOST_CHECK((is_safely_castable<const real &, rational>::value));
+    BOOST_CHECK((!is_safely_castable<real, double>::value));
+    BOOST_CHECK((!is_safely_castable<real, float>::value));
+    BOOST_CHECK((is_safely_convertible<real, int &>::value));
+    BOOST_CHECK((is_safely_convertible<real &, integer &>::value));
+    BOOST_CHECK((is_safely_convertible<const real &, rational &>::value));
+    BOOST_CHECK((!is_safely_convertible<real, const int &>::value));
+    BOOST_CHECK((!is_safely_convertible<real, float &>::value));
+    BOOST_CHECK((!is_safely_convertible<real, void>::value));
+    BOOST_CHECK((!is_safely_castable<int, real>::value));
+    BOOST_CHECK((!is_safely_castable<float, real>::value));
+    BOOST_CHECK((!is_safely_castable<integer, real>::value));
+    BOOST_CHECK((!is_safely_castable<rational, real>::value));
+    BOOST_CHECK((!is_safely_castable<void, real>::value));
+    BOOST_CHECK((!is_safely_convertible<int, real &>::value));
+    BOOST_CHECK((!is_safely_convertible<void, real &>::value));
     BOOST_CHECK_EQUAL(safe_cast<int>(3_r), 3);
     BOOST_CHECK_EQUAL(safe_cast<int>(-3_r), -3);
+    int tmp_n;
+    BOOST_CHECK((safe_convert(tmp_n, 3_r)));
+    BOOST_CHECK_EQUAL(tmp_n, 3);
+    BOOST_CHECK((!safe_convert(tmp_n, 3.12_r)));
+    BOOST_CHECK_EQUAL(tmp_n, 3);
+    integer tmp_z;
+    BOOST_CHECK((safe_convert(tmp_z, 3_r)));
+    BOOST_CHECK_EQUAL(tmp_z, 3);
+    BOOST_CHECK((!safe_convert(tmp_z, 3.12_r)));
+    BOOST_CHECK_EQUAL(tmp_z, 3);
+    rational tmp_q;
+    BOOST_CHECK((safe_convert(tmp_q, 3.5_r)));
+    BOOST_CHECK_EQUAL(tmp_q, (rational{7, 2}));
+    BOOST_CHECK((!safe_convert(tmp_q, real{"inf", 100})));
+    BOOST_CHECK_EQUAL(tmp_q, (rational{7, 2}));
 #if defined(MPPP_HAVE_GCC_INT128)
     BOOST_CHECK(safe_cast<__int128_t>(3_r) == 3);
     BOOST_CHECK(safe_cast<__uint128_t>(3_r) == 3u);
@@ -238,17 +263,16 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     BOOST_CHECK_EQUAL(safe_cast<rational>(-5_r / 2), -5_q / 2);
     // Various types of failures.
     BOOST_CHECK_EXCEPTION(safe_cast<int>(3.1_r), safe_cast_failure, [](const safe_cast_failure &e) {
-        return boost::contains(e.what(), "as the real does not represent a finite integral value");
+        return boost::contains(e.what(), "the safe conversion of a value of type");
     });
     BOOST_CHECK_THROW(safe_cast<int>(-3.1_r), safe_cast_failure);
     BOOST_CHECK_EXCEPTION(safe_cast<int>(real{"inf", 100}), safe_cast_failure, [](const safe_cast_failure &e) {
-        return boost::contains(e.what(), "as the real does not represent a finite integral value");
+        return boost::contains(e.what(), "the safe conversion of a value of type");
     });
     BOOST_CHECK_THROW(safe_cast<int>(real{"nan", 100}), safe_cast_failure);
-    BOOST_CHECK_EXCEPTION(safe_cast<int>(real{std::numeric_limits<int>::max()} * 2), safe_cast_failure,
-                          [](const safe_cast_failure &e) {
-                              return boost::contains(e.what(), "as the conversion would result in overflow");
-                          });
+    BOOST_CHECK_EXCEPTION(
+        safe_cast<int>(real{std::numeric_limits<int>::max()} * 2), safe_cast_failure,
+        [](const safe_cast_failure &e) { return boost::contains(e.what(), "the safe conversion of a value of type"); });
     BOOST_CHECK_THROW(safe_cast<int>(real{std::numeric_limits<int>::min()} * 2), safe_cast_failure);
     BOOST_CHECK_THROW(safe_cast<unsigned>(3.1_r), safe_cast_failure);
     BOOST_CHECK_THROW(safe_cast<unsigned>(-3_r), safe_cast_failure);
@@ -261,7 +285,7 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     BOOST_CHECK_THROW(safe_cast<integer>(real{"nan", 100}), safe_cast_failure);
     BOOST_CHECK_THROW(safe_cast<rational>(real{"inf", 100}), safe_cast_failure);
     BOOST_CHECK_EXCEPTION(safe_cast<rational>(real{"nan", 100}), safe_cast_failure, [](const safe_cast_failure &e) {
-        return boost::contains(e.what(), "cannot convert the non-finite real value");
+        return boost::contains(e.what(), "the safe conversion of a value of type");
     });
 }
 

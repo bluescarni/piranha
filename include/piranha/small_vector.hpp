@@ -609,7 +609,7 @@ private:
     PIRANHA_TT_CHECK(is_forward_iterator, const_iterator);
     // Enabler for ctor from init list.
     template <typename U>
-    using init_list_enabler = typename std::enable_if<has_safe_cast<T, U>::value, int>::type;
+    using init_list_enabler = typename std::enable_if<is_safely_castable<const U &, T>::value, int>::type;
     // Enabler for equality operator.
     template <typename U>
     using equality_enabler = typename std::enable_if<is_equality_comparable<const U &>::value, int>::type;
@@ -677,7 +677,7 @@ public:
     {
         // NOTE: push_back has strong exception safety.
         for (const U &x : l) {
-            push_back(safe_cast<T>(x));
+            push_back(piranha::safe_cast<T>(x));
         }
     }
     /// Constructor from size and value.

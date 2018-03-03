@@ -147,10 +147,10 @@ public:
 private:
     // Enabler for ctor from range.
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  has_safe_cast<T, typename std::iterator_traits<Iterator>::value_type>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<is_input_iterator<Iterator>,
+                    is_safely_castable<const typename std::iterator_traits<Iterator>::value_type &, T>>::value,
+        int>;
 
 public:
     /// Constructor from range.
@@ -173,7 +173,7 @@ public:
     explicit monomial(Iterator begin, Iterator end)
     {
         for (; begin != end; ++begin) {
-            this->push_back(safe_cast<T>(*begin));
+            this->push_back(piranha::safe_cast<T>(*begin));
         }
     }
     /// Constructor from range and symbol set.
@@ -938,7 +938,7 @@ private:
         // Case 0: U is integer or a C++ integral.
         disjunction<std::is_integral<U>, std::is_same<integer, U>>,
         // Case 1: U supports safe cast to integer.
-        has_safe_cast<integer, U>>;
+        is_safely_castable<const U &, integer>>;
     template <typename U>
     static void ipow_subs_d_assign(integer &d, const U &expo, const std::integral_constant<std::size_t, 0> &)
     {
@@ -947,7 +947,7 @@ private:
     template <typename U>
     static void ipow_subs_d_assign(integer &d, const U &expo, const std::integral_constant<std::size_t, 1> &)
     {
-        d = safe_cast<integer>(expo);
+        d = piranha::safe_cast<integer>(expo);
     }
     // Dispatcher for the assignment of an integer to an exponent.
     template <typename U>
@@ -955,7 +955,7 @@ private:
         // Case 0: U is integer.
         std::is_same<integer, U>,
         // Case 1: integer supports safe cast to U.
-        has_safe_cast<U, integer>>;
+        is_safely_castable<const integer &, U>>;
     template <typename U>
     static void ipow_subs_expo_assign(U &expo, const integer &r, const std::integral_constant<std::size_t, 0> &)
     {
@@ -964,7 +964,7 @@ private:
     template <typename U>
     static void ipow_subs_expo_assign(U &expo, const integer &r, const std::integral_constant<std::size_t, 1> &)
     {
-        expo = safe_cast<U>(r);
+        expo = piranha::safe_cast<U>(r);
     }
     // Definition of the return type.
     template <typename U>

@@ -129,7 +129,7 @@ struct base_series_multiplier_impl {
             // We will merge the vectors later.
             using vv_t = std::vector<std::vector<Term const *>>;
             using vv_size_t = typename vv_t::size_type;
-            vv_t vv(safe_cast<vv_size_t>(n_threads));
+            vv_t vv(piranha::safe_cast<vv_size_t>(n_threads));
             // Go with the threads.
             future_list<void> ff_list;
             try {
@@ -444,7 +444,7 @@ protected:
      *
      * @throws std::invalid_argument if \p start1 is greater than \p end1 or greater than the size of
      * base_series_multiplier::m_v1, or if \p end1 is greater than the size of base_series_multiplier::m_v1.
-     * @throws unspecified any exception thrown by the call operator of \p mf or \p sf, or piranha::safe_cast.
+     * @throws unspecified any exception thrown by the call operator of \p mf or \p sf, or piranha::safe_cast().
      */
     template <typename MultFunctor, typename LimitFunctor>
     void blocked_multiplication(const MultFunctor &mf, const size_type &start1, const size_type &end1,
@@ -455,7 +455,7 @@ protected:
             piranha_throw(std::invalid_argument, "invalid bounds in blocked_multiplication");
         }
         // Block size and number of regular blocks.
-        const size_type bsize = safe_cast<size_type>(tuning::get_multiplication_block_size()),
+        const size_type bsize = piranha::safe_cast<size_type>(tuning::get_multiplication_block_size()),
                         nblocks1 = static_cast<size_type>((end1 - start1) / bsize),
                         nblocks2 = static_cast<size_type>(m_v2.size() / bsize);
         // Start and end of last (possibly irregular) blocks.
@@ -602,7 +602,7 @@ protected:
         auto estimator = [&lf, size1, n_threads, tpt, this, &c_estimate, &mut, multiplier](unsigned thread_idx) {
             piranha_assert(thread_idx < n_threads);
             // Vectors of indices into m_v1.
-            std::vector<size_type> v_idx1(safe_cast<typename std::vector<size_type>::size_type>(size1));
+            std::vector<size_type> v_idx1(piranha::safe_cast<typename std::vector<size_type>::size_type>(size1));
             std::iota(v_idx1.begin(), v_idx1.end(), size_type(0));
             // Copy in order to reset to initial state later.
             const auto v_idx1_copy = v_idx1;
@@ -1004,7 +1004,7 @@ protected:
         (void)size2;
         piranha_assert(size1 && size2);
         // Convert n_threads to size_type for convenience.
-        const size_type n_threads = safe_cast<size_type>(m_n_threads);
+        const size_type n_threads = piranha::safe_cast<size_type>(m_n_threads);
         piranha_assert(n_threads);
         // Determine if we should estimate the size. We check the threshold, but we always
         // need to estimate in multithreaded mode.
@@ -1047,7 +1047,7 @@ protected:
         // Multi-threaded case.
         piranha_assert(estimate);
         // Init the vector of spinlocks.
-        detail::atomic_flag_array sl_array(safe_cast<std::size_t>(retval._container().bucket_count()));
+        detail::atomic_flag_array sl_array(piranha::safe_cast<std::size_t>(retval._container().bucket_count()));
         // Init the future list.
         future_list<void> f_list;
         // Thread block size.

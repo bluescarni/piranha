@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -633,12 +634,12 @@ struct msgpack_pack_impl<Stream, mppp::integer<SSize>, integer_msgpack_pack_enab
             PIRANHA_MAYBE_TLS std::vector<char> tmp_v;
             // Make sure we use exactly the amount of storage required
             // by serialisation.
-            tmp_v.resize(safe_cast<decltype(tmp_v.size())>(n.binary_size()));
+            tmp_v.resize(piranha::safe_cast<decltype(tmp_v.size())>(n.binary_size()));
             // Save into the temp buffer.
             n.binary_save(tmp_v);
             // Do the binary packing into the packer.
-            p.pack_bin(safe_cast<std::uint32_t>(tmp_v.size()));
-            p.pack_bin_body(tmp_v.data(), safe_cast<std::uint32_t>(tmp_v.size()));
+            p.pack_bin(piranha::safe_cast<std::uint32_t>(tmp_v.size()));
+            p.pack_bin_body(tmp_v.data(), piranha::safe_cast<std::uint32_t>(tmp_v.size()));
         } else {
             // NOTE: here we have an unnecessary copy (but at least we are avoiding memory allocations).
             // Maybe we should consider providing an API from mp++ to interact directly with strings
@@ -697,82 +698,49 @@ struct msgpack_convert_impl<T, integer_msgpack_convert_enabler<T>> {
 
 #endif
 
-inline namespace impl
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <std::size_t SSize, mppp::CppInteroperable From>
+class safe_convert_impl<mppp::integer<SSize>, From>
+#else
+template <std::size_t SSize, typename From>
+class safe_convert_impl<mppp::integer<SSize>, From, enable_if_t<mppp::is_cpp_interoperable<From>::value>>
+#endif
 {
-
-// Enabler for safe_cast specialisation.
-template <typename To, typename From>
-using integer_safe_cast_enabler = enable_if_t<
-    // NOTE: let's keep the first disjunction here separated: we don't want to catch all
-    // CppInteroperable types here, as safe casting needs to be done on a controlled
-    // case-by-case basis.
-    disjunction<conjunction<mppp::is_integer<To>, disjunction<mppp::is_cpp_floating_point_interoperable<From>,
-                                                              mppp::is_cpp_integral_interoperable<From>>>,
-                conjunction<mppp::is_integer<From>, mppp::is_cpp_integral_interoperable<To>>>::value>;
-}
-
-/// Specialisation of piranha::safe_cast() for conversions involving mp++'s integers.
-/**
- * \note
- * This specialisation is enabled in the following cases:
- * - \p To is an mp++ integer and \p From is a C++ floating-point or integral type with which
- *   mp++ integer can interoperate,
- * - \p From is an mp++ integer and \p To is a C++ integral type with which
- *   mp++ integer can interoperate.
- */
-template <typename To, typename From>
-struct safe_cast_impl<To, From, integer_safe_cast_enabler<To, From>> {
-private:
-    // From float to mppp::integer.
-    template <typename T, enable_if_t<mppp::is_cpp_floating_point_interoperable<T>::value, int> = 0>
-    static To impl(const T &f)
+    template <typename T>
+    static bool impl(mppp::integer<SSize> &out, const T &n, const std::true_type &)
     {
-        if (unlikely(!std::isfinite(f))) {
-            piranha_throw(safe_cast_failure, "the non-finite floating-point value " + std::to_string(f)
-                                                 + " cannot be converted to an arbitrary-precision integer");
-        }
-        if (unlikely(f != std::trunc(f))) {
-            piranha_throw(safe_cast_failure, "the floating-point value with nonzero fractional part "
-                                                 + std::to_string(f)
-                                                 + " cannot be converted to an arbitrary-precision integer");
-        }
-        return To{f};
+        out = n;
+        return true;
     }
-    // From C++ integral to mppp::integer.
-    template <typename T, enable_if_t<mppp::is_cpp_integral_interoperable<T>::value, int> = 0>
-    static To impl(const T &n)
+    template <typename T>
+    static bool impl(mppp::integer<SSize> &out, const T &x, const std::false_type &)
     {
-        return To{n};
-    }
-    // From mppp::integer to C++ integral.
-    template <typename T, enable_if_t<mppp::is_integer<T>::value, int> = 0>
-    static To impl(const T &n)
-    {
-        To retval;
-        const auto status = mppp::get(retval, n);
-        if (unlikely(!status)) {
-            piranha_throw(safe_cast_failure, "the arbitrary-precision integer " + n.to_string()
-                                                 + " cannot be converted to the type '" + demangle<To>()
-                                                 + "', as the conversion would result in overflow");
+        if (!std::isfinite(x) || std::trunc(x) != x) {
+            return false;
         }
-        return retval;
+        out = x;
+        return true;
     }
 
 public:
-    /// Call operator.
-    /**
-     * @param x the input value to be converted.
-     *
-     * @return \p x converted to \p To.
-     *
-     * @throws piranha::safe_cast_failure if:
-     * - the input float is not finite or if it has a nonzero fractional part,
-     * - the target integral type \p To cannot represent the value of the input mp++ integer.
-     * @throws unspecified any exception thrown by the constructor of mp++'s integers from a floating-point.
-     */
-    To operator()(const From &x) const
+    bool operator()(mppp::integer<SSize> &out, const From &x) const
     {
-        return impl(x);
+        return impl(out, x, mppp::is_cpp_integral_interoperable<From>{});
+    }
+};
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <mppp::CppIntegralInteroperable To, std::size_t SSize>
+class safe_convert_impl<To, mppp::integer<SSize>>
+#else
+template <typename To, std::size_t SSize>
+class safe_convert_impl<To, mppp::integer<SSize>, enable_if_t<mppp::is_cpp_integral_interoperable<To>::value>>
+#endif
+{
+public:
+    bool operator()(To &out, const mppp::integer<SSize> &n) const
+    {
+        return n.get(out);
     }
 };
 }

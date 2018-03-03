@@ -161,7 +161,7 @@ public:
 private:
     // Enabler for ctor from init list.
     template <typename U>
-    using init_list_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
+    using init_list_enabler = enable_if_t<is_safely_castable<const U &, value_type>::value, int>;
 
 public:
     /// Constructor from initalizer list.
@@ -191,10 +191,10 @@ public:
 private:
     // Enabler for ctor from iterator.
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  has_safe_cast<value_type, decltype(*std::declval<const Iterator &>())>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<is_input_iterator<Iterator>,
+                    is_safely_castable<const decltype(*std::declval<const Iterator &>()) &, value_type>>::value,
+        int>;
 
 public:
     /// Constructor from range.
@@ -221,9 +221,10 @@ public:
         : m_value(0), m_flavour(flavour)
     {
         v_type tmp;
-        std::transform(
-            start, end, std::back_inserter(tmp),
-            [](const typename std::iterator_traits<Iterator>::value_type &v) { return safe_cast<value_type>(v); });
+        std::transform(start, end, std::back_inserter(tmp),
+                       [](const typename std::iterator_traits<Iterator>::value_type &v) {
+                           return piranha::safe_cast<value_type>(v);
+                       });
         m_value = ka::encode(tmp);
     }
     /// Constructor from set of symbols.

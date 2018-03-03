@@ -161,7 +161,7 @@ public:
 private:
     // Enabler for generic ctor.
     template <typename U>
-    using generic_ctor_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
+    using generic_ctor_enabler = enable_if_t<is_safely_castable<const U &, value_type>::value, int>;
 
 public:
     /// Constructor from piranha::array_key parametrized on a generic type.
@@ -193,7 +193,7 @@ public:
                               + std::to_string(args.size()) + ")");
         }
         std::transform(other.begin(), other.end(), std::back_inserter(m_container),
-                       [](const U &x) { return safe_cast<value_type>(x); });
+                       [](const U &x) { return piranha::safe_cast<value_type>(x); });
     }
     /// Trivial destructor.
     ~array_key()

@@ -117,8 +117,8 @@ inline void bind_to_proc(unsigned n)
     unsigned cpu_setsize;
     int n_int;
     try {
-        cpu_setsize = safe_cast<unsigned>(CPU_SETSIZE);
-        n_int = safe_cast<int>(n);
+        cpu_setsize = piranha::safe_cast<unsigned>(CPU_SETSIZE);
+        n_int = piranha::safe_cast<int>(n);
     } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
@@ -136,8 +136,8 @@ inline void bind_to_proc(unsigned n)
     unsigned cpu_setsize;
     int n_int;
     try {
-        cpu_setsize = safe_cast<unsigned>(CPU_SETSIZE);
-        n_int = safe_cast<int>(n);
+        cpu_setsize = piranha::safe_cast<unsigned>(CPU_SETSIZE);
+        n_int = piranha::safe_cast<int>(n);
     } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
@@ -193,7 +193,7 @@ inline std::pair<bool, unsigned> bound_proc()
     }
     int cpu_setsize;
     try {
-        cpu_setsize = safe_cast<int>(CPU_SETSIZE);
+        cpu_setsize = piranha::safe_cast<int>(CPU_SETSIZE);
     } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }
@@ -214,7 +214,7 @@ inline std::pair<bool, unsigned> bound_proc()
     }
     int cpu_setsize;
     try {
-        cpu_setsize = safe_cast<int>(CPU_SETSIZE);
+        cpu_setsize = piranha::safe_cast<int>(CPU_SETSIZE);
     } catch (const safe_cast_failure &) {
         piranha_throw(std::runtime_error, "numeric conversion error");
     }

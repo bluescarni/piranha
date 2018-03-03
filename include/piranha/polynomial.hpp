@@ -192,8 +192,9 @@ class polynomial
         // Construct and insert the term.
         this->insert(term_type(Cf(1), typename term_type::key_type{1}));
     }
-    template <typename T = Key,
-              enable_if_t<conjunction<detail::key_has_is_linear<T>, has_safe_cast<integer, Cf>>::value, int> = 0>
+    template <
+        typename T = Key,
+        enable_if_t<conjunction<detail::key_has_is_linear<T>, is_safely_castable<const Cf &, integer>>::value, int> = 0>
     std::map<std::string, integer> integral_combination() const
     {
         std::map<std::string, integer> retval;
@@ -202,14 +203,13 @@ class polynomial
             if (unlikely(!p.first)) {
                 piranha_throw(std::invalid_argument, "polynomial is not an integral linear combination");
             }
-            retval[*(this->m_symbol_set.nth(p.second))] = safe_cast<integer>(it->m_cf);
+            retval[*(this->m_symbol_set.nth(p.second))] = piranha::safe_cast<integer>(it->m_cf);
         }
         return retval;
     }
-    template <
-        typename T = Key,
-        enable_if_t<disjunction<negation<detail::key_has_is_linear<T>>, negation<has_safe_cast<integer, Cf>>>::value,
-                    int> = 0>
+    template <typename T = Key, enable_if_t<disjunction<negation<detail::key_has_is_linear<T>>,
+                                                        negation<is_safely_castable<const Cf &, integer>>>::value,
+                                            int> = 0>
     std::map<std::string, integer> integral_combination() const
     {
         piranha_throw(std::invalid_argument,
@@ -275,9 +275,9 @@ class polynomial
                // We need to be able to add the non-integrable type.
                is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
                // We need to be able to compute the partial degree and cast it to integer.
-               has_safe_cast<integer,
-                             decltype(std::declval<const typename T::term_type::key_type &>().degree(
-                                 std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()))>::value
+               is_safely_castable<const decltype(std::declval<const typename T::term_type::key_type &>().degree(
+                                      std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>())) &,
+                                  integer>::value
                &&
                // This is required in the initialisation of the return value.
                std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
@@ -305,7 +305,7 @@ class polynomial
         try {
             // Check if s is actually in the symbol set or not.
             if (*idx.begin() < this->m_symbol_set.size()) {
-                degree = safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
+                degree = piranha::safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
             } else {
                 degree = 0;
             }
@@ -378,9 +378,9 @@ class polynomial
         int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>
-    using at_degree_set_enabler =
-        typename std::enable_if<detail::true_tt<at_degree_enabler<T>>::value && has_safe_cast<degree_type<T>, U>::value,
-                                int>::type;
+    using at_degree_set_enabler = typename std::enable_if<detail::true_tt<at_degree_enabler<T>>::value
+                                                              && is_safely_castable<const U &, degree_type<T>>::value,
+                                                          int>::type;
     // This needs to be separate from the other static inits because we don't have anything to init
     // if the series does not support degree computation.
     // NOTE: here the important thing is that this method does not return the same object for different series types,
@@ -432,7 +432,7 @@ class polynomial
     template <typename T, typename U>
     using tm_enabler =
         typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value
-                                    && has_safe_cast<degree_type<T>, U>::value
+                                    && is_safely_castable<const U &, degree_type<T>>::value
                                     && detail::true_tt<at_degree_enabler<T>>::value,
                                 int>::type;
     // Common bits for truncated/untruncated multiplication. Will do the usual merging of the symbol sets
@@ -643,7 +643,7 @@ public:
     static void set_auto_truncate_degree(const U &max_degree)
     {
         // Init out for exception safety.
-        auto new_degree = safe_cast<degree_type<T>>(max_degree);
+        auto new_degree = piranha::safe_cast<degree_type<T>>(max_degree);
         // Initialisation of function-level statics is thread-safe, no need to lock. We get
         // a ref before the lock because the initialisation of the static could throw in principle,
         // and we want the section after the lock to be exception-free.
@@ -682,7 +682,7 @@ public:
     static void set_auto_truncate_degree(const U &max_degree, const symbol_fset &names)
     {
         // Copy+move for exception safety.
-        auto new_degree = safe_cast<degree_type<T>>(max_degree);
+        auto new_degree = piranha::safe_cast<degree_type<T>>(max_degree);
         auto new_names = names;
         auto &at_dm = get_at_degree_max();
         std::lock_guard<std::mutex> lock(s_at_degree_mutex);
@@ -843,7 +843,8 @@ public:
         // NOTE: these 2 implementations may be rolled into one once we can safely capture variadic arguments
         // in lambdas.
         auto runner = [&max_degree](const polynomial &a, const polynomial &b) {
-            return series_multiplier<polynomial>(a, b)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree));
+            return series_multiplier<polynomial>(a, b)._truncated_multiplication(
+                piranha::safe_cast<degree_type<T>>(max_degree));
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -881,8 +882,8 @@ public:
         // NOTE: total and partial degree must be the same.
         auto runner = [&max_degree, &names](const polynomial &a, const polynomial &b) -> polynomial {
             const auto idx = ss_intersect_idx(a.get_symbol_set(), names);
-            return series_multiplier<polynomial>(a, b)._truncated_multiplication(safe_cast<degree_type<T>>(max_degree),
-                                                                                 names, idx);
+            return series_multiplier<polynomial>(a, b)._truncated_multiplication(
+                piranha::safe_cast<degree_type<T>>(max_degree), names, idx);
         };
         return um_tm_implementation(p1, p2, runner);
     }
@@ -1406,8 +1407,8 @@ public:
         static_assert(detail::has_get_auto_truncate_degree<Series>::value, "Invalid series type");
         // First let's create two vectors with the degrees of the terms in the two series.
         using d_size_type = typename std::vector<degree_type>::size_type;
-        std::vector<degree_type> v_d1(safe_cast<d_size_type>(this->m_v1.size())),
-            v_d2(safe_cast<d_size_type>(this->m_v2.size()));
+        std::vector<degree_type> v_d1(piranha::safe_cast<d_size_type>(this->m_v1.size())),
+            v_d2(piranha::safe_cast<d_size_type>(this->m_v2.size()));
         detail::parallel_vector_transform(
             this->m_n_threads, this->m_v1, v_d1,
             std::bind(term_degree_getter{}, sph::_1, std::cref(this->m_ss), std::cref(args)...));
@@ -1416,7 +1417,8 @@ public:
             std::bind(term_degree_getter{}, sph::_1, std::cref(this->m_ss), std::cref(args)...));
         // Next we need to order the terms in the second series, and also the corresponding degree vector.
         // First we create a vector of indices and we fill it.
-        std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+        std::vector<size_type> idx_vector(
+            piranha::safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
         std::iota(idx_vector.begin(), idx_vector.end(), size_type(0u));
         // Second, we sort the vector of indices according to the degrees in the second series.
         std::stable_sort(idx_vector.begin(), idx_vector.end(), [&v_d2](const size_type &i1, const size_type &i2) {
@@ -1478,7 +1480,8 @@ public:
         using d_size_type = typename std::vector<T>::size_type;
         piranha_assert(std::is_sorted(v_d2.begin(), v_d2.end()));
         // A vector of indices into the second series.
-        std::vector<size_type> idx_vector(safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
+        std::vector<size_type> idx_vector(
+            piranha::safe_cast<typename std::vector<size_type>::size_type>(this->m_v2.size()));
         std::iota(idx_vector.begin(), idx_vector.end(), size_type(0u));
         // The return value.
         std::vector<size_type> retval;
@@ -1694,7 +1697,7 @@ private:
                    < r_bucket(v1[std::get<0u>(t2)]) + r_bucket(v2[std::get<1u>(t2)]);
         };
         // Task block size.
-        const size_type block_size = safe_cast<size_type>(tuning::get_multiplication_block_size());
+        const size_type block_size = piranha::safe_cast<size_type>(tuning::get_multiplication_block_size());
         // Task splitter: split a task in block_size sized tasks and append them to out.
         auto task_split = [block_size](const task_type &t, std::vector<task_type> &out) {
             size_type start = std::get<1u>(t), end = std::get<2u>(t);
@@ -1781,7 +1784,7 @@ private:
         const bucket_size_type bpz = static_cast<bucket_size_type>(bucket_count / n_zones);
         // For each zone, we need to define a vector of tasks that will write only into that zone.
         std::vector<std::vector<task_type>> task_table;
-        task_table.resize(safe_cast<decltype(task_table.size())>(n_zones));
+        task_table.resize(piranha::safe_cast<decltype(task_table.size())>(n_zones));
         // Lower bound implementation. Adapted from:
         // http://en.cppreference.com/w/cpp/algorithm/lower_bound
         // Given the [first,last[ index range in v2, find the first index idx in the v2 range such that the i-th
@@ -1906,7 +1909,7 @@ private:
         (void)table_checker;
         piranha_assert(table_checker());
         // Init the vector of atomic flags.
-        detail::atomic_flag_array af(safe_cast<std::size_t>(task_table.size()));
+        detail::atomic_flag_array af(piranha::safe_cast<std::size_t>(task_table.size()));
         // Thread functor.
         auto thread_functor = [&task_table, &af, &task_consume](const unsigned &thread_idx) {
             using t_size_type = decltype(task_table.size());

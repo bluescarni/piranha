@@ -29,276 +29,53 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SAFE_CAST_HPP
 #define PIRANHA_SAFE_CAST_HPP
 
-// #include <cmath>
-// #include <stdexcept>
-// #include <string>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
 #include <piranha/config.hpp>
-// #include <piranha/detail/demangle.hpp>
+#include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
-// #include <piranha/exceptions.hpp>
+#include <piranha/exceptions.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
 {
 
-// Default implementation of safe_cast().
-template <typename To, typename From
-#if !defined(PIRANHA_HAVE_CONCEPTS)
-          ,
-          typename = void
-#endif
-          >
-class safe_cast_impl
-{
-};
-
-inline namespace impl
-{
-
-// Enabler for safe_cast().
-template <typename To, typename From>
-using safe_cast2_type_ = decltype(safe_cast_impl<To, uncvref_t<From>>{}(std::declval<To &>(), std::declval<From>()));
-
-template <typename To, typename From>
-using safe_cast2_type = enable_if_t<std::is_convertible<safe_cast2_type_<To, From>, bool>::value, bool>;
-}
-
-// Safe conversion.
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <NonConst To, typename From>
-#else
-template <typename To, typename From, enable_if_t<!std::is_const<T>::value, int> = 0>
-#endif
-inline safe_cast2_type<To, From &&> safe_cast(To &dest, From &&x)
-{
-    return safe_cast_impl<To, uncvref_t<From>>{}(dest, std::forward<From>(x));
-}
-
 // Exception to signal failure in piranha::safe_cast().
-struct safe_cast_failure final : std::invalid_argument {
+class safe_cast_failure final : public std::invalid_argument
+{
+public:
     using std::invalid_argument::invalid_argument;
 };
 
-inline namespace impl
-{
+template <typename From, typename To>
+using is_safely_castable
+    = conjunction<std::is_default_constructible<To>, is_safely_convertible<From, addlref_t<To>>, is_returnable<To>>;
 
-template <typename To, typename From>
-using safe_cast2_t = decltype(piranha::safe_cast(std::declval<To &>(), std::declval<const From &>()));
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
-template <typename To, typename From>
-using safe_cast1_type = enable_if_t<conjunction<std::is_same<To, uncvref_t<To>>, std::is_default_constructible<To>,
-                                                is_returnable<To>, is_detected<safe_cast2_t<To, From>>>::value,
-                                    To>;
-}
-
-template <typename To>
-inline auto safe_cast(From &&x)
-{
-    To retval;
-    if (unlikely(!safe_cast(retval, std::forward<From>(x)))) {
-        piranha_throw(safe_cast_failure, "");
-    }
-    return retval;
-}
-
-/// Default implementation of piranha::safe_cast().
-/**
- * The default implementation of piranha::safe_cast() is activated only when the source type coincides with the target
- * type. A copy of the input value will be returned.
- */
-template <typename To, typename From, typename = void>
-struct safe_cast_impl {
-private:
-    template <typename T>
-    using enabler
-        = enable_if_t<conjunction<std::is_same<To, T>, std::is_same<From, T>, std::is_copy_constructible<T>>::value,
-                      int>;
-
-public:
-    /// Call operator.
-    /**
-     * \note
-     * This call operator is enabled only if:
-     * - \p T, \p To and \p From are the same type,
-     * - \p To is copy-constructible.
-     *
-     * @param f conversion argument.
-     *
-     * @return a copy of \p f.
-     *
-     * @throws unspecified any exception thrown by the copy/move constructor of \p From.
-     */
-    template <typename T, enabler<T> = 0>
-    To operator()(const T &f) const
-    {
-        return f;
-    }
-};
-
-inline namespace impl
-{
-
-template <typename To, typename From>
-using sc_int_int_enabler = enable_if_t<conjunction<std::is_integral<To>, std::is_integral<From>>::value>;
-}
-
-/// Specialisation of piranha::safe_cast() for C++ integral types.
-/**
- * This specialisation is enabled when both \p To and \p From are integral types.
- */
-template <typename To, typename From>
-struct safe_cast_impl<To, From, sc_int_int_enabler<To, From>> {
-    /// Call operator.
-    /**
-     * The call operator uses \p boost::numeric_cast() to perform a safe conversion
-     * between integral types.
-     *
-     * @param f conversion argument.
-     *
-     * @return a copy of \p f cast safely to \p To.
-     *
-     * @throws piranha::safe_cast_failure if \p boost::numeric_cast() raises an error.
-     */
-    To operator()(const From &f) const
-    {
-        try {
-            return boost::numeric_cast<To>(f);
-        } catch (...) {
-            piranha_throw(safe_cast_failure, "the integral value " + std::to_string(f)
-                                                 + " cannot be converted to the type '" + demangle<To>()
-                                                 + "', as the conversion cannot preserve the original value");
-        }
-    }
-};
-
-inline namespace impl
-{
-
-template <typename To, typename From>
-using sc_float_to_int_enabler = enable_if_t<conjunction<std::is_integral<To>, std::is_floating_point<From>>::value>;
-}
-
-/// Specialisation of piranha::safe_cast() for C++ floating-point to C++ integral conversions.
-/**
- * \note
- * This specialisation is enabled if \p From is a C++ floating-point type and \p To is a C++ integral type.
- */
-template <typename To, typename From>
-struct safe_cast_impl<To, From, sc_float_to_int_enabler<To, From>> {
-    /// Call operator.
-    /**
-     * The call operator will first check that \p f is a finite integral value, and it will then invoke
-     * \p boost::numeric_cast() to perform the conversion.
-     *
-     * @param f conversion argument.
-     *
-     * @return \p f safely converted to \p To.
-     *
-     * @throws piranha::safe_cast_failure if:
-     * - \p f is not finite or it has a nonzero fractional part,
-     * - \p boost::numeric_cast() raises an error.
-     */
-    To operator()(const From &f) const
-    {
-        if (unlikely(!std::isfinite(f))) {
-            piranha_throw(safe_cast_failure, "the non-finite floating-point value " + std::to_string(f)
-                                                 + " cannot be converted to the integral type '" + demangle<To>()
-                                                 + "'");
-        }
-        if (std::trunc(f) != f) {
-            piranha_throw(safe_cast_failure, "the floating-point value with nonzero fractional part "
-                                                 + std::to_string(f) + " cannot be converted to the integral type '"
-                                                 + demangle<To>()
-                                                 + "', as the conversion cannot preserve the original value");
-        }
-        try {
-            return boost::numeric_cast<To>(f);
-        } catch (...) {
-            piranha_throw(safe_cast_failure, "the floating-point value " + std::to_string(f)
-                                                 + " cannot be converted to the integral type '" + demangle<To>()
-                                                 + "', as the conversion cannot preserve the original value");
-        }
-    }
-};
-
-inline namespace impl
-{
-
-template <typename To, typename From>
-using safe_cast_t_ = decltype(safe_cast_impl<uncvref_t<To>, From>{}(std::declval<const From &>()));
-
-template <typename To, typename From>
-using safe_cast_type
-    = enable_if_t<conjunction<std::is_same<safe_cast_t_<To, From>, uncvref_t<To>>, is_returnable<uncvref_t<To>>>::value,
-                  uncvref_t<To>>;
-}
-
-/// Safe cast.
-/**
- * This function is meant to be used when it is necessary to convert between two types while making
- * sure that the value is preserved after the conversion. For instance, a safe cast between
- * integral types will check that the input value is representable by the return type, otherwise
- * an error will be raised.
- *
- * The actual implementation of this function is in the piranha::safe_cast_impl functor's
- * call operator. \p To is passed as first template parameter of piranha::safe_cast_impl after the removal
- * of cv/reference qualifiers, whereas \p From is passed as-is. The body of this function is thus equivalent to:
- * @code
- * return safe_cast_impl<uncvref_t<To>, From>{}(x);
- * @endcode
- * (where \p uncvref_t<To> refers to \p To without cv/reference qualifiers).
- *
- * Any specialisation of piranha::safe_cast_impl must have a call operator returning
- * an instance of type \p uncvref_t<To>, otherwise this function will be disabled. The function will also be disabled
- * if \p uncvref_t<To> does not satisfy piranha::is_returnable.
- *
- * Specialisations of piranha::safe_cast_impl are encouraged to raise an exception of type piranha::safe_cast_failure
- * in case the type conversion fails.
- *
- * @param x argument for the conversion.
- *
- * @return \p x converted to \p To.
- *
- * @throws unspecified any exception thrown by the call operator of piranha::safe_cast_impl.
- */
-template <typename To, typename From>
-inline safe_cast_type<To, From> safe_cast(const From &x)
-{
-    return safe_cast_impl<uncvref_t<To>, From>{}(x);
-}
-
-inline namespace impl
-{
-
-template <typename To, typename From>
-using safe_cast_t = decltype(safe_cast<To>(std::declval<From>()));
-}
-
-/// Type trait to detect piranha::safe_cast().
-/**
- * The type trait will be \p true if piranha::safe_cast() can be called with \p To and \p From
- * as template arguments, \p false otherwise.
- */
-template <typename To, typename From>
-class has_safe_cast
-{
-    static const bool implementation_defined = is_detected<safe_cast_t, To, From>::value;
-
-public:
-    /// Value of the type trait.
-    static constexpr bool value = implementation_defined;
-};
-
-#if PIRANHA_CPLUSPLUS < 201703L
-
-// Static init.
-template <typename To, typename From>
-constexpr bool has_safe_cast<To, From>::value;
+template <typename From, typename To>
+concept bool SafelyCastable = is_safely_castable<From, To>::value;
 
 #endif
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename To>
+inline To safe_cast(SafelyCastable<To> &&x)
+#else
+template <typename To, typename From, enable_if_t<is_safely_castable<From, To>::value, int> = 0>
+inline To safe_cast(From &&x)
+#endif
+{
+    To retval;
+    if (likely(piranha::safe_convert(retval, std::forward<decltype(x)>(x)))) {
+        return retval;
+    }
+    piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + demangle<decltype(x)>()
+                                         + "' to the type '" + demangle<To>() + "' failed");
+}
 }
 
 #endif
