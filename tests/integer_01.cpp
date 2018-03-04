@@ -591,7 +591,10 @@ struct safe_cast_int_tester {
         tuple_for_each(int_types{}, runner<S>{});
         using int_type = mppp::integer<S::value>;
         BOOST_CHECK((is_safely_castable<wchar_t, int_type>::value));
-#if defined(MPPP_HAVE_GCC_INT128)
+        // NOTE: further demangler fixes are needed in mp++, the problem
+        // here is that we will be trying to demangle references to 128bit
+        // integers rather than pure 128bit ints. Let's disable for now.
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
         BOOST_CHECK((is_safely_castable<__int128_t, int_type>::value));
         BOOST_CHECK((is_safely_castable<__uint128_t, int_type>::value));
         BOOST_CHECK((is_safely_castable<int_type, __int128_t>::value));
