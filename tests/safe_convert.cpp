@@ -67,6 +67,10 @@ static const int ntrials = 1000;
 struct foo {
 };
 
+struct bar {
+    int n = 0;
+};
+
 namespace piranha
 {
 
@@ -167,4 +171,14 @@ BOOST_AUTO_TEST_CASE(safe_convert_test_00)
             BOOST_CHECK_EQUAL(un32, 4294967295ull);
         }
     }
+
+    // Check the default implementation.
+    BOOST_CHECK((is_safely_convertible<bar, bar &>::value));
+    BOOST_CHECK((is_safely_convertible<bar, bar &&>::value));
+    BOOST_CHECK((is_safely_convertible<const bar, bar &>::value));
+    BOOST_CHECK((is_safely_convertible<const bar &, bar &>::value));
+    BOOST_CHECK((!is_safely_convertible<const bar &, const bar &>::value));
+    bar b{12};
+    safe_convert(b, bar{});
+    BOOST_CHECK_EQUAL(b.n, 0);
 }

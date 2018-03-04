@@ -53,6 +53,8 @@ template <typename To, typename From
 class safe_convert_impl
 {
 public:
+    // NOTE: the default implementation is enabled if T and U are the same type
+    // (after uncvref) and we can assign from to out.
     template <
         typename T, typename U,
         enable_if_t<conjunction<std::is_same<uncvref_t<T>, uncvref_t<U>>, std::is_assignable<T, U>>::value, int> = 0>

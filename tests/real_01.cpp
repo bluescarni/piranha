@@ -287,6 +287,13 @@ BOOST_AUTO_TEST_CASE(real_safe_cast_test)
     BOOST_CHECK_EXCEPTION(safe_cast<rational>(real{"nan", 100}), safe_cast_failure, [](const safe_cast_failure &e) {
         return boost::contains(e.what(), "the safe conversion of a value of type");
     });
+    // Check that real-real safe_convert() actually steals with move semantics.
+    real foo1{123}, foo2{2};
+    safe_convert(foo1, std::move(foo2));
+    BOOST_CHECK_EQUAL(foo1, 2);
+    // NOTE: safe_convert() will do a move assignment, which is implemented
+    // as a swap() in real.
+    BOOST_CHECK(foo2 == real{123});
 }
 
 BOOST_AUTO_TEST_CASE(real_ternary_arith_test)
