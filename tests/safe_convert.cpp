@@ -178,7 +178,8 @@ BOOST_AUTO_TEST_CASE(safe_convert_test_00)
     BOOST_CHECK((is_safely_convertible<const bar, bar &>::value));
     BOOST_CHECK((is_safely_convertible<const bar &, bar &>::value));
     BOOST_CHECK((!is_safely_convertible<const bar &, const bar &>::value));
-    bar b{12};
+    bar b;
+    b.n = 12;
     safe_convert(b, bar{});
     BOOST_CHECK_EQUAL(b.n, 0);
 }

@@ -723,7 +723,7 @@ class safe_convert_impl<mppp::integer<SSize>, From, enable_if_t<mppp::is_cpp_int
     }
 
 public:
-    bool operator()(mppp::integer<SSize> &out, const From &x) const
+    bool operator()(mppp::integer<SSize> &out, From x) const
     {
         return impl(out, x, mppp::is_cpp_integral_interoperable<From>{});
     }

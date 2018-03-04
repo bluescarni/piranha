@@ -265,7 +265,7 @@ class safe_convert_impl<mppp::rational<SSize>, From,
 #endif
 {
 public:
-    bool operator()(mppp::rational<SSize> &out, const From &x) const
+    bool operator()(mppp::rational<SSize> &out, From x) const
     {
         if (!std::isfinite(x)) {
             return false;

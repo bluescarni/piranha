@@ -12,6 +12,18 @@ Safe cast
    of ``To`` representing exactly the value of *x* will be returned.
    Otherwise, an exception of type :cpp:class:`piranha::safe_cast_failure` will be raised.
 
+   In other words, the body of this function is equivalent to:
+
+   .. code-block:: c++
+
+    To retval;
+    if (piranha::safe_convert(retval, x)) {
+        return retval;
+    }
+    throw piranha::safe_cast_failure(...);
+
+   (where *x* is perfectly forwarded to :cpp:func:`piranha::safe_convert()`).
+
    :param x: the object to be converted.
 
    :return: *x* converted to the type ``To``.

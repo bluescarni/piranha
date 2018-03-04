@@ -65,11 +65,8 @@ Type properties
 .. cpp:concept:: template <typename T> piranha::Returnable
 
    This concept is satisfied if instances of type ``T`` can be returned from a function.
-   Specifically, this concept is satisfied if ``T`` is either:
-
-   * ``void``, or
-   * copy-constructible, or
-   * move-constructible.
+   Specifically, this concept is satisfied if ``T`` is either ``void``, copy-constructible, or
+   move-constructible.
 
 .. cpp:concept:: template <typename T, typename... Args> piranha::Same
 

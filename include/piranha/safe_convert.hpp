@@ -99,11 +99,11 @@ inline bool safe_convert(To &&x, From &&y)
 
 // Specialisation for integral to integral conversions.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <CppIntegral T, CppIntegral U>
-class safe_convert_impl<T, U>
+template <CppIntegral To, CppIntegral From>
+class safe_convert_impl<To, From>
 #else
-template <typename T, typename U>
-class safe_convert_impl<T, U, enable_if_t<conjunction<std::is_integral<T>, std::is_integral<U>>::value>>
+template <typename To, typename From>
+class safe_convert_impl<To, From, enable_if_t<conjunction<std::is_integral<To>, std::is_integral<From>>::value>>
 #endif
 {
     // Unsigned-unsigned overload.
@@ -148,23 +148,23 @@ class safe_convert_impl<T, U, enable_if_t<conjunction<std::is_integral<T>, std::
     }
 
 public:
-    bool operator()(T &out, U x) const
+    bool operator()(To &out, From x) const
     {
-        return impl(out, x, std::is_signed<T>{}, std::is_signed<U>{});
+        return impl(out, x, std::is_signed<To>{}, std::is_signed<From>{});
     }
 };
 
 // Specialisation for fp to integral conversions.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <CppIntegral T, CppFloatingPoint U>
-class safe_convert_impl<T, U>
+template <CppIntegral To, CppFloatingPoint From>
+class safe_convert_impl<To, From>
 #else
-template <typename T, typename U>
-class safe_convert_impl<T, U, enable_if_t<conjunction<std::is_integral<T>, std::is_floating_point<U>>::value>>
+template <typename To, typename From>
+class safe_convert_impl<To, From, enable_if_t<conjunction<std::is_integral<To>, std::is_floating_point<From>>::value>>
 #endif
 {
 public:
-    bool operator()(T &out, U x) const
+    bool operator()(To &out, From x) const
     {
         // NOTE: the conversion fails if either:
         // - x is not finite (NaN, inf), or
@@ -172,10 +172,10 @@ public:
         // - x does not fit in the range of T (checked via Boost's conversion
         //   utilities).
         if (!std::isfinite(x) || std::trunc(x) != x
-            || boost::numeric::converter<T, U>::out_of_range(x) != boost::numeric::range_check_result::cInRange) {
+            || boost::numeric::converter<To, From>::out_of_range(x) != boost::numeric::range_check_result::cInRange) {
             return false;
         }
-        out = static_cast<T>(x);
+        out = static_cast<To>(x);
         return true;
     }
 };
