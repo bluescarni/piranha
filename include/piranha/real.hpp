@@ -489,11 +489,12 @@ inline namespace impl
 
 // Enablers for msgpack serialization.
 template <typename Stream>
-using real_msgpack_pack_enabler = enable_if_t<conjunction<
-    is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>, has_msgpack_pack<Stream, std::string>,
-    has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
-    has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
-    has_msgpack_pack<Stream, ::mp_limb_t>, is_safely_castable<const ::mpfr_prec_t &, std::uint32_t>>::value>;
+using real_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>,
+                              has_msgpack_pack<Stream, std::string>,
+                              has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_msgpack_pack<Stream, ::mp_limb_t>>::value>;
 
 template <typename T>
 using real_msgpack_convert_enabler = enable_if_t<

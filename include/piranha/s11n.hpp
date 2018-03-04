@@ -1800,15 +1800,10 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
 
 template <typename Stream, typename V, typename T = void>
 using msgpack_pack_vector_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>,
-                              is_safely_castable<const typename V::size_type &, std::uint32_t>>::value,
-                  T>;
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>>::value, T>;
 
 template <typename V, typename T = void>
-using msgpack_convert_array_enabler = enable_if_t<
-    conjunction<is_safely_castable<const typename std::vector<msgpack::object>::size_type &, typename V::size_type>,
-                has_msgpack_convert<typename V::value_type>>::value,
-    T>;
+using msgpack_convert_array_enabler = enable_if_t<has_msgpack_convert<typename V::value_type>::value, T>;
 
 #endif
 }

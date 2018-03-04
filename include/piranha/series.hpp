@@ -3618,8 +3618,6 @@ inline namespace impl
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler
     = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                              is_safely_castable<addlref_t<const decltype(symbol_fset{}.size())>, std::uint32_t>,
-                              is_safely_castable<const typename Series::size_type &, std::uint32_t>,
                               has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                               key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
 
