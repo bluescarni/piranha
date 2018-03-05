@@ -62,6 +62,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/real.hpp>
 #endif
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
@@ -396,14 +397,14 @@ public:
     bool operator()(const T &) const;
 };
 
-template <typename T>
-struct safe_cast_impl<integer, T, typename std::enable_if<std::is_same<T, fake_int_01>::value>::type> {
-    integer operator()(const T &) const;
+template <>
+struct safe_convert_impl<integer, fake_int_01> {
+    bool operator()(integer &, const fake_int_01 &) const;
 };
 
-template <typename T>
-struct safe_cast_impl<integer, T, typename std::enable_if<std::is_same<T, fake_int_02>::value>::type> {
-    integer operator()(const T &) const;
+template <>
+struct safe_convert_impl<integer, fake_int_02> {
+    bool operator()(integer &, const fake_int_02 &) const;
 };
 }
 

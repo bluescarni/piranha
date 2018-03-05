@@ -34,6 +34,7 @@ see https://www.gnu.org/licenses/. */
 #if defined(MPPP_WITH_MPFR)
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
 #include <string>
@@ -60,6 +61,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math/sin.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/type_traits.hpp>
 
 namespace piranha
@@ -268,87 +270,47 @@ struct div3_impl<real> {
 };
 }
 
-inline namespace impl
+// From real to C++ integral.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <mppp::CppIntegralInteroperable To>
+class safe_convert_impl<To, real>
+#else
+template <typename To>
+class safe_convert_impl<To, real, enable_if_t<mppp::is_cpp_integral_interoperable<To>::value>>
+#endif
 {
-
-template <typename To>
-using sc_real_enabler = enable_if_t<
-    disjunction<mppp::is_cpp_integral_interoperable<To>, mppp::is_integer<To>, mppp::is_rational<To>>::value>;
-}
-
-/// Specialisation of piranha::safe_cast() for conversions involving piranha::real.
-/**
- * \note
- * This specialisation is enabled if \p To is an integral type, an mp++ integer or an mp++ rational.
- */
-template <typename To>
-struct safe_cast_impl<To, real, sc_real_enabler<To>> {
-private:
-    // The integral conversion overload.
-    static To impl(const real &r, const std::true_type &)
-    {
-        if (unlikely(!r.number_p() || !r.integer_p())) {
-            // For conversions to integrals, r must represent a finite and integral value.
-            piranha_throw(safe_cast_failure, "cannot convert the real value " + r.to_string()
-                                                 + " to the integral type '" + demangle<To>()
-                                                 + "', as the real does not represent a finite integral value");
-        }
-        To retval;
-        const bool status = mppp::get(retval, r);
-        if (unlikely(!status)) {
-            // NOTE: for integral conversions, the only possible failure is if the value
-            // overflows the target C++ integral type's range.
-            piranha_throw(safe_cast_failure, "cannot convert the real value " + r.to_string()
-                                                 + " to the integral type '" + demangle<To>()
-                                                 + "', as the conversion would result in overflow");
-        }
-        return retval;
-    }
-    // The rational conversion overload.
-    static To impl(const real &r, const std::false_type &)
-    {
-        if (unlikely(!r.number_p())) {
-            // For conversions to rational, r must represent a finite value.
-            piranha_throw(safe_cast_failure, "cannot convert the non-finite real value " + r.to_string()
-                                                 + " to the rational type '" + demangle<To>() + "'");
-        }
-        To retval;
-        const bool status = mppp::get(retval, r);
-        // LCOV_EXCL_START
-        if (unlikely(!status)) {
-            // NOTE: for rational conversions, the only possible failure is if the manipulation
-            // of the exponent of r results in overflow.
-            piranha_throw(
-                safe_cast_failure,
-                "cannot convert the real value " + r.to_string() + " to the rational type '" + demangle<To>()
-                    + "', as the conversion triggers an overflow in the manipulation of the input real's exponent");
-        }
-        // LCOV_EXCL_STOP
-        return retval;
-    }
-
 public:
-    /// Call operator.
-    /**
-     * If ``To`` is an integral type, the conversion of the input argument will fail in the following cases:
-     * - ``r`` is not finite or it does not represent an integral value,
-     * - ``To`` is a C++ integral type and the value of ``r`` overflows the range of ``To``.
-     *
-     * If ``To`` is an mp++ rational, the conversion of the input argument will fail in the following cases:
-     * - ``r`` is not finite,
-     * - the conversion to the target rational type triggers an overflow in the manipulation of the exponent of
-     *   ``r`` (this can happen if the absolute value of ``r`` is extremely large or extremely small).
-     *
-     * @param r the conversion argument.
-     *
-     * @return \p r converted to ``To``.
-     *
-     * @throws piranha::safe_cast_failure if the conversion fails.
-     */
-    To operator()(const real &r) const
+    bool operator()(To &n, const real &r) const
     {
-        return impl(r, std::integral_constant<
-                           bool, disjunction<mppp::is_cpp_integral_interoperable<To>, mppp::is_integer<To>>::value>{});
+        // NOTE: we attempte the conversion only if r represents
+        // exactly an integral value. The conversion can still
+        // fail if the value overflows the range of To.
+        return r.integer_p() ? r.get(n) : false;
+    }
+};
+
+// From real to mp++ integer.
+template <std::size_t SSize>
+class safe_convert_impl<mppp::integer<SSize>, real>
+{
+public:
+    bool operator()(mppp::integer<SSize> &n, const real &r) const
+    {
+        // NOTE: like above, convert only if r is an integral value.
+        return r.integer_p() ? r.get(n) : false;
+    }
+};
+
+// From real to mp++ rational.
+template <std::size_t SSize>
+class safe_convert_impl<mppp::rational<SSize>, real>
+{
+public:
+    bool operator()(mppp::rational<SSize> &q, const real &r) const
+    {
+        // NOTE: r must be a finite value. The conversion could fail
+        // if there are overflows in the manipulation of r's exponent.
+        return r.number_p() ? r.get(q) : false;
     }
 };
 
@@ -527,11 +489,12 @@ inline namespace impl
 
 // Enablers for msgpack serialization.
 template <typename Stream>
-using real_msgpack_pack_enabler = enable_if_t<conjunction<
-    is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>, has_msgpack_pack<Stream, std::string>,
-    has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
-    has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
-    has_msgpack_pack<Stream, ::mp_limb_t>, has_safe_cast<std::uint32_t, ::mpfr_prec_t>>::value>;
+using real_msgpack_pack_enabler
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, ::mpfr_prec_t>,
+                              has_msgpack_pack<Stream, std::string>,
+                              has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
+                              has_msgpack_pack<Stream, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
+                              has_msgpack_pack<Stream, ::mp_limb_t>>::value>;
 
 template <typename T>
 using real_msgpack_convert_enabler = enable_if_t<
@@ -581,7 +544,7 @@ struct msgpack_pack_impl<Stream, real, real_msgpack_pack_enabler<Stream>> {
             piranha::msgpack_pack(p, x.get_prec(), f);
             piranha::msgpack_pack(p, x.get_mpfr_t()->_mpfr_sign, f);
             piranha::msgpack_pack(p, x.get_mpfr_t()->_mpfr_exp, f);
-            const auto s = safe_cast<std::uint32_t>(real_size_from_prec(x.get_mpfr_t()->_mpfr_prec));
+            const auto s = piranha::safe_cast<std::uint32_t>(real_size_from_prec(x.get_mpfr_t()->_mpfr_prec));
             p.pack_array(s);
             // NOTE: no need to save the size, as it can be recovered from the prec.
             for (std::uint32_t i = 0; i < s; ++i) {
@@ -652,7 +615,7 @@ struct msgpack_convert_impl<T, real_msgpack_convert_enabler<T>> {
             try {
                 PIRANHA_MAYBE_TLS std::vector<msgpack::object> vlimbs;
                 vobj[3].convert(vlimbs);
-                const auto s = safe_cast<decltype(vlimbs.size())>(real_size_from_prec(prec));
+                const auto s = piranha::safe_cast<decltype(vlimbs.size())>(real_size_from_prec(prec));
                 if (unlikely(s != vlimbs.size())) {
                     piranha_throw(std::invalid_argument,
                                   "error in the msgpack deserialization of a real: the number of serialized limbs ("

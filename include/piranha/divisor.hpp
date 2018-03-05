@@ -329,11 +329,11 @@ private:
     }
     // Enabler for insertion.
     template <typename It, typename Exponent>
-    using insert_enabler =
-        typename std::enable_if<is_input_iterator<It>::value
-                                    && has_safe_cast<value_type, typename std::iterator_traits<It>::value_type>::value
-                                    && has_safe_cast<value_type, Exponent>::value,
-                                int>::type;
+    using insert_enabler
+        = enable_if_t<conjunction<is_input_iterator<It>,
+                                  is_safely_castable<const typename std::iterator_traits<It>::value_type &, value_type>,
+                                  is_safely_castable<const Exponent &, value_type>>::value,
+                      int>;
 
 public:
     /// Arity of the multiply() method.
@@ -432,13 +432,13 @@ public:
     {
         p_type term;
         // Assign the exponent.
-        term.e = safe_cast<value_type>(e);
+        term.e = piranha::safe_cast<value_type>(e);
         if (unlikely(term.e <= 0)) {
             piranha_throw(std::invalid_argument, "a term of a divisor must have a positive exponent");
         }
         // Build the vector to be inserted.
         for (; begin != end; ++begin) {
-            term.v.push_back(safe_cast<value_type>(*begin));
+            term.v.push_back(piranha::safe_cast<value_type>(*begin));
         }
         // Range check.
         if (unlikely(!term_range_check(term))) {

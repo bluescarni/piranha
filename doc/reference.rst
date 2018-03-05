@@ -11,3 +11,4 @@ Reference
    symbol_management.rst
    math.rst
    key_interface.rst
+   conversions.rst

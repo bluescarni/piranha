@@ -1,6 +1,9 @@
 language: cpp
 
-sudo: false
+# NOTE: as of today, the sudo-enabled instances have more RAM:
+# https://docs.travis-ci.com/user/reference/overview/
+sudo: required
+dist: trusty
 
 # Do not build branches of the form "pr/*". By prefixing pull requests coming
 # from branches inside the repository with pr/, this avoids building both the

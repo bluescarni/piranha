@@ -1894,7 +1894,7 @@ private:
         // allocs for each string are necessary anyway. Still, with the small string optimisation
         // it may be worth it.
         std::vector<std::string> vs;
-        vs.resize(safe_cast<std::vector<std::string>::size_type>(ss_size));
+        vs.resize(piranha::safe_cast<std::vector<std::string>::size_type>(ss_size));
         // Load the symbol names in a vector of strings.
         for (auto &str : vs) {
             boost_load(ar, str);
@@ -1932,7 +1932,7 @@ private:
     using pow_m_type = decltype(std::declval<const U &>() * std::declval<const U &>());
     // Common checks on the exponent.
     template <typename T>
-    using pow_expo_checks = conjunction<is_is_zero_type<const T &>, has_safe_cast<integer, T>>;
+    using pow_expo_checks = conjunction<is_is_zero_type<const T &>, is_safely_castable<const T &, integer>>;
     // Hashing utils for series.
     struct series_hasher {
         template <typename T>
@@ -2365,7 +2365,7 @@ public:
         // Exponentiation by repeated multiplications.
         integer n;
         try {
-            n = safe_cast<integer>(x);
+            n = piranha::safe_cast<integer>(x);
         } catch (const safe_cast_failure &) {
             piranha_throw(std::invalid_argument, "invalid argument for series exponentiation: non-integral value");
         }
@@ -2648,7 +2648,7 @@ public:
     Derived trim() const
     {
         // Init the trimming mask.
-        std::vector<char> trim_mask(safe_cast<std::vector<char>::size_type>(m_symbol_set.size()), char(1));
+        std::vector<char> trim_mask(piranha::safe_cast<std::vector<char>::size_type>(m_symbol_set.size()), char(1));
         // Determine the symbols to be trimmed.
         const auto it_f = this->m_container.end();
         for (auto it = this->m_container.begin(); it != it_f; ++it) {
@@ -3618,8 +3618,6 @@ inline namespace impl
 template <typename Stream, typename Series>
 using series_msgpack_pack_enabler
     = enable_if_t<conjunction<is_series<Series>, is_msgpack_stream<Stream>, has_msgpack_pack<Stream, std::string>,
-                              has_safe_cast<std::uint32_t, decltype(symbol_fset{}.size())>,
-                              has_safe_cast<std::uint32_t, typename Series::size_type>,
                               has_msgpack_pack<Stream, typename Series::term_type::cf_type>,
                               key_has_msgpack_pack<Stream, typename Series::term_type::key_type>>::value>;
 
@@ -3666,12 +3664,12 @@ struct msgpack_pack_impl<Stream, Series, series_msgpack_pack_enabler<Stream, Ser
         packer.pack_array(2u);
         // Pack the symbol set.
         const auto &ss = s.get_symbol_set();
-        packer.pack_array(safe_cast<std::uint32_t>(ss.size()));
+        packer.pack_array(piranha::safe_cast<std::uint32_t>(ss.size()));
         for (const auto &sym : ss) {
             msgpack_pack(packer, sym, f);
         }
         // Pack the terms.
-        packer.pack_array(safe_cast<std::uint32_t>(s.size()));
+        packer.pack_array(piranha::safe_cast<std::uint32_t>(s.size()));
         for (const auto &t : s._container()) {
             // Each term is an array made of two elements, coefficient and key.
             packer.pack_array(2u);

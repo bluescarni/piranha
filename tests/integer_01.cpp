@@ -53,6 +53,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
 
@@ -400,15 +401,13 @@ struct gcd_tester {
         BOOST_CHECK((are_gcd3_types<int_type &, int_type>::value));
         BOOST_CHECK((are_gcd3_types<int_type &, int_type &&, const int_type &>::value));
         BOOST_CHECK((are_gcd3_types<int_type &, int, long>::value));
+        BOOST_CHECK((!are_gcd3_types<int_type, int_type, int_type>::value));
         BOOST_CHECK((!are_gcd3_types<const int_type &, int_type &>::value));
         BOOST_CHECK((!are_gcd3_types<const int_type, int_type const>::value));
         BOOST_CHECK((are_gcd_types<int_type, wchar_t>::value));
         BOOST_CHECK((are_gcd_types<wchar_t, int_type>::value));
         BOOST_CHECK((!are_gcd_types<int_type, void>::value));
         BOOST_CHECK((!are_gcd_types<void, int_type>::value));
-        // NOTE: the demangler in mp++ earlier than 0.9 does not support
-        // correctly 128bit types on OSX. Once we bump up the mp++ version,
-        // we can remove the second check.
 #if defined(MPPP_HAVE_GCC_INT128)
         BOOST_CHECK((are_gcd_types<int_type, __int128_t>::value));
         BOOST_CHECK((are_gcd_types<__int128_t, int_type>::value));
@@ -474,23 +473,35 @@ struct safe_cast_float_tester {
         void operator()(const T &) const
         {
             using int_type = mppp::integer<S::value>;
-            // Type trait.
-            BOOST_CHECK((has_safe_cast<int_type, T>::value));
-            BOOST_CHECK((has_safe_cast<int_type, T &>::value));
-            BOOST_CHECK((has_safe_cast<const int_type, T &>::value));
-            BOOST_CHECK((has_safe_cast<const int_type &, T &&>::value));
-            BOOST_CHECK((!has_safe_cast<int_type, void>::value));
-            BOOST_CHECK((!has_safe_cast<void, int_type>::value));
+            // Type traits.
+            BOOST_CHECK((is_safely_convertible<const T &, int_type &>::value));
+            BOOST_CHECK((!is_safely_convertible<const T &, const int_type &>::value));
+            BOOST_CHECK((!is_safely_convertible<const T &, int_type &&>::value));
+            BOOST_CHECK((!is_safely_convertible<void, int_type &>::value));
+            BOOST_CHECK((is_safely_castable<T, int_type>::value));
+            BOOST_CHECK((!is_safely_castable<T, int_type &>::value));
+            BOOST_CHECK((!is_safely_castable<T, const int_type>::value));
+            BOOST_CHECK((is_safely_castable<T &, int_type>::value));
+            BOOST_CHECK((is_safely_castable<const T &, int_type>::value));
+            BOOST_CHECK((is_safely_castable<T &&, int_type>::value));
+            BOOST_CHECK((!is_safely_castable<void, int_type>::value));
+            BOOST_CHECK((!is_safely_castable<int_type, void>::value));
 
             // Simple testing.
+            int_type tmp_n;
+            BOOST_CHECK(safe_convert(tmp_n, T(123)));
+            BOOST_CHECK_EQUAL(tmp_n, 123);
+            tmp_n = 0;
+            BOOST_CHECK(!safe_convert(tmp_n, T(123.12)));
+            BOOST_CHECK_EQUAL(tmp_n, 0);
             BOOST_CHECK_EQUAL(safe_cast<int_type>(T(0)), int_type{0});
             BOOST_CHECK_EQUAL(safe_cast<int_type>(T(-1)), int_type{-1});
             BOOST_CHECK_EQUAL(safe_cast<int_type>(T(1)), int_type{1});
             BOOST_CHECK_EXCEPTION(safe_cast<int_type>(T(1.5)), safe_cast_failure, [](const safe_cast_failure &e) {
-                return boost::contains(e.what(), "the floating-point value with nonzero fractional part");
+                return boost::contains(e.what(), "the safe conversion of a value of type");
             });
             BOOST_CHECK_EXCEPTION(safe_cast<int_type>(T(-1.5)), safe_cast_failure, [](const safe_cast_failure &e) {
-                return boost::contains(e.what(), "the floating-point value with nonzero fractional part");
+                return boost::contains(e.what(), "the safe conversion of a value of type");
             });
 
             // Non-finite values.
@@ -498,11 +509,11 @@ struct safe_cast_float_tester {
             if (lim::is_iec559) {
                 BOOST_CHECK_EXCEPTION(safe_cast<int_type>(lim::quiet_NaN()), safe_cast_failure,
                                       [](const safe_cast_failure &e) {
-                                          return boost::contains(e.what(), "the non-finite floating-point value");
+                                          return boost::contains(e.what(), "the safe conversion of a value of type");
                                       });
                 BOOST_CHECK_EXCEPTION(safe_cast<int_type>(lim::infinity()), safe_cast_failure,
                                       [](const safe_cast_failure &e) {
-                                          return boost::contains(e.what(), "the non-finite floating-point value");
+                                          return boost::contains(e.what(), "the safe conversion of a value of type");
                                       });
             }
         }
@@ -527,16 +538,34 @@ struct safe_cast_int_tester {
         {
             using int_type = mppp::integer<S::value>;
             // Type trait.
-            BOOST_CHECK((has_safe_cast<int_type, T>::value));
-            BOOST_CHECK((has_safe_cast<int_type, T &>::value));
-            BOOST_CHECK((has_safe_cast<const int_type, T &>::value));
-            BOOST_CHECK((has_safe_cast<const int_type &, T &&>::value));
-            BOOST_CHECK((has_safe_cast<T, int_type>::value));
-            BOOST_CHECK((has_safe_cast<T &, int_type>::value));
-            BOOST_CHECK((has_safe_cast<T &, const int_type>::value));
-            BOOST_CHECK((has_safe_cast<T &&, const int_type &>::value));
+            BOOST_CHECK((is_safely_convertible<T, int_type &>::value));
+            BOOST_CHECK((!is_safely_convertible<T, const int_type &>::value));
+            BOOST_CHECK((!is_safely_convertible<T, int_type &&>::value));
+            BOOST_CHECK((!is_safely_convertible<void, int_type &&>::value));
+            BOOST_CHECK((is_safely_convertible<int_type, T &>::value));
+            BOOST_CHECK((!is_safely_convertible<int_type, const T &>::value));
+            BOOST_CHECK((!is_safely_convertible<int_type, T &&>::value));
+            BOOST_CHECK((!is_safely_convertible<void, T &&>::value));
+            BOOST_CHECK((is_safely_castable<T, int_type>::value));
+            BOOST_CHECK((is_safely_castable<T &, int_type>::value));
+            BOOST_CHECK((is_safely_castable<const T &, int_type>::value));
+            BOOST_CHECK((is_safely_castable<T &&, int_type>::value));
+            BOOST_CHECK((!is_safely_castable<T &&, int_type &>::value));
+            BOOST_CHECK((!is_safely_castable<T &&, const int_type>::value));
+            BOOST_CHECK((is_safely_castable<int_type, T>::value));
+            BOOST_CHECK((is_safely_castable<int_type &, T>::value));
+            BOOST_CHECK((is_safely_castable<const int_type, T>::value));
+            BOOST_CHECK((is_safely_castable<const int_type &, T>::value));
+            BOOST_CHECK((!is_safely_castable<const int_type, T &>::value));
+            BOOST_CHECK((!is_safely_castable<const int_type, const T &>::value));
 
             // Simple checks.
+            int_type tmp_n;
+            BOOST_CHECK(safe_convert(tmp_n, T(12)));
+            BOOST_CHECK_EQUAL(tmp_n, 12);
+            T tmp_m;
+            BOOST_CHECK(safe_convert(tmp_m, int_type(12)));
+            BOOST_CHECK_EQUAL(tmp_m, T(12));
             BOOST_CHECK(safe_cast<int_type>(T(0)) == int_type{0});
             BOOST_CHECK(safe_cast<int_type>(T(1)) == int_type{1});
             BOOST_CHECK(safe_cast<int_type>(T(12)) == int_type{12});
@@ -548,11 +577,11 @@ struct safe_cast_int_tester {
             using lim = std::numeric_limits<T>;
             BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::max()) + 1), safe_cast_failure,
                                   [](const safe_cast_failure &e) {
-                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                      return boost::contains(e.what(), "the safe conversion of a value of type");
                                   });
             BOOST_CHECK_EXCEPTION(safe_cast<T>(int_type(lim::min()) - 1), safe_cast_failure,
                                   [](const safe_cast_failure &e) {
-                                      return boost::contains(e.what(), "as the conversion would result in overflow");
+                                      return boost::contains(e.what(), "the safe conversion of a value of type");
                                   });
         }
     };
@@ -561,12 +590,15 @@ struct safe_cast_int_tester {
     {
         tuple_for_each(int_types{}, runner<S>{});
         using int_type = mppp::integer<S::value>;
-        BOOST_CHECK((has_safe_cast<int_type, wchar_t>::value));
-#if defined(MPPP_HAVE_GCC_INT128)
-        BOOST_CHECK((has_safe_cast<int_type, __int128_t>::value));
-        BOOST_CHECK((has_safe_cast<int_type, __uint128_t>::value));
-        BOOST_CHECK((has_safe_cast<__int128_t, int_type>::value));
-        BOOST_CHECK((has_safe_cast<__uint128_t, int_type>::value));
+        BOOST_CHECK((is_safely_castable<wchar_t, int_type>::value));
+        // NOTE: further demangler fixes are needed in mp++, the problem
+        // here is that we will be trying to demangle references to 128bit
+        // integers rather than pure 128bit ints. Let's disable for now.
+#if defined(MPPP_HAVE_GCC_INT128) && !defined(__apple_build_version__)
+        BOOST_CHECK((is_safely_castable<__int128_t, int_type>::value));
+        BOOST_CHECK((is_safely_castable<__uint128_t, int_type>::value));
+        BOOST_CHECK((is_safely_castable<int_type, __int128_t>::value));
+        BOOST_CHECK((is_safely_castable<int_type, __uint128_t>::value));
         BOOST_CHECK(safe_cast<__int128_t>(int_type{12}) == 12);
         BOOST_CHECK(safe_cast<__uint128_t>(int_type{12}) == 12u);
         BOOST_CHECK(safe_cast<int_type>(__int128_t(12)) == 12);
