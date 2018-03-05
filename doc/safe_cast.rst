@@ -38,7 +38,8 @@ Types
 .. cpp:class:: piranha::safe_cast_failure final : public std::invalid_argument
 
    This exception is raised by :cpp:func:`piranha::safe_cast()` upon a conversion failure.
-   This class inherits all the public members of ``std::invalid_argument`` (including its constructors).
+   This class inherits all the public members of ``std::invalid_argument``, constructors
+   included.
 
 Concepts
 --------
