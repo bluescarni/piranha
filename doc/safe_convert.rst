@@ -240,4 +240,4 @@ Implementations
 
    .. code-block:: c++
 
-      bool operator()(mppp::rational<SSize> &, const piranha::real &) const
+      bool operator()(mppp::rational<SSize> &, const piranha::real &) const;
