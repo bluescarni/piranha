@@ -54,19 +54,40 @@ class pow_impl
 inline namespace impl
 {
 
-// Enabler for pow().
+// The candidate return type for piranha::pow().
 template <typename T, typename U>
-using pow_type_ = decltype(pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+using pow_t_ = decltype(pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+}
+
+template <typename T, typename U = T>
+struct is_exponentiable : is_returnable<detected_t<pow_t_, T, U>> {
+};
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool Exponentiable = is_exponentiable<T, U>::value;
+
+#endif
+
+inline namespace impl
+{
 
 template <typename T, typename U>
-using pow_type = enable_if_t<is_returnable<pow_type_<T, U>>::value, pow_type_<T, U>>;
+using pow_t = enable_if_t<is_exponentiable<T, U>::value, pow_t_<T, U>>;
 }
 
 // The exponentiation function.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T>
+inline auto pow(Exponentiable<T> &&x, T &&y)
+#else
 template <typename T, typename U>
-inline pow_type<T &&, U &&> pow(T &&x, U &&y)
+inline pow_t<T, U> pow(T &&x, U &&y)
+#endif
 {
-    return pow_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
+    return pow_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>>{}(std::forward<decltype(x)>(x),
+                                                                      std::forward<decltype(y)>(y));
 }
 
 // Specialisation of the implementation of piranha::pow() for C++ arithmetic types.
@@ -118,25 +139,6 @@ public:
         return mppp::pow(std::forward<T1>(b), std::forward<U1>(e));
     }
 };
-
-// Implementation of the type trait to detect exponentiability.
-inline namespace impl
-{
-
-template <typename T, typename U>
-using pow_t = decltype(piranha::pow(std::declval<const T &>(), std::declval<const U &>()));
-}
-
-template <typename T, typename U = T>
-struct is_exponentiable : is_detected<pow_t, T, U> {
-};
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U = T>
-concept bool Exponentiable = is_exponentiable<T, U>::value;
-
-#endif
 }
 
 #endif

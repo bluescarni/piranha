@@ -58,7 +58,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/math/gcd3.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/power_series.hpp>
-#include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/substitutable_series.hpp>

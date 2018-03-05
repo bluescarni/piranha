@@ -622,10 +622,7 @@ struct pow_tester {
             return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
         });
         BOOST_CHECK_EXCEPTION(k1.pow(42.5, symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
-            return boost::contains(e.what(), "the floating-point value with nonzero fractional part "
-                                                 + std::to_string(42.5) + " cannot be converted to the integral type '"
-                                                 + demangle<T>()
-                                                 + "', as the conversion cannot preserve the original value");
+            return boost::contains(e.what(), "the safe conversion of a value of type");
         });
         k1 = k_type{2};
         k_type k2({4});

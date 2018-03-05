@@ -60,7 +60,7 @@ using monomial_pow_dispatcher = disjunction_idx<
     std::is_same<detected_t<mul_t, T, U>, T>,
     // Case 3: T * U is well-defined, yielding a type that
     // can be safely cast back to T.
-    has_safe_cast<T, detected_t<mul_t, T, U>>>;
+    is_safely_castable<const detected_t<mul_t, T, U> &, T>>;
 
 // Implementation of case 0.
 template <typename T, typename U>
@@ -104,7 +104,7 @@ inline void monomial_pow_mult_exp(T &ret, const T &exp, const U &x, const std::i
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
-    ret = safe_cast<T>(exp * x);
+    ret = piranha::safe_cast<T>(exp * x);
 #if defined(PIRANHA_COMPILER_IS_GCC)
 #pragma GCC diagnostic pop
 #endif

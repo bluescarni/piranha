@@ -158,8 +158,9 @@ private:
     template <typename U>
     using container_ctor_enabler
         = enable_if_t<conjunction<has_input_begin_end<const U>,
-                                  has_safe_cast<T, typename std::iterator_traits<decltype(
-                                                       std::begin(std::declval<const U &>()))>::value_type>>::value,
+                                  is_safely_castable<const typename std::iterator_traits<decltype(
+                                                         std::begin(std::declval<const U &>()))>::value_type &,
+                                                     T>>::value,
                       int>;
     // Implementation of the ctor from range.
     template <typename Iterator>
@@ -167,7 +168,7 @@ private:
     {
         v_type tmp;
         std::transform(begin, end, std::back_inserter(tmp),
-                       [](const uncvref_t<decltype(*begin)> &v) { return safe_cast<T>(v); });
+                       [](const uncvref_t<decltype(*begin)> &v) { return piranha::safe_cast<T>(v); });
         m_value = ka::encode(tmp);
         return tmp.size();
     }
@@ -213,10 +214,10 @@ public:
 
 private:
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  has_safe_cast<T, typename std::iterator_traits<Iterator>::value_type>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<is_input_iterator<Iterator>,
+                    is_safely_castable<const typename std::iterator_traits<Iterator>::value_type &, T>>::value,
+        int>;
 
 public:
     /// Constructor from range.
@@ -942,9 +943,11 @@ public:
 private:
     // ipow subs utilities.
     template <typename U>
-    using ipow_subs_type = enable_if_t<
-        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value,
-        pow_t<U, integer>>;
+    using ipow_subs_t_ = pow_t<const U &, const integer &>;
+    template <typename U>
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ipow_subs_t_<U>, int>, is_returnable<ipow_subs_t_<U>>>::value,
+                      ipow_subs_t_<U>>;
 
 public:
     /// Substitution of integral power.

@@ -38,6 +38,11 @@ see https://www.gnu.org/licenses/. */
 #if defined(_MSC_VER)
 
 #define PIRANHA_COMPILER_IS_CLANG_CL
+#define PIRANHA_PRETTY_FUNCTION __FUNCSIG__
+
+#else
+
+#define PIRANHA_PRETTY_FUNCTION __PRETTY_FUNCTION__
 
 #endif
 

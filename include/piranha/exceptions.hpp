@@ -47,6 +47,7 @@ see https://www.gnu.org/licenses/. */
 #include <boost/optional.hpp>
 #endif
 
+#include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
 #include <piranha/detail/stacktrace.hpp>
@@ -114,6 +115,7 @@ struct ex_thrower {
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
         }
 #endif
+        oss << "\nException type   : " << demangle<Exception>();
         oss << "\nException message: " << std::forward<Str>(desc) << "\n";
         throw Exception(oss.str(), std::forward<Args>(args)...);
     }

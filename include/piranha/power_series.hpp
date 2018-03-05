@@ -37,7 +37,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/forwarding.hpp>
 #include <piranha/math.hpp>
-#include <piranha/safe_cast.hpp>
 #include <piranha/series.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/type_traits.hpp>
