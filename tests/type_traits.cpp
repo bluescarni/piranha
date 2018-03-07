@@ -1958,3 +1958,14 @@ BOOST_AUTO_TEST_CASE(type_traits_same_test)
     BOOST_CHECK((!are_same<double, int, const int>::value));
     BOOST_CHECK((!are_same<int, volatile int, const int>::value));
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_preinc_test)
+{
+    BOOST_CHECK(is_preincrementable<int &>::value);
+    BOOST_CHECK(!is_preincrementable<int>::value);
+    BOOST_CHECK(!is_preincrementable<const int>::value);
+    BOOST_CHECK(!is_preincrementable<const int &>::value);
+    BOOST_CHECK(is_preincrementable<double &>::value);
+    BOOST_CHECK(is_preincrementable<int *&>::value);
+    BOOST_CHECK(!is_preincrementable<void>::value);
+}

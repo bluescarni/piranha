@@ -75,6 +75,18 @@ Type properties
 Arithmetic and logical operators
 --------------------------------
 
+.. cpp:concept:: template <typename T> piranha::Preincrementable
+
+   This concept is satisfied if the type ``T`` supports the pre-increment operator.
+
+   Specifically, this concept is satisfied if
+
+   .. code-block:: c++
+
+      ++std::declval<T>()
+
+   is a valid expression.
+
 .. cpp:concept:: template <typename T, typename U = T> piranha::EqualityComparable
 
    This concept is satisfied if instances of type ``T`` can be compared to instances of type

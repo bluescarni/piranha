@@ -273,6 +273,24 @@ public:
 template <typename T, typename U>
 const bool is_addable_in_place<T, U>::value;
 
+inline namespace impl
+{
+
+template <typename T>
+using preinc_t = decltype(++std::declval<T>());
+}
+
+// Pre-incrementable type-trait.
+template <typename T>
+using is_preincrementable = is_detected<preinc_t, T>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool Preincrementable = is_preincrementable<T>::value;
+
+#endif
+
 /// Subtractable type trait.
 /**
  * This type trait will be \p true if objects of type \p U can be subtracted from objects of type \p T using the binary
@@ -907,8 +925,6 @@ class is_iterator
     template <typename U>
     using deref_t = decltype(*std::declval<U &>());
     template <typename U>
-    using inc_t = decltype(++std::declval<U &>());
-    template <typename U>
     using it_cat = typename std::iterator_traits<U>::iterator_category;
     using uT = uncvref_t<T>;
     static const bool implementation_defined = conjunction<
@@ -920,7 +936,8 @@ class is_iterator
         //
         // Until this is clarified, it is probably better to keep this workaround.
         /* std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value */
-        is_detected<deref_t, uT>, std::is_same<detected_t<inc_t, uT>, addlref_t<uT>>, has_iterator_traits<uT>,
+        is_detected<deref_t, uT>, std::is_same<detected_t<preinc_t, addlref_t<uT>>, addlref_t<uT>>,
+        has_iterator_traits<uT>,
         // NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived
         // from the standard ones. Hence, check that the category can be converted to one of the standard categories.
         // This should not change anything for std iterators, and just enable support for Boost ones.
