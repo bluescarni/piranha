@@ -1969,3 +1969,14 @@ BOOST_AUTO_TEST_CASE(type_traits_preinc_test)
     BOOST_CHECK(is_preincrementable<int *&>::value);
     BOOST_CHECK(!is_preincrementable<void>::value);
 }
+
+BOOST_AUTO_TEST_CASE(type_traits_postinc_test)
+{
+    BOOST_CHECK(is_postincrementable<int &>::value);
+    BOOST_CHECK(!is_postincrementable<int>::value);
+    BOOST_CHECK(!is_postincrementable<const int>::value);
+    BOOST_CHECK(!is_postincrementable<const int &>::value);
+    BOOST_CHECK(is_postincrementable<double &>::value);
+    BOOST_CHECK(is_postincrementable<int *&>::value);
+    BOOST_CHECK(!is_postincrementable<void>::value);
+}

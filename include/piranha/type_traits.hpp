@@ -291,6 +291,24 @@ concept bool Preincrementable = is_preincrementable<T>::value;
 
 #endif
 
+inline namespace impl
+{
+
+template <typename T>
+using postinc_t = decltype(std::declval<T>()++);
+}
+
+// Post-incrementable type-trait.
+template <typename T>
+using is_postincrementable = is_detected<postinc_t, T>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool Postincrementable = is_postincrementable<T>::value;
+
+#endif
+
 /// Subtractable type trait.
 /**
  * This type trait will be \p true if objects of type \p U can be subtracted from objects of type \p T using the binary
