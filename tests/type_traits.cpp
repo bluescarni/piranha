@@ -1478,15 +1478,15 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_iterator<const int *>::value);
     BOOST_CHECK(is_iterator<std::vector<int>::iterator>::value);
     BOOST_CHECK(is_iterator<std::vector<int>::const_iterator>::value);
-    BOOST_CHECK(is_iterator<std::vector<int>::iterator &>::value);
+    BOOST_CHECK(!is_iterator<std::vector<int>::iterator &>::value);
     BOOST_CHECK(!is_iterator<int>::value);
     BOOST_CHECK(!is_iterator<std::string>::value);
     BOOST_CHECK(is_iterator<iter01>::value);
-    BOOST_CHECK(is_iterator<iter01 &>::value);
-    BOOST_CHECK(is_iterator<const iter01>::value);
+    BOOST_CHECK(!is_iterator<iter01 &>::value);
+    BOOST_CHECK(!is_iterator<const iter01>::value);
     BOOST_CHECK(is_iterator<iter02>::value);
-    BOOST_CHECK(is_iterator<iter02 &>::value);
-    BOOST_CHECK(is_iterator<const iter02>::value);
+    BOOST_CHECK(!is_iterator<iter02 &>::value);
+    BOOST_CHECK(!is_iterator<const iter02>::value);
     BOOST_CHECK(!is_iterator<iter03>::value);
     BOOST_CHECK(!is_iterator<iter03 &>::value);
     BOOST_CHECK(!is_iterator<const iter03>::value);
@@ -1520,14 +1520,14 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_input_iterator<iter06 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter06>::value);
     BOOST_CHECK(is_iterator<iter06>::value);
-    BOOST_CHECK(is_iterator<iter06 &>::value);
-    BOOST_CHECK(is_iterator<const iter06>::value);
+    BOOST_CHECK(!is_iterator<iter06 &>::value);
+    BOOST_CHECK(!is_iterator<const iter06>::value);
     BOOST_CHECK(!is_input_iterator<iter07>::value);
     BOOST_CHECK(!is_input_iterator<iter07 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter07>::value);
     BOOST_CHECK(is_iterator<iter07>::value);
-    BOOST_CHECK(is_iterator<iter07 &>::value);
-    BOOST_CHECK(is_iterator<const iter07>::value);
+    BOOST_CHECK(!is_iterator<iter07 &>::value);
+    BOOST_CHECK(!is_iterator<const iter07>::value);
     BOOST_CHECK(!is_input_iterator<iter08>::value);
     BOOST_CHECK(!is_input_iterator<iter08 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter08>::value);
@@ -1544,14 +1544,14 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_input_iterator<iter11 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter11>::value);
     BOOST_CHECK(is_iterator<iter11>::value);
-    BOOST_CHECK(is_iterator<iter11 &>::value);
-    BOOST_CHECK(is_iterator<const iter11>::value);
+    BOOST_CHECK(!is_iterator<iter11 &>::value);
+    BOOST_CHECK(!is_iterator<const iter11>::value);
     BOOST_CHECK(!is_input_iterator<iter12>::value);
     BOOST_CHECK(!is_input_iterator<iter12 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter12>::value);
     BOOST_CHECK(is_iterator<iter12>::value);
-    BOOST_CHECK(is_iterator<iter12 &>::value);
-    BOOST_CHECK(is_iterator<const iter12>::value);
+    BOOST_CHECK(!is_iterator<iter12 &>::value);
+    BOOST_CHECK(!is_iterator<const iter12>::value);
     BOOST_CHECK(is_input_iterator<iter13>::value);
     BOOST_CHECK(is_input_iterator<iter13 &>::value);
     BOOST_CHECK(is_input_iterator<const iter13>::value);
@@ -1576,8 +1576,8 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_forward_iterator<iter17 &>::value);
     BOOST_CHECK(!is_forward_iterator<const iter17>::value);
     BOOST_CHECK(is_iterator<iter17>::value);
-    BOOST_CHECK(is_iterator<iter17 &>::value);
-    BOOST_CHECK(is_iterator<const iter17>::value);
+    BOOST_CHECK(!is_iterator<iter17 &>::value);
+    BOOST_CHECK(!is_iterator<const iter17>::value);
     BOOST_CHECK(!is_forward_iterator<iter18>::value);
     BOOST_CHECK(!is_forward_iterator<iter18 &>::value);
     BOOST_CHECK(!is_forward_iterator<const iter18>::value);
@@ -1603,8 +1603,8 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_input_iterator<iter21 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter21>::value);
     BOOST_CHECK(is_iterator<iter21>::value);
-    BOOST_CHECK(is_iterator<iter21 &>::value);
-    BOOST_CHECK(is_iterator<const iter21>::value);
+    BOOST_CHECK(!is_iterator<iter21 &>::value);
+    BOOST_CHECK(!is_iterator<const iter21>::value);
 }
 
 template <typename S>
@@ -1979,4 +1979,73 @@ BOOST_AUTO_TEST_CASE(type_traits_postinc_test)
     BOOST_CHECK(is_postincrementable<double &>::value);
     BOOST_CHECK(is_postincrementable<int *&>::value);
     BOOST_CHECK(!is_postincrementable<void>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_output_it)
+{
+    BOOST_CHECK((!is_output_iterator<void, void>::value));
+    BOOST_CHECK((!is_output_iterator<void, double>::value));
+    BOOST_CHECK((!is_output_iterator<double, void>::value));
+    BOOST_CHECK((is_output_iterator<std::ostream_iterator<double>, double &>::value));
+    BOOST_CHECK((is_output_iterator<std::ostream_iterator<double>, int>::value));
+    BOOST_CHECK((!is_output_iterator<std::ostream_iterator<double>, std::string &>::value));
+}
+
+// Swappable.
+struct swap00 {
+};
+
+void swap(swap00 &, swap00 &);
+
+// Swappable only mixed with swap00: swapping with self
+// fails because there's no ADL overload, and std::swap()
+// is blocked by the lack of move ctor.
+struct swap01 {
+    swap01(swap01 &&) = delete;
+};
+
+void swap(swap00 &, swap01 &);
+void swap(swap01 &, swap00 &);
+
+// Same as above, but move assignment is missing.
+struct swap02 {
+    swap02 &operator=(swap02 &&) = delete;
+};
+
+void swap(swap01 &, swap02 &);
+void swap(swap02 &, swap01 &);
+
+// Funky overloads.
+struct swap03 {
+    swap03() = default;
+    swap03(swap03 &&) = delete;
+};
+
+void swap(const swap03 &, swap03 &);
+void swap(const swap03 &, const swap03 &);
+
+BOOST_AUTO_TEST_CASE(type_traits_swappable)
+{
+    BOOST_CHECK((!is_swappable<void>::value));
+    BOOST_CHECK((!is_swappable<void, int &>::value));
+    BOOST_CHECK((!is_swappable<int &, void>::value));
+    BOOST_CHECK((is_swappable<int &>::value));
+    BOOST_CHECK((is_swappable<swap00 &>::value));
+    BOOST_CHECK((!is_swappable<swap01 &>::value));
+    BOOST_CHECK((is_swappable<swap01 &, swap00 &>::value));
+    BOOST_CHECK((is_swappable<swap00 &, swap01 &>::value));
+    BOOST_CHECK((!is_swappable<swap02 &>::value));
+    BOOST_CHECK((is_swappable<swap02 &, swap01 &>::value));
+    BOOST_CHECK((is_swappable<swap01 &, swap02 &>::value));
+    BOOST_CHECK((is_swappable<swap03 &>::value));
+    BOOST_CHECK((is_swappable<const swap03 &>::value));
+    BOOST_CHECK((is_swappable<const swap03 &, swap03 &>::value));
+#if PIRANHA_CPLUSPLUS < 201703L
+    // BOOST_CHECK((impl_swap2::swap_is_std<int &, int &>::value));
+    // BOOST_CHECK((!impl_swap2::swap_is_std<swap00 &, swap00 &>::value));
+    // BOOST_CHECK((!impl_swap2::swap_is_std<swap01 &, swap00 &>::value));
+    // BOOST_CHECK((!impl_swap2::swap_is_std<swap00 &, swap01 &>::value));
+    // BOOST_CHECK((!impl_swap2::swap_is_std<const swap03 &, const swap03 &>::value));
+    // BOOST_CHECK((!impl_swap2::swap_is_std<const swap03 &, swap03 &>::value));
+#endif
 }
