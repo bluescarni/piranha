@@ -72,6 +72,24 @@ Type properties
 
    This concept is satisfied if ``T`` and ``Args...`` are all the same type.
 
+.. cpp:concept:: template <typename T, typename U = T> piranha::Swappable
+
+   This concept is satisfied if the expressions
+
+   .. code-block:: c++
+
+      swap(std::declval<T>(), std::declval<U>())
+
+   and
+
+   .. code-block:: c++
+
+      swap(std::declval<U>(), std::declval<T>())
+
+   are both well-formed in unevaluated context after ``using std::swap``. If at least
+   C++17 is being used, this concept is equivalent to the ``std::is_swappable_with``
+   type trait.
+
 Arithmetic and logical operators
 --------------------------------
 
@@ -117,3 +135,26 @@ Arithmetic and logical operators
       std::declval<T>() != std::declval<U>()
 
    are valid expressions whose types are :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
+
+Iterators
+---------
+
+.. cpp:concept:: template <typename T> piranha::Iterator
+
+   This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
+   for iterator types.
+
+.. cpp:concept:: template <typename T> piranha::InputIterator
+
+   This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
+   for input iterator types.
+
+.. cpp:concept:: template <typename T, typename U> piranha::OutputIterator
+
+   This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
+   for output iterator types which instances of ``U`` can be written to.
+
+.. cpp:concept:: template <typename T> piranha::ForwardIterator
+
+   This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
+   for forward iterator types.

@@ -223,6 +223,7 @@ struct random_failure {
     {
         return m_str == rf.m_str;
     }
+    random_failure &operator=(const random_failure &) = default;
     random_failure &operator=(random_failure &&other) noexcept
     {
         m_str = std::move(other.m_str);

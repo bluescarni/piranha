@@ -244,7 +244,7 @@ private:
     static bool term_range_check(const p_type &p)
     {
         return std::all_of(p.v.begin(), p.v.end(), [](const value_type &x) {
-            return x >= -detail::safe_abs_sint<value_type>::value && x <= detail::safe_abs_sint<value_type>::value;
+            return x >= -safe_abs_sint<value_type>::value && x <= safe_abs_sint<value_type>::value;
         });
     }
     template <typename U = T, typename std::enable_if<!std::is_integral<U>::value, int>::type = 0>

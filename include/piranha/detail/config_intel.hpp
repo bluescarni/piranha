@@ -30,7 +30,7 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_CONFIG_INTEL_HPP
 
 #if __INTEL_COMPILER < 1500
-#error Minimum Intel compiler version supported is 15.
+#error The minimum supported Intel compiler version is 15.
 #endif
 
 #define PIRANHA_COMPILER_IS_INTEL

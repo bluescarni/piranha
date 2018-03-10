@@ -322,6 +322,7 @@ struct time_bomb {
     }
     time_bomb(time_bomb &&) = default;
     time_bomb(const time_bomb &) = default;
+    time_bomb &operator=(const time_bomb &) = default;
     time_bomb &operator=(time_bomb &&other) noexcept
     {
         m_vector = std::move(other.m_vector);
