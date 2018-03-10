@@ -66,7 +66,7 @@ see https://www.gnu.org/licenses/. */
 
 #if defined(__apple_build_version__)
 
-// clang 3.4 from Xcode 5.1.
+// clang 3.4 is available since Xcode 5.1.
 #if __clang_major__ > 5 || (__clang_major__ == 5 && __clang_minor__ >= 1)
 
 #define PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL

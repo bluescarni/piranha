@@ -373,15 +373,15 @@ inline namespace impl
 {
 
 #if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-increment-bool"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
 template <typename T>
 using preinc_t = decltype(++std::declval<T>());
 
 #if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 #endif
 }
 
@@ -400,15 +400,15 @@ inline namespace impl
 {
 
 #if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-increment-bool"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
 template <typename T>
 using postinc_t = decltype(std::declval<T>()++);
 
 #if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 #endif
 }
 
