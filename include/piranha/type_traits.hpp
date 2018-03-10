@@ -95,6 +95,13 @@ template <class... Bs>
 struct disjunction_idx : disjunction_idx_impl<0u, Bs...> {
 };
 
+// Deferred conditional. It will check the value of the
+// compile-time boolean constant C, and derive from T if
+// C is true, from F otherwise.
+template <typename C, typename T, typename F>
+struct dcond : std::conditional<C::value != false, T, F>::type {
+};
+
 #if PIRANHA_CPLUSPLUS >= 201402L
 
 // Handy bits available since C++14, we re-implement them below.
@@ -1160,10 +1167,13 @@ using is_output_iterator = conjunction<
     // Lvalue post-incrementable and returning convertible to const T &.
     std::is_convertible<detected_t<postinc_t, addlref_t<T>>, addlref_t<const T>>,
     // Can post-increment-assign on lvalue.
-    is_detected<out_iter_pia_t, addlref_t<T>, U>
-    // NOTE: let's not put the category check here, because input iterators can also
-    // be output iterators, but their category will *not* be std::output_iterator_tag.
-    >;
+    is_detected<out_iter_pia_t, addlref_t<T>, U>,
+    // NOTE: if T is an input iterator, its category tag must *not* derive from std::output_iterator_tag
+    // (the fact that it is an input iterator takes the precedence in the category tagging).
+    // If T is a pure output iterator, its category tag must derive from std::output_iterator_tag.
+    dcond<is_input_iterator<T>,
+          negation<std::is_base_of<std::output_iterator_tag, detected_t<it_traits_iterator_category, T>>>,
+          std::is_base_of<std::output_iterator_tag, detected_t<it_traits_iterator_category, T>>>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -1182,10 +1192,9 @@ using is_forward_iterator = conjunction<
     // If it is a mutable (i.e., output) iterator, it_traits::reference
     // must be a reference to the value type. Otherwise, it_traits::reference
     // must be a reference to const value type.
-    disjunction<
-        conjunction<is_output_iterator<T, addlref_t<detected_t<it_traits_value_type, T>>>,
-                    std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>>,
-        std::is_same<detected_t<it_traits_reference, T>, addlref_t<const detected_t<it_traits_value_type, T>>>>,
+    dcond<is_output_iterator<T, addlref_t<detected_t<it_traits_value_type, T>>>,
+          std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>,
+          std::is_same<detected_t<it_traits_reference, T>, addlref_t<const detected_t<it_traits_value_type, T>>>>,
     // Post-incrementable lvalue returns convertible to const T &.
     std::is_convertible<detected_t<postinc_t, addlref_t<T>>, addlref_t<const T>>,
     // *r++ returns it_traits::reference.

@@ -2040,3 +2040,27 @@ BOOST_AUTO_TEST_CASE(type_traits_swappable)
     BOOST_CHECK((adl_swap::detected<swap03 &, const swap03 &>::value));
 #endif
 }
+
+template <typename T>
+struct foo_empty {
+};
+
+template <typename T>
+using dcond_tester_0 = conjunction<std::is_floating_point<T>, dcond<foo_empty<T>, foo_empty<T>, foo_empty<T>>>;
+
+template <typename T>
+using dcond_tester_1
+    = conjunction<std::is_floating_point<T>, dcond<std::is_same<T, float>, std::true_type, foo_empty<T>>>;
+
+template <typename T>
+using dcond_tester_2
+    = conjunction<std::is_floating_point<T>, dcond<std::is_same<T, float>, foo_empty<T>, std::true_type>>;
+
+BOOST_AUTO_TEST_CASE(type_traits_dcond_test)
+{
+    // Check that dcond instantiates the condition type only when dcond itself is instantiated.
+    BOOST_CHECK(!dcond_tester_0<int>::value);
+    // Check that only one of the branches is instantiated.
+    BOOST_CHECK(dcond_tester_1<float>::value);
+    BOOST_CHECK(dcond_tester_2<double>::value);
+}
