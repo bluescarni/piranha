@@ -1457,8 +1457,8 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_iterator<iter03>::value);
     BOOST_CHECK(!is_iterator<iter03 &>::value);
     BOOST_CHECK(!is_iterator<const iter03>::value);
-// The Intel compiler has problems with the destructible
-// type-trait.
+    // The Intel compiler has problems with the destructible
+    // type-trait.
 #if !defined(PIRANHA_COMPILER_IS_INTEL)
     BOOST_CHECK(!is_iterator<iter04>::value);
     BOOST_CHECK(!is_iterator<iter04 &>::value);
@@ -1478,6 +1478,8 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_input_iterator<std::vector<int>::iterator &>::value);
     BOOST_CHECK(is_input_iterator<std::istream_iterator<double>>::value);
     BOOST_CHECK(is_input_iterator<iter01>::value);
+    BOOST_CHECK((is_output_iterator<iter01, int &>::value));
+    BOOST_CHECK((!is_output_iterator<iter01, void>::value));
     BOOST_CHECK(!is_input_iterator<iter01 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter01>::value);
     BOOST_CHECK(!is_input_iterator<iter02>::value);
@@ -1505,6 +1507,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_input_iterator<iter09 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter09>::value);
     BOOST_CHECK(is_input_iterator<iter10>::value);
+    BOOST_CHECK((is_output_iterator<iter10, int &>::value));
     BOOST_CHECK(!is_input_iterator<iter10 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter10>::value);
     BOOST_CHECK(!is_input_iterator<iter11>::value);
@@ -1520,6 +1523,9 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_iterator<iter12 &>::value);
     BOOST_CHECK(!is_iterator<const iter12>::value);
     BOOST_CHECK(is_input_iterator<iter13>::value);
+    // NOTE: cannot use iter13 for writing, as it dereferences
+    // to an int rather than int &.
+    BOOST_CHECK((!is_output_iterator<iter13, int &>::value));
     BOOST_CHECK(!is_input_iterator<iter13 &>::value);
     BOOST_CHECK(!is_input_iterator<const iter13>::value);
     // Forward iterator.
@@ -1528,10 +1534,14 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK((is_output_iterator<int *, int &>::value));
     BOOST_CHECK(is_forward_iterator<const int *>::value);
     BOOST_CHECK(is_forward_iterator<std::vector<int>::iterator>::value);
+    BOOST_CHECK((is_output_iterator<std::vector<int>::iterator, int &>::value));
+    BOOST_CHECK((is_output_iterator<std::vector<int>::iterator, double &>::value));
+    BOOST_CHECK((!is_output_iterator<std::vector<int>::iterator, std::string &>::value));
     BOOST_CHECK(is_forward_iterator<std::vector<int>::const_iterator>::value);
     BOOST_CHECK(!is_forward_iterator<std::vector<int>::iterator &>::value);
     BOOST_CHECK(!is_forward_iterator<std::istream_iterator<double>>::value);
     BOOST_CHECK(is_forward_iterator<iter14>::value);
+    BOOST_CHECK((is_output_iterator<iter14, int>::value));
     BOOST_CHECK(!is_forward_iterator<iter14 &>::value);
     BOOST_CHECK(!is_forward_iterator<const iter14>::value);
     BOOST_CHECK(!is_forward_iterator<iter15>::value);
@@ -1957,6 +1967,13 @@ BOOST_AUTO_TEST_CASE(type_traits_output_it)
     BOOST_CHECK((is_output_iterator<std::ostream_iterator<double>, double &>::value));
     BOOST_CHECK((is_output_iterator<std::ostream_iterator<double>, int>::value));
     BOOST_CHECK((!is_output_iterator<std::ostream_iterator<double>, std::string &>::value));
+    BOOST_CHECK((!is_input_iterator<std::ostream_iterator<double>>::value));
+    BOOST_CHECK((is_output_iterator<int *, int &>::value));
+    BOOST_CHECK((is_output_iterator<int *, int &&>::value));
+    BOOST_CHECK((is_output_iterator<int *, double &&>::value));
+    BOOST_CHECK((!is_output_iterator<int *, std::string &>::value));
+    BOOST_CHECK((is_output_iterator<std::list<int>::iterator, int &>::value));
+    BOOST_CHECK((!is_output_iterator<std::list<int>::const_iterator, int &>::value));
 }
 
 // Swappable via std::swap().
