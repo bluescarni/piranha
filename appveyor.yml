@@ -34,14 +34,14 @@ environment:
 install:
 - if [%BUILD_TYPE%]==[MSVC15_clang] set PATH=C:\Miniconda36-x64\Scripts;%PATH%
 - if [%BUILD_TYPE%]==[MSVC15_clang] conda config --add channels conda-forge --force
-- if [%BUILD_TYPE%]==[MSVC15_clang] conda create -y --name piranha cmake boost-cpp msgpack-c mppp ninja clangdev
+- if [%BUILD_TYPE%]==[MSVC15_clang] conda create -y --name piranha cmake boost-cpp msgpack-c mppp ninja "clangdev<6"
 - if [%BUILD_TYPE%]==[MSVC15_clang] call activate piranha
 - if [%BUILD_TYPE%]==[MSVC15_clang] clang-cl -v
 - if [%BUILD_TYPE%]==[MSVC15_clang] call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
 - if [%BUILD_TYPE%]==[MSVC17_clang] set PATH=C:\Miniconda36-x64\Scripts;%PATH%
 - if [%BUILD_TYPE%]==[MSVC17_clang] conda config --add channels conda-forge --force
-- if [%BUILD_TYPE%]==[MSVC17_clang] conda create -y --name piranha cmake boost-cpp msgpack-c mppp ninja clangdev
+- if [%BUILD_TYPE%]==[MSVC17_clang] conda create -y --name piranha cmake boost-cpp msgpack-c mppp ninja "clangdev<6"
 - if [%BUILD_TYPE%]==[MSVC17_clang] call activate piranha
 - if [%BUILD_TYPE%]==[MSVC17_clang] clang-cl -v
 - if [%BUILD_TYPE%]==[MSVC17_clang] call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
