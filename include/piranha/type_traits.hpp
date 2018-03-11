@@ -285,6 +285,9 @@ template <typename T, typename U>
 using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
 }
 
+inline namespace impl
+{
+
 // Detect if std::swap() can be called on types T and U. For std::swap() to be viable we need:
 // - to be able to call it, meaning that T and U must be nonconst lvalue refs to the same type,
 // - T/U to be move ctible and move assignable.
@@ -294,25 +297,14 @@ using std_swap_t = decltype(std::swap(std::declval<T>(), std::declval<U>()));
 template <typename T, typename U>
 using std_swap_viable = conjunction<is_detected<std_swap_t, T, U>, std::is_move_constructible<unref_t<T>>,
                                     std::is_move_assignable<unref_t<T>>>;
-
-inline namespace impl
-{
-
-// std::swap() is available for the types T and U, check
-// the availability of "using std::swap" + ADL.
-template <typename T, typename U, bool StdSwapViable>
-struct is_swappable_impl : using_std_adl_swap::detected<T, U> {
-};
-
-// std::swap() is not available for the types T and U, check
-// the availability of pure ADL-based swapping.
-template <typename T, typename U>
-struct is_swappable_impl<T, U, false> : adl_swap::detected<T, U> {
-};
 }
 
+// Two possibilities:
+// - std::swap() is available for the types T and U, check the availability of "using std::swap" + ADL;
+// - std::swap() is not available for the types T and U, check the availability of pure ADL-based swapping.
 template <typename T, typename U = T>
-struct is_swappable : is_swappable_impl<T, U, std_swap_viable<T, U>::value> {
+struct is_swappable : std::conditional<std_swap_viable<T, U>::value, using_std_adl_swap::detected<T, U>,
+                                       adl_swap::detected<T, U>>::type {
 };
 
 #endif
