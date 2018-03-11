@@ -67,11 +67,6 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_constructor_test)
     BOOST_CHECK(is_container_element<cache_aligning_allocator<int>>::value);
 }
 
-PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
-PIRANHA_DECLARE_HAS_TYPEDEF(const_pointer);
-PIRANHA_DECLARE_HAS_TYPEDEF(reference);
-PIRANHA_DECLARE_HAS_TYPEDEF(const_reference);
-
 BOOST_AUTO_TEST_CASE(cache_aligning_allocator_construct_destroy_test)
 {
     cache_aligning_allocator<char> caa1;
@@ -91,8 +86,4 @@ BOOST_AUTO_TEST_CASE(cache_aligning_allocator_construct_destroy_test)
     BOOST_CHECK(*static_cast<std::string *>(static_cast<void *>(&st1)) == "");
     caa2.destroy(static_cast<std::string *>(static_cast<void *>(&st1)));
     BOOST_CHECK(cache_aligning_allocator<std::string>::rebind<char>::other{} == caa1);
-    BOOST_CHECK(has_typedef_pointer<cache_aligning_allocator<std::string>>::value);
-    BOOST_CHECK(has_typedef_const_pointer<cache_aligning_allocator<std::string>>::value);
-    BOOST_CHECK(has_typedef_reference<cache_aligning_allocator<std::string>>::value);
-    BOOST_CHECK(has_typedef_const_reference<cache_aligning_allocator<std::string>>::value);
 }

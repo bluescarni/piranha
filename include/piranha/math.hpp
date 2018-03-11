@@ -67,10 +67,8 @@ struct negate_impl {
 private:
     // NOTE: inside this type trait, U is always a non-const non-reference type.
     template <typename U>
-    using generic_enabler =
-        typename std::enable_if<!std::is_integral<U>::value
-                                    && detail::true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value,
-                                int>::type;
+    using generic_enabler = typename std::enable_if<
+        !std::is_integral<U>::value && true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value, int>::type;
     template <typename U>
     using integral_enabler = typename std::enable_if<std::is_integral<U>::value, int>::type;
 

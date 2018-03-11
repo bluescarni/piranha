@@ -670,7 +670,7 @@ class series_operators
     using in_place_add_type
         = decltype(dispatch_in_place_add(std::declval<T &>(), std::declval<const typename std::decay<U>::type &>()...));
     template <typename T, typename... U>
-    using in_place_add_enabler = typename std::enable_if<detail::true_tt<in_place_add_type<T, U...>>::value, int>::type;
+    using in_place_add_enabler = typename std::enable_if<true_tt<in_place_add_type<T, U...>>::value, int>::type;
     // Subtraction.
     template <typename T, typename U, typename std::enable_if<bso_type<T, U, 1>::value == 0u, int>::type = 0>
     static series_common_type<T, U, 1> dispatch_binary_sub(T &&x, U &&y)
@@ -733,7 +733,7 @@ class series_operators
     using in_place_sub_type
         = decltype(dispatch_in_place_sub(std::declval<T &>(), std::declval<const typename std::decay<U>::type &>()...));
     template <typename T, typename... U>
-    using in_place_sub_enabler = typename std::enable_if<detail::true_tt<in_place_sub_type<T, U...>>::value, int>::type;
+    using in_place_sub_enabler = typename std::enable_if<true_tt<in_place_sub_type<T, U...>>::value, int>::type;
     // Multiplication.
     struct binary_mul_impl {
         template <typename T, typename U>
@@ -807,7 +807,7 @@ class series_operators
     using in_place_mul_type
         = decltype(dispatch_in_place_mul(std::declval<T &>(), std::declval<const typename std::decay<U>::type &>()...));
     template <typename T, typename... U>
-    using in_place_mul_enabler = typename std::enable_if<detail::true_tt<in_place_mul_type<T, U...>>::value, int>::type;
+    using in_place_mul_enabler = typename std::enable_if<true_tt<in_place_mul_type<T, U...>>::value, int>::type;
     // Division.
     // NOTE: the divisibility requirement here is already satisfied in the determination of the return type.
     // The base case: same recursion, no promotion.
@@ -968,7 +968,7 @@ class series_operators
     using in_place_div_type
         = decltype(dispatch_in_place_div(std::declval<T &>(), std::declval<const typename std::decay<U>::type &>()...));
     template <typename T, typename... U>
-    using in_place_div_enabler = typename std::enable_if<detail::true_tt<in_place_div_type<T, U...>>::value, int>::type;
+    using in_place_div_enabler = typename std::enable_if<true_tt<in_place_div_type<T, U...>>::value, int>::type;
     // Equality.
     // Low-level implementation of equality.
     template <typename T>
@@ -1035,7 +1035,7 @@ class series_operators
     using eq_type = decltype(dispatch_equality(std::declval<const typename std::decay<T>::type &>(),
                                                std::declval<const typename std::decay<U>::type &>()...));
     template <typename T, typename... U>
-    using eq_enabler = typename std::enable_if<detail::true_tt<eq_type<T, U...>>::value, int>::type;
+    using eq_enabler = typename std::enable_if<true_tt<eq_type<T, U...>>::value, int>::type;
 
 public:
     /// Binary addition involving piranha::series.
@@ -1588,7 +1588,7 @@ private:
     // These aspects are tested in series_03.
     template <typename T, typename U>
     using generic_ctor_enabler = typename std::enable_if<
-        detail::true_tt<decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value
+        true_tt<decltype(std::declval<U &>().dispatch_generic_constructor(std::declval<const T &>()))>::value
             && !std::is_base_of<U, T>::value,
         int>::type;
     // Enabler for is_identical.

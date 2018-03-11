@@ -89,6 +89,7 @@ struct time_bomb {
         }
         ++s_counter;
     }
+    time_bomb &operator=(const time_bomb &) = default;
     time_bomb &operator=(time_bomb &&other) noexcept
     {
         m_vector = std::move(other.m_vector);
@@ -666,6 +667,7 @@ struct time_bomb2 {
         }
         ++s_counter;
     }
+    time_bomb2 &operator=(const time_bomb2 &) = default;
     time_bomb2 &operator=(time_bomb2 &&other) noexcept
     {
         m_vector = std::move(other.m_vector);

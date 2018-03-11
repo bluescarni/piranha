@@ -95,6 +95,13 @@ template <class... Bs>
 struct disjunction_idx : disjunction_idx_impl<0u, Bs...> {
 };
 
+// Deferred conditional. It will check the value of the
+// compile-time boolean constant C, and derive from T if
+// C is true, from F otherwise.
+template <typename C, typename T, typename F>
+struct dcond : std::conditional<C::value != false, T, F>::type {
+};
+
 #if PIRANHA_CPLUSPLUS >= 201402L
 
 // Handy bits available since C++14, we re-implement them below.
@@ -221,6 +228,94 @@ concept bool CppComplex = is_cpp_complex<T>::value;
 
 #endif
 
+// Swappable type-trait/concept.
+
+#if PIRANHA_CPLUSPLUS >= 201703L
+
+// NOTE: this ends up behaving like std::is_swappable_with,
+// rather than std::is_swappable, which invokes std::is_swappable_with
+// after adding references. Throughout piranha, we adopt the convention
+// that the user has to manually add the reference qualification to the
+// argument types of a function whose availability is being checked,
+// so we prefer the std::is_swappable_with behaviour here.
+// http://en.cppreference.com/w/cpp/types/is_swappable
+template <typename T, typename U = T>
+struct is_swappable : std::is_swappable_with<T, U> {
+};
+
+#else
+
+// Swappable implementation, mostly inspired from:
+// https://stackoverflow.com/questions/26744589/what-is-a-proper-way-to-implement-is-swappable-to-test-for-the-swappable-concept
+// The plan is to check if "using std::swap" + ADL leads to a callable
+// swap() function. The complication is that std::swap() will be marked
+// as available even for those argument types which do not support swapping because
+// they are not move ctible/assignable (C++<17 does not SFINAE on std::swap()).
+// Therefore, the strategy is to avoid "using std::swap" if std::swap() is not available,
+// and go only for the ADL detection.
+
+// The using std::swap + ADL detection.
+namespace using_std_adl_swap
+{
+
+using std::swap;
+
+// NOTE: we need to make sure swapping is well defined also with inverted arguments.
+template <typename T, typename U>
+using swap1_t = decltype(swap(std::declval<T>(), std::declval<U>()));
+
+template <typename T, typename U>
+using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
+
+template <typename T, typename U>
+using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
+}
+
+// Pure ADL-based swap detection.
+namespace adl_swap
+{
+
+template <typename T, typename U>
+using swap1_t = decltype(swap(std::declval<T>(), std::declval<U>()));
+
+template <typename T, typename U>
+using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
+
+template <typename T, typename U>
+using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
+}
+
+inline namespace impl
+{
+
+// Detect if std::swap() can be called on types T and U. For std::swap() to be viable we need:
+// - to be able to call it, meaning that T and U must be nonconst lvalue refs to the same type,
+// - T/U to be move ctible and move assignable.
+template <typename T, typename U>
+using std_swap_t = decltype(std::swap(std::declval<T>(), std::declval<U>()));
+
+template <typename T, typename U>
+using std_swap_viable = conjunction<is_detected<std_swap_t, T, U>, std::is_move_constructible<unref_t<T>>,
+                                    std::is_move_assignable<unref_t<T>>>;
+}
+
+// Two possibilities:
+// - std::swap() is available for the types T and U, check the availability of "using std::swap" + ADL;
+// - std::swap() is not available for the types T and U, check the availability of pure ADL-based swapping.
+template <typename T, typename U = T>
+struct is_swappable : std::conditional<std_swap_viable<T, U>::value, using_std_adl_swap::detected<T, U>,
+                                       adl_swap::detected<T, U>>::type {
+};
+
+#endif
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool Swappable = is_swappable<T, U>::value;
+
+#endif
+
 inline namespace impl
 {
 
@@ -272,6 +367,60 @@ public:
 
 template <typename T, typename U>
 const bool is_addable_in_place<T, U>::value;
+
+inline namespace impl
+{
+
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
+#endif
+
+template <typename T>
+using preinc_t = decltype(++std::declval<T>());
+
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#pragma clang diagnostic pop
+#endif
+}
+
+// Pre-incrementable type-trait.
+template <typename T>
+using is_preincrementable = is_detected<preinc_t, T>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool Preincrementable = is_preincrementable<T>::value;
+
+#endif
+
+inline namespace impl
+{
+
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
+#endif
+
+template <typename T>
+using postinc_t = decltype(std::declval<T>()++);
+
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#pragma clang diagnostic pop
+#endif
+}
+
+// Post-incrementable type-trait.
+template <typename T>
+using is_postincrementable = is_detected<postinc_t, T>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool Postincrementable = is_postincrementable<T>::value;
+
+#endif
 
 /// Subtractable type trait.
 /**
@@ -758,35 +907,6 @@ template <typename T>
 const bool is_hashable<T>::value;
 }
 
-/// Macro to test if class has type definition.
-/**
- * This macro will declare a struct template parametrized over one type \p T and called <tt>has_typedef_type_name</tt>,
- * whose static const bool member \p value will be \p true if \p T contains a \p typedef called \p type_name, \p false
- * otherwise.
- *
- * For instance:
- * @code
- * PIRANHA_DECLARE_HAS_TYPEDEF(foo_type);
- * struct foo
- * {
- * 	typedef int foo_type;
- * };
- * struct bar {};
- * @endcode
- * \p has_typedef_foo_type<foo>::value will be true and \p has_typedef_foo_type<bar>::value will be false.
- */
-#define PIRANHA_DECLARE_HAS_TYPEDEF(type_name)                                                                         \
-    template <typename PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>                                                           \
-    class has_typedef_##type_name                                                                                      \
-    {                                                                                                                  \
-        using Td_ = piranha::uncvref_t<PIRANHA_DECLARE_HAS_TYPEDEF_ARGUMENT>;                                          \
-        template <typename U>                                                                                          \
-        using type_t = typename U::type_name;                                                                          \
-                                                                                                                       \
-    public:                                                                                                            \
-        static const bool value = piranha::is_detected<type_t, Td_>::value;                                            \
-    }
-
 /// Macro for static type trait checks.
 /**
  * This macro will check via a \p static_assert that the template type trait \p tt provides a \p true \p value.
@@ -798,7 +918,7 @@ const bool is_hashable<T>::value;
 namespace piranha
 {
 
-namespace detail
+inline namespace impl
 {
 
 template <typename T, typename... Args>
@@ -844,7 +964,7 @@ struct max_int_impl<T> {
  * It will be defined as the input type with the narrowest numerical range.
  */
 template <typename T, typename... Args>
-using min_int = typename detail::min_int_impl<T, Args...>::type;
+using min_int = typename min_int_impl<T, Args...>::type;
 
 /// Detect widest integer type
 /**
@@ -852,87 +972,75 @@ using min_int = typename detail::min_int_impl<T, Args...>::type;
  * It will be defined as the input type with the widest numerical range.
  */
 template <typename T, typename... Args>
-using max_int = typename detail::max_int_impl<T, Args...>::type;
+using max_int = typename max_int_impl<T, Args...>::type;
 
 inline namespace impl
 {
 
-// Detect the availability of std::iterator_traits on type It, plus a couple more requisites from the
-// iterator concept.
-// NOTE: this needs also the is_swappable type trait, but this seems to be difficult to implement in C++11. Mostly
-// because it seems that:
-// - we cannot detect a specialised std::swap (so if it is not specialised, it will pick the default implementation
-//   which could fail in the implementation without giving hints in the prototype),
-// - it's tricky to fulfill the requirement that swap has to be called unqualified (cannot use 'using std::swap' within
-//   a decltype() SFINAE, might be doable with automatic return type deduction for regular functions in C++14?).
-template <typename It>
-struct has_iterator_traits {
-    using it_tags = std::tuple<std::input_iterator_tag, std::output_iterator_tag, std::forward_iterator_tag,
-                               std::bidirectional_iterator_tag, std::random_access_iterator_tag>;
-    PIRANHA_DECLARE_HAS_TYPEDEF(difference_type);
-    PIRANHA_DECLARE_HAS_TYPEDEF(value_type);
-    PIRANHA_DECLARE_HAS_TYPEDEF(pointer);
-    PIRANHA_DECLARE_HAS_TYPEDEF(reference);
-    PIRANHA_DECLARE_HAS_TYPEDEF(iterator_category);
-    using i_traits = std::iterator_traits<It>;
-    static const bool value
-        = conjunction<has_typedef_reference<i_traits>, has_typedef_value_type<i_traits>, has_typedef_pointer<i_traits>,
-                      has_typedef_difference_type<i_traits>, has_typedef_iterator_category<i_traits>,
-                      std::is_copy_constructible<It>, std::is_copy_assignable<It>, std::is_destructible<It>>::value;
-};
+// Helpers for the detection of the typedefs in std::iterator_traits.
+// Use a macro (yuck) to reduce typing.
+#define PIRANHA_DECLARE_IT_TRAITS_TYPE(type)                                                                           \
+    template <typename T>                                                                                              \
+    using it_traits_##type = typename std::iterator_traits<T>::type;
 
-// TMP to check if a type is convertible to a type in the tuple.
+PIRANHA_DECLARE_IT_TRAITS_TYPE(difference_type)
+PIRANHA_DECLARE_IT_TRAITS_TYPE(value_type)
+PIRANHA_DECLARE_IT_TRAITS_TYPE(pointer)
+PIRANHA_DECLARE_IT_TRAITS_TYPE(reference)
+PIRANHA_DECLARE_IT_TRAITS_TYPE(iterator_category)
+
+#undef PIRANHA_DECLARE_IT_TRAITS_TYPE
+
+// All standard iterator tags packed in a tuple.
+using it_tags_tuple = std::tuple<std::input_iterator_tag, std::output_iterator_tag, std::forward_iterator_tag,
+                                 std::bidirectional_iterator_tag, std::random_access_iterator_tag>;
+
+// Detect the availability of std::iterator_traits on type It.
+template <typename It>
+using has_iterator_traits = conjunction<is_detected<it_traits_reference, It>, is_detected<it_traits_value_type, It>,
+                                        is_detected<it_traits_pointer, It>, is_detected<it_traits_difference_type, It>,
+                                        is_detected<it_traits_iterator_category, It>>;
+
+// Type resulting from the dereferencing operation.
+template <typename T>
+using deref_t = decltype(*std::declval<T>());
+
+// TMP to check if a type T derives from at least one type in the tuple.
+// NOTE: default empty for hard error.
 template <typename, typename>
-struct convertible_type_in_tuple {
+struct base_type_in_tuple {
 };
 
 template <typename T, typename... Args>
-struct convertible_type_in_tuple<T, std::tuple<Args...>> : disjunction<std::is_convertible<T, Args>...> {
+struct base_type_in_tuple<T, std::tuple<Args...>> : disjunction<std::is_base_of<Args, T>...> {
+    static_assert(sizeof...(Args) > 0u, "Invalid parameter pack.");
 };
 }
 
-// NOTE: this and the other iterator type traits seem to work ok in practice, but probably
-// there are some corner cases which are not handled fully according to the standard. After spending
-// some time on these, it seems like a nontrivial amount of work would be needed to refine them
-// further, so let's just leave them like this for now.
-
-/// Iterator type trait.
-/**
- * This type trait will be \p true if \p T, after the removal of cv/ref qualifiers, satisfies the compile-time
- * requirements of an iterator (as defined by the C++ standard), \p false otherwise.
- */
+// Detect iterator types.
 template <typename T>
-class is_iterator
-{
-    template <typename U>
-    using deref_t = decltype(*std::declval<U &>());
-    template <typename U>
-    using inc_t = decltype(++std::declval<U &>());
-    template <typename U>
-    using it_cat = typename std::iterator_traits<U>::iterator_category;
-    using uT = uncvref_t<T>;
-    static const bool implementation_defined = conjunction<
-        // NOTE: here the correct condition is the commented one, as opposed to the first one appearing. However, it
-        // seems like there are inconsistencies between the commented condition and the definition of many output
-        // iterators in the standard library:
-        //
-        // http://stackoverflow.com/questions/23567244/apparent-inconsistency-in-iterator-requirements
-        //
-        // Until this is clarified, it is probably better to keep this workaround.
-        /* std::is_same<typename std::iterator_traits<T>::reference,decltype(*std::declval<T &>())>::value */
-        is_detected<deref_t, uT>, std::is_same<detected_t<inc_t, uT>, addlref_t<uT>>, has_iterator_traits<uT>,
-        // NOTE: here we used to have type_in_tuple, but it turns out Boost.iterator defines its own set of tags derived
-        // from the standard ones. Hence, check that the category can be converted to one of the standard categories.
-        // This should not change anything for std iterators, and just enable support for Boost ones.
-        convertible_type_in_tuple<detected_t<it_cat, uT>, typename has_iterator_traits<uT>::it_tags>>::value;
+using is_iterator = conjunction<
+    // Copy constr/ass, destructible.
+    std::is_copy_constructible<T>, std::is_copy_assignable<T>, std::is_destructible<T>,
+    // Lvalue swappable.
+    is_swappable<addlref_t<T>>,
+    // Valid std::iterator_traits.
+    has_iterator_traits<T>,
+    // Lvalue dereferenceable.
+    is_detected<deref_t, addlref_t<T>>,
+    // Lvalue preincrementable, returning T &.
+    std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
+    // Add a check that the iterator category is one of the standard ones
+    // or at least derives from it. This allows Boost.iterator iterators
+    // (which have their own tags) to satisfy this type trait.
+    base_type_in_tuple<detected_t<it_traits_iterator_category, T>, it_tags_tuple>>;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool is_iterator<T>::value;
+concept bool Iterator = is_iterator<T>::value;
+
+#endif
 
 inline namespace impl
 {
@@ -941,116 +1049,159 @@ inline namespace impl
 // A correct implementation will return a pointer, after potentially calling
 // the operator recursively as many times as needed. See:
 // http://stackoverflow.com/questions/10677804/how-arrow-operator-overloading-works-internally-in-c
-template <typename U, typename = void>
+
+// The expression x->m is either:
+// - equivalent to (*x).m, if x is a pointer, or
+// - equivalent to (x.operator->())->m otherwise. That is, if operator->()
+//   returns a pointer, then the member "m" of the pointee is returned,
+//   otherwise there's a recursion to call again operator->() on the returned
+//   value.
+// This type trait will extract the final pointer type whose pointee type
+// contains the "m" member.
+template <typename T, typename = void>
 struct arrow_operator_type {
 };
 
-// This represents the terminator of the recursion.
-template <typename U>
-struct arrow_operator_type<U *> {
-    using type = U *;
-};
-
 // Handy alias.
-template <typename U>
-using arrow_operator_t = typename arrow_operator_type<U>::type;
-
-// These bits invoke arrow_operator_type recursively, until a pointer is found.
-template <typename U>
-using rec_arrow_op_t = arrow_operator_t<decltype(std::declval<U &>().operator->())>;
-
-template <typename U>
-struct arrow_operator_type<U, enable_if_t<is_detected<rec_arrow_op_t, U>::value>> {
-    using type = rec_arrow_op_t<U>;
-};
-
-// NOTE: need the SFINAE wrapper here and below because we need to soft-error
-// out in case the types in std::iterator_traits are not defined.
-template <typename T, typename = void>
-struct is_input_iterator_impl : std::false_type {
-};
-
 template <typename T>
-struct is_input_iterator_impl<
-    T,
-    enable_if_t<conjunction<
-        is_iterator<T>, is_equality_comparable<const T &>,
-        std::is_convertible<decltype(*std::declval<T &>()), typename std::iterator_traits<T>::value_type>,
-        std::is_same<decltype(++std::declval<T &>()), T &>,
-        std::is_same<decltype((void)std::declval<T &>()++), decltype((void)++std::declval<T &>())>,
-        std::is_convertible<decltype(*std::declval<T &>()++), typename std::iterator_traits<T>::value_type>,
-        // NOTE: here we know that the arrow op has to return a pointer, if
-        // implemented correctly, and that the syntax it->m must be
-        // equivalent to (*it).m. This means that, barring differences in
-        // reference qualifications, it-> and *it must return the same thing.
-        std::is_same<unref_t<decltype(*std::declval<arrow_operator_t<T>>())>, unref_t<decltype(*std::declval<T &>())>>,
-        // NOTE: here the usage of is_convertible guarantees we catch both
-        // iterators higher in the type hierarchy and the Boost versions of
-        // standard iterators as well.
-        std::is_convertible<typename std::iterator_traits<T>::iterator_category, std::input_iterator_tag>>::value>>
-    : std::true_type {
+using arrow_operator_t = typename arrow_operator_type<T>::type;
+
+// If T is a pointer (after ref removal), we don't need to do anything: the final pointer type
+// will be T itself (unreffed).
+template <typename T>
+struct arrow_operator_type<T, enable_if_t<std::is_pointer<unref_t<T>>::value>> {
+    using type = unref_t<T>;
 };
+
+// Type resulting from the invocation of the member function operator->().
+template <typename T>
+using mem_arrow_op_t = decltype(std::declval<T>().operator->());
+
+// T is not a pointer, it is a class whose operator->() returns some type U.
+// We call again arrow_operator_type on that U: if that leads eventually to a pointer
+// (possibly by calling this specialisation recursively) then we define that pointer
+// as the internal "type" member, otherwise we will SFINAE out.
+template <typename T>
+struct arrow_operator_type<T, enable_if_t<is_detected<arrow_operator_t, mem_arrow_op_t<T>>::value>> {
+    using type = arrow_operator_t<mem_arrow_op_t<T>>;
+};
+
+// *it++ expression, used below.
+template <typename T>
+using it_inc_deref_t = decltype(*std::declval<T>()++);
 }
 
-/// Input iterator type trait.
-/**
- * This type trait will be \p true if \p T, after the removal of cv/reference qualifiers, satisfies the compile-time
- * requirements of an input iterator (as defined by the C++ standard), \p false otherwise.
- */
+// Input iterator type trait.
 template <typename T>
-class is_input_iterator
-{
-    static const bool implementation_defined = is_input_iterator_impl<uncvref_t<T>>::value;
+using is_input_iterator = conjunction<
+    // Must be a class or pointer.
+    disjunction<std::is_class<T>, std::is_pointer<T>>,
+    // Base iterator requirements.
+    is_iterator<T>,
+    // Lvalue equality-comparable (just test the const-const variant).
+    is_equality_comparable<addlref_t<const T>>,
+    // *it returns it_traits::reference_type, both in mutable and const forms.
+    // NOTE: it_traits::reference_type is never nonesuch, we tested its availability
+    // in is_iterator.
+    std::is_same<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_reference, T>>,
+    std::is_same<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_reference, T>>,
+    // *it is convertible to it_traits::value_type.
+    // NOTE: as above, it_traits::value_type does exist.
+    std::is_convertible<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_value_type, T>>,
+    std::is_convertible<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_value_type, T>>,
+    // it->m must be the same as (*it).m. What we test here is that the pointee type of the pointer type
+    // yielded eventually by the arrow operator is the same as *it, but minus references: the arrow operator
+    // always returns a pointer, but *it could return a new object (e.g., a transform iterator).
+    // NOTE: we already verified earlier that T is dereferenceable, so deref_t will not be nonesuch.
+    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<T>>>>>,
+                 unref_t<detected_t<deref_t, addlref_t<T>>>>,
+    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>>,
+                 unref_t<detected_t<deref_t, addlref_t<const T>>>>,
+    // ++it returns &it. Only non-const needed.
+    std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
+    // it is post-incrementable. Only non-const needed.
+    is_postincrementable<addlref_t<T>>,
+    // *it++ is convertible to the value type. Only non-const needed.
+    std::is_convertible<detected_t<it_inc_deref_t, addlref_t<T>>, detected_t<it_traits_value_type, T>>,
+    // Check that the iterator category of T derives from the standard
+    // input iterator tag. This accommodates the Boost iterators as well, who have
+    // custom categories derived from the standard ones.
+    std::is_base_of<std::input_iterator_tag, detected_t<it_traits_iterator_category, T>>>;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool is_input_iterator<T>::value;
+concept bool InputIterator = is_input_iterator<T>::value;
+
+#endif
 
 inline namespace impl
 {
 
-template <typename T, typename = void>
-struct is_forward_iterator_impl : std::false_type {
-};
+template <typename T, typename U>
+using out_iter_assign_t = decltype(*std::declval<T>() = std::declval<U>());
 
-template <typename T>
-struct is_forward_iterator_impl<
-    T, enable_if_t<conjunction<
-           is_input_iterator<T>, std::is_default_constructible<T>,
-           disjunction<std::is_same<typename std::iterator_traits<T>::value_type &,
-                                    typename std::iterator_traits<T>::reference>,
-                       std::is_same<typename std::iterator_traits<T>::value_type const &,
-                                    typename std::iterator_traits<T>::reference>>,
-           std::is_convertible<decltype(std::declval<T &>()++), const T &>,
-           std::is_same<decltype(*std::declval<T &>()++), typename std::iterator_traits<T>::reference>,
-           std::is_convertible<typename std::iterator_traits<T>::iterator_category, std::forward_iterator_tag>>::value>>
-    : std::true_type {
-};
+template <typename T, typename U>
+using out_iter_pia_t = decltype(*std::declval<T>()++ = std::declval<U>());
 }
 
-/// Forward iterator type trait.
-/**
- * This type trait will be \p true if \p T, after the removal of cv/reference qualifiers, satisfies the compile-time
- * requirements of a forward iterator (as defined by the C++ standard), \p false otherwise.
- */
+// Output iterator type trait.
+template <typename T, typename U>
+using is_output_iterator = conjunction<
+    // Must be a class or pointer.
+    disjunction<std::is_class<T>, std::is_pointer<T>>,
+    // Must be an iterator.
+    is_iterator<T>,
+    // *r = o must be valid (r is an lvalue T, o is an U).
+    is_detected<out_iter_assign_t, addlref_t<T>, U>,
+    // Lvalue pre-incremetable and returning lref to T.
+    std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
+    // Lvalue post-incrementable and returning convertible to const T &.
+    std::is_convertible<detected_t<postinc_t, addlref_t<T>>, addlref_t<const T>>,
+    // Can post-increment-assign on lvalue.
+    is_detected<out_iter_pia_t, addlref_t<T>, U>,
+    // NOTE: if T is an input iterator, its category tag must *not* derive from std::output_iterator_tag
+    // (the fact that it is an input iterator takes the precedence in the category tagging).
+    // If T is a pure output iterator, its category tag must derive from std::output_iterator_tag.
+    dcond<is_input_iterator<T>,
+          negation<std::is_base_of<std::output_iterator_tag, detected_t<it_traits_iterator_category, T>>>,
+          std::is_base_of<std::output_iterator_tag, detected_t<it_traits_iterator_category, T>>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U>
+concept bool OutputIterator = is_output_iterator<T, U>::value;
+
+#endif
+
 template <typename T>
-class is_forward_iterator
-{
-    static const bool implementation_defined = is_forward_iterator_impl<uncvref_t<T>>::value;
+using is_forward_iterator = conjunction<
+    // Must be an input iterator.
+    // NOTE: the pointer or class requirement is already in the input iterator.
+    is_input_iterator<T>,
+    // Must be def-ctible.
+    std::is_default_constructible<T>,
+    // If it is a mutable (i.e., output) iterator, it_traits::reference
+    // must be a reference to the value type. Otherwise, it_traits::reference
+    // must be a reference to const value type.
+    dcond<is_output_iterator<T, addlref_t<detected_t<it_traits_value_type, T>>>,
+          std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>,
+          std::is_same<detected_t<it_traits_reference, T>, addlref_t<const detected_t<it_traits_value_type, T>>>>,
+    // Post-incrementable lvalue returns convertible to const T &.
+    std::is_convertible<detected_t<postinc_t, addlref_t<T>>, addlref_t<const T>>,
+    // *r++ returns it_traits::reference.
+    std::is_same<detected_t<it_inc_deref_t, addlref_t<T>>, detected_t<it_traits_reference, T>>,
+    // Category check.
+    std::is_base_of<std::forward_iterator_tag, detected_t<it_traits_iterator_category, T>>>;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool is_forward_iterator<T>::value;
+concept bool ForwardIterator = is_forward_iterator<T>::value;
 
-namespace detail
+#endif
+
+inline namespace impl
 {
 
 template <typename T>

@@ -235,7 +235,7 @@ class polynomial
                                                                std::declval<const std::string &>()))>>::value
         &&
         // The key is integrable.
-        detail::true_tt<key_integrate_type<T>>::value &&
+        true_tt<key_integrate_type<T>>::value &&
         // The result needs to be addable in-place.
         is_addable_in_place<ResT>::value &&
         // It also needs to be ctible from zero.
@@ -247,7 +247,7 @@ class polynomial
     template <typename T>
     struct integrate_type_<
         T, typename std::enable_if<!is_integrable<typename T::term_type::cf_type>::value
-                                   && detail::true_tt<basic_integrate_requirements<T, nic_res_type<T>>>::value>::type> {
+                                   && true_tt<basic_integrate_requirements<T, nic_res_type<T>>>::value>::type> {
         using type = nic_res_type<T>;
     };
     // Integrable coefficient.
@@ -272,7 +272,7 @@ class polynomial
         T,
         typename std::enable_if<
             is_integrable<typename T::term_type::cf_type>::value
-            && detail::true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
+            && true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
             // We need to be able to add the non-integrable type.
             is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
             // We need to be able to compute the partial degree and cast it to integer.
@@ -379,9 +379,8 @@ class polynomial
         int>::type;
     // For the setter, we need the above plus we need to be able to convert safely U to the degree type.
     template <typename T, typename U>
-    using at_degree_set_enabler = typename std::enable_if<detail::true_tt<at_degree_enabler<T>>::value
-                                                              && is_safely_castable<const U &, degree_type<T>>::value,
-                                                          int>::type;
+    using at_degree_set_enabler = typename std::enable_if<
+        true_tt<at_degree_enabler<T>>::value && is_safely_castable<const U &, degree_type<T>>::value, int>::type;
     // This needs to be separate from the other static inits because we don't have anything to init
     // if the series does not support degree computation.
     // NOTE: here the important thing is that this method does not return the same object for different series types,
@@ -434,7 +433,7 @@ class polynomial
     using tm_enabler =
         typename std::enable_if<std::is_same<T, decltype(std::declval<const T &>() * std::declval<const T &>())>::value
                                     && is_safely_castable<const U &, degree_type<T>>::value
-                                    && detail::true_tt<at_degree_enabler<T>>::value,
+                                    && true_tt<at_degree_enabler<T>>::value,
                                 int>::type;
     // Common bits for truncated/untruncated multiplication. Will do the usual merging of the symbol sets
     // before calling the runner functor, which performs the actual multiplication.

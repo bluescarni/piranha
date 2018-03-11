@@ -564,16 +564,12 @@ public:
 
 private:
     // Integrate utils.
-    // Detect increment operator.
-    template <typename U>
-    using inc_t = decltype(++std::declval<U &>());
-    // Main dispatcher.
     template <typename U>
     using monomial_int_dispatcher = disjunction_idx<
         // Case 0: U is integral.
         std::is_integral<U>,
-        // Case 1: U supports the increment operator.
-        is_detected<inc_t, U>>;
+        // Case 1: U supports the preincrement operator.
+        is_preincrementable<addlref_t<U>>>;
     // In-place increment by one, checked for integral types.
     template <typename U>
     static void ip_inc(U &x, const std::integral_constant<std::size_t, 0u> &)
