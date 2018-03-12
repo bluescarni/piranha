@@ -56,6 +56,222 @@ namespace piranha
 inline namespace impl
 {
 
+template <typename T>
+struct kronecker_array_statics {
+    // Determine limits for the codification of m-dimensional arrays.
+    // The returned value is a 4-tuple built as follows:
+    // 0. vector of absolute values of the upper/lower limit for each component,
+    // 1. h_min,
+    // 2. h_max,
+    // 3. h_max - h_min.
+    //
+    // NOTE: when reasoning about this, keep in mind that this is not a completely generic
+    // codification: min/max vectors are negative/positive and symmetric. This makes it easy
+    // to reason about overflows during (de)codification of vectors, representability of the
+    // quantities involved, etc.
+    //
+    // NOTE: here we should not have problems when interoperating with libraries that
+    // modify the GMP allocation functions, as we do not store any static piranha::integer:
+    // the creation and destruction of integer objects is confined to the determine_limit() function.
+    static std::tuple<std::vector<T>, T, T, T> determine_limit(const std::size_t &m)
+    {
+        piranha_assert(m >= 1u);
+        // Init the engine with a different seed for each size m.
+        std::mt19937 engine(static_cast<std::mt19937::result_type>(m));
+        // Perturb an integer value: add random quantity (hard-coded to +-5%)
+        // and then take the next prime.
+        std::uniform_int_distribution<int> dist(-5, 5);
+        auto perturb = [&engine, &dist](integer &arg) {
+            arg += (dist(engine) * arg) / 100;
+            arg.nextprime();
+        };
+        // Build the initial minmax and coding vectors: all elements in the [-1,1] range.
+        std::vector<integer> m_vec, M_vec, c_vec, prev_m_vec, prev_M_vec, prev_c_vec;
+        c_vec.emplace_back(1);
+        m_vec.emplace_back(-1);
+        M_vec.emplace_back(1);
+        for (std::size_t i = 1; i < m; ++i) {
+            m_vec.emplace_back(-1);
+            M_vec.emplace_back(1);
+            c_vec.emplace_back(c_vec.back() * 3);
+        }
+        // Functor for the scalar product of two vectors.
+        auto dot_prod = [](const std::vector<integer> &v1, const std::vector<integer> &v2) -> integer {
+            piranha_assert(v1.size() && v1.size() == v2.size());
+            return std::inner_product(v1.begin(), v1.end(), v2.begin(), integer{});
+        };
+        while (true) {
+            // Compute the current h_min/max and diff.
+            integer h_min = dot_prod(c_vec, m_vec);
+            integer h_max = dot_prod(c_vec, M_vec);
+            integer diff = h_max - h_min;
+            piranha_assert(diff.sgn() >= 0);
+            // Try to cast everything to hardware integers.
+            T tmp_int;
+            // NOTE: here it is diff + 1 because h_max - h_min must be strictly less than the maximum value
+            // of T. In the paper, in eq. (7), the Delta_i product appearing in the
+            // decoding of the last component of a vector is equal to (h_max - h_min + 1) so we need
+            // to be able to represent it.
+            const bool fits_int_type
+                = mppp::get(tmp_int, h_min) && mppp::get(tmp_int, h_max) && mppp::get(tmp_int, diff + 1);
+            // NOTE: we do not need to cast the individual elements of m/M vecs, as the representability
+            // of h_min/max ensures the representability of m/M as well.
+            if (!fits_int_type) {
+                std::vector<T> tmp;
+                if (prev_c_vec.size()) {
+                    // We are not at the first iteration. Return
+                    // the codification limits from the previous iteration.
+                    h_min = dot_prod(prev_c_vec, prev_m_vec);
+                    h_max = dot_prod(prev_c_vec, prev_M_vec);
+                    std::transform(prev_M_vec.begin(), prev_M_vec.end(), std::back_inserter(tmp),
+                                   [](const integer &n) { return static_cast<T>(n); });
+                    return std::make_tuple(std::move(tmp), static_cast<T>(h_min), static_cast<T>(h_max),
+                                           static_cast<T>(h_max - h_min));
+                } else {
+                    // We are the first iteration: this means that m variables are too many,
+                    // and we signal that with a tuple filled with zeroes.
+                    return std::make_tuple(std::move(tmp), T(0), T(0), T(0));
+                }
+            }
+            // Store the old vectors.
+            prev_c_vec = c_vec;
+            prev_m_vec = m_vec;
+            prev_M_vec = M_vec;
+            // Generate the new coding vector for next iteration.
+            auto it = c_vec.begin() + 1, prev_it = prev_c_vec.begin();
+            for (; it != c_vec.end(); ++it, ++prev_it) {
+                // Recover the original delta.
+                *it /= *prev_it;
+                // Multiply by two and perturb.
+                *it *= 2;
+                perturb(*it);
+                // Multiply by the new accumulated delta product.
+                *it *= *(it - 1);
+            }
+            // Fill in the minmax vectors, apart from the last component.
+            it = c_vec.begin() + 1;
+            piranha_assert(M_vec.size() && M_vec.size() == m_vec.size());
+            for (decltype(M_vec.size()) i = 0; i < M_vec.size() - 1u; ++i, ++it) {
+                M_vec[i] = ((*it) / *(it - 1) - 1) / 2;
+                m_vec[i] = -M_vec[i];
+            }
+            // We need to generate the last interval, which does not appear in the coding vector.
+            // Take the previous interval and enlarge it so that the corresponding delta is increased by a
+            // perturbed factor of 2.
+            M_vec.back() = (4 * M_vec.back() + 1) / 2;
+            perturb(M_vec.back());
+            m_vec.back() = -M_vec.back();
+        }
+    }
+    static std::vector<std::tuple<std::vector<T>, T, T, T>> determine_limits()
+    {
+        std::vector<std::tuple<std::vector<T>, T, T, T>> retval;
+        retval.emplace_back(std::vector<T>{}, T(0), T(0), T(0));
+        for (std::size_t i = 1;; ++i) {
+            auto tmp = determine_limit(i);
+            if (std::get<0>(tmp).empty()) {
+                break;
+            } else {
+                retval.emplace_back(std::move(tmp));
+            }
+        }
+        return retval;
+    }
+    // Static vector of limits built at startup.
+    static const std::vector<std::tuple<std::vector<T>, T, T, T>> s_limits;
+};
+}
+
+template <typename T>
+using is_uncv_cpp_signed_integral
+    = conjunction<std::is_integral<T>, negation<std::is_const<T>>, negation<std::is_volatile<T>>, std::is_signed<T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool UncvCppSignedIntegral = is_uncv_cpp_signed_integral<T>::value;
+
+#endif
+
+template <typename It, typename T>
+using is_safely_castable_forward_iterator
+    = conjunction<is_forward_iterator<It>, is_safely_castable<detected_t<it_traits_reference, It>, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename It, typename T>
+concept bool SafelyCastableForwardIterator = is_safely_castable_forward_iterator<It, T>::value;
+
+#endif
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
+inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
+{
+    return kronecker_array_statics<T>::s_limits;
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, SafelyCastableForwardIterator<T> It>
+#else
+template <typename T, typename It,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_iterator<It, T>>::value,
+                      int> = 0>
+#endif
+inline T k_encode(It begin, It end)
+{
+    const auto size = safe_cast<std::size_t>(std::distance(begin, end));
+    const auto &limits = k_limits<T>();
+    // NOTE: here the check is >= because indices in the limits vector correspond to the
+    // sizes of the sequences to be encoded.
+    if (unlikely(size >= limits.size())) {
+        piranha_throw(std::invalid_argument, "cannot procede to the Kronecker encoding of a sequence of size "
+                                                 + std::to_string(size) + " (the maximum size is "
+                                                 + std::to_string(limits.size() - 1u) + ")");
+    }
+    // Special case for zero size.
+    if (!size) {
+        return T(0);
+    }
+    // Cache quantities.
+    const auto &limit = limits[static_cast<decltype(limits.size())>(size)];
+    const auto &minmax_vec = std::get<0>(limit);
+    piranha_assert(minmax_vec[0] > T(0));
+    // Small helper to check that the value val in the input sequence
+    // is within the allowed bounds (from minmax_vec).
+    auto range_checker = [](T val, T minmax) {
+        if (unlikely(val < -minmax || val > minmax)) {
+            piranha_throw(std::invalid_argument, "one of the elements of a sequence to be Kronecker-encoded is out of "
+                                                 "bounds: the value of the element is "
+                                                     + std::to_string(val) + ", while the bounds are ["
+                                                     + std::to_string(-minmax) + ", " + std::to_string(minmax) + "]");
+        }
+    };
+    // Start of the iteration.
+    auto retval = piranha::safe_cast<T>(*begin);
+    range_checker(retval, minmax_vec[0]);
+    retval = static_cast<T>(retval + minmax_vec[0]);
+    auto cur_c = static_cast<T>(2 * minmax_vec[0] + 1);
+    piranha_assert(retval >= T(0));
+    // Do the rest.
+    ++begin;
+    for (decltype(minmax_vec.size()) i = 1; begin != end; ++i, ++begin) {
+        piranha_assert(i < minmax_vec.size());
+        const auto tmp = piranha::safe_cast<T>(*begin);
+        range_checker(tmp, minmax_vec[i]);
+        retval = static_cast<T>(retval + (tmp + minmax_vec[i]) * cur_c);
+        piranha_assert(minmax_vec[i] > 0);
+        cur_c = static_cast<T>(cur_c * (2 * minmax_vec[i] + 1));
+    }
+    return static_cast<T>(retval + std::get<1>(limit));
+}
+
+inline namespace impl
+{
+
 // Type requirement for Kronecker array.
 template <typename T>
 using ka_type_reqs = conjunction<std::is_integral<T>, std::is_signed<T>>;
