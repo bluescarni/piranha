@@ -1119,10 +1119,13 @@ using is_input_iterator = conjunction<
     // yielded eventually by the arrow operator is the same as *it, but minus references: the arrow operator
     // always returns a pointer, but *it could return a new object (e.g., a transform iterator).
     // NOTE: we already verified earlier that T is dereferenceable, so deref_t will not be nonesuch.
-    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<T>>>>>,
-                 unref_t<detected_t<deref_t, addlref_t<T>>>>,
-    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>>,
-                 unref_t<detected_t<deref_t, addlref_t<const T>>>>,
+    dcond<std::is_class<unref_t<detected_t<deref_t, addlref_t<T>>>>,
+          conjunction<
+              std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<T>>>>>,
+                           unref_t<detected_t<deref_t, addlref_t<T>>>>,
+              std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>>,
+                           unref_t<detected_t<deref_t, addlref_t<const T>>>>>,
+          std::true_type>,
     // ++it returns &it. Only non-const needed.
     std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
     // it is post-incrementable. Only non-const needed.
@@ -1238,6 +1241,32 @@ struct true_tt {
 template <typename T>
 const bool true_tt<T>::value;
 }
+
+namespace begin_adl
+{
+
+using std::begin;
+
+template <typename T>
+using type = decltype(begin(std::declval<T>()));
+}
+
+namespace end_adl
+{
+
+using std::end;
+
+template <typename T>
+using type = decltype(end(std::declval<T>()));
+}
+
+template <typename T>
+using is_input_range = conjunction<is_input_iterator<detected_t<begin_adl::type, T>>,
+                                   std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
+
+template <typename T>
+using is_forward_range = conjunction<is_forward_iterator<detected_t<begin_adl::type, T>>,
+                                     std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
 
 /// Detect the availability of <tt>std::begin()</tt> and <tt>std::end()</tt>.
 /**

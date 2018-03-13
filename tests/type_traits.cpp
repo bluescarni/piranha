@@ -1457,6 +1457,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(!is_iterator<iter03>::value);
     BOOST_CHECK(!is_iterator<iter03 &>::value);
     BOOST_CHECK(!is_iterator<const iter03>::value);
+    BOOST_CHECK(is_iterator<std::istreambuf_iterator<double>>::value);
     // The Intel compiler has problems with the destructible
     // type-trait.
 #if !defined(PIRANHA_COMPILER_IS_INTEL)
@@ -1477,6 +1478,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_input_iterator<std::vector<int>::const_iterator>::value);
     BOOST_CHECK(!is_input_iterator<std::vector<int>::iterator &>::value);
     BOOST_CHECK(is_input_iterator<std::istream_iterator<double>>::value);
+    BOOST_CHECK(is_input_iterator<std::istreambuf_iterator<double>>::value);
     BOOST_CHECK(is_input_iterator<iter01>::value);
     BOOST_CHECK((is_output_iterator<iter01, int &>::value));
     BOOST_CHECK((!is_output_iterator<iter01, void>::value));
@@ -1628,6 +1630,36 @@ struct bad_begin_end_03 {
     int *begin();
     double *end();
 };
+
+// Input but not forward.
+struct input_only_00 {
+    std::istreambuf_iterator<char> begin();
+    std::istreambuf_iterator<char> end();
+};
+
+BOOST_AUTO_TEST_CASE(type_traits_input_range_test)
+{
+    BOOST_CHECK((is_input_range<std::vector<int> &>::value));
+    BOOST_CHECK((is_input_range<const std::vector<int> &>::value));
+    BOOST_CHECK((is_input_range<std::vector<int> &&>::value));
+    BOOST_CHECK((is_input_range<std::initializer_list<int> &&>::value));
+    BOOST_CHECK(is_input_range<std::list<int> &>::value);
+    BOOST_CHECK(is_input_range<const std::list<double> &>::value);
+    BOOST_CHECK(is_input_range<std::set<int> &>::value);
+    BOOST_CHECK(is_input_range<const std::set<long> &>::value);
+    BOOST_CHECK(is_input_range<int(&)[3]>::value);
+    BOOST_CHECK(is_input_range<good_begin_end_mut &>::value);
+    BOOST_CHECK(!is_input_range<const good_begin_end_mut &>::value);
+    BOOST_CHECK(is_input_range<good_begin_end_const &>::value);
+    BOOST_CHECK(is_input_range<const good_begin_end_const &>::value);
+    BOOST_CHECK(!is_input_range<bad_begin_end_00 &>::value);
+    BOOST_CHECK(is_input_range<input_only_00 &>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_forward_range_test)
+{
+    BOOST_CHECK(!is_forward_range<input_only_00 &>::value);
+}
 
 BOOST_AUTO_TEST_CASE(type_traits_has_input_begin_end_test)
 {
