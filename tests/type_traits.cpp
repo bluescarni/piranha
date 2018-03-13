@@ -2040,6 +2040,11 @@ BOOST_AUTO_TEST_CASE(type_traits_swappable)
     BOOST_CHECK((is_swappable<const swap03 &, swap03 &>::value));
     BOOST_CHECK((!is_swappable<swap03 &, swap04 &>::value));
     BOOST_CHECK((!is_swappable<swap04 &, swap03 &>::value));
+    BOOST_CHECK((is_swappable<int(&)[3]>::value));
+    BOOST_CHECK((is_swappable<swap00(&)[3]>::value));
+    BOOST_CHECK((is_swappable<std::string(&)[3]>::value));
+    BOOST_CHECK((!is_swappable<swap01(&)[3]>::value));
+    BOOST_CHECK((!is_swappable<swap01(&)[3], swap00(&)[3]>::value));
 #if PIRANHA_CPLUSPLUS < 201703L
     BOOST_CHECK((std_swap_viable<swap00 &, swap00 &>::value));
     BOOST_CHECK((using_std_adl_swap::detected<swap00 &, swap00 &>::value));

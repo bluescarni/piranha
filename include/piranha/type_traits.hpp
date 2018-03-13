@@ -295,8 +295,14 @@ template <typename T, typename U>
 using std_swap_t = decltype(std::swap(std::declval<T>(), std::declval<U>()));
 
 template <typename T, typename U>
-using std_swap_viable = conjunction<is_detected<std_swap_t, T, U>, std::is_move_constructible<unref_t<T>>,
-                                    std::is_move_assignable<unref_t<T>>>;
+using std_swap_viable = conjunction<
+    is_detected<std_swap_t, T, U>,
+    // NOTE: we need to distinguish is T is an array or not, when checking
+    // for move operations.
+    dcond<std::is_array<unref_t<T>>, std::is_move_constructible<typename std::remove_extent<unref_t<T>>::type>,
+          std::is_move_constructible<unref_t<T>>>,
+    dcond<std::is_array<unref_t<T>>, std::is_move_assignable<typename std::remove_extent<unref_t<T>>::type>,
+          std::is_move_assignable<unref_t<T>>>>;
 }
 
 // Two possibilities:
