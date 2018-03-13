@@ -1095,6 +1095,11 @@ struct arrow_operator_type<T, enable_if_t<is_detected<arrow_operator_t, mem_arro
 // *it++ expression, used below.
 template <typename T>
 using it_inc_deref_t = decltype(*std::declval<T>()++);
+
+// The type resulting from dereferencing an lvalue of T,
+// or nonesuch. Shortcut useful below.
+template <typename T>
+using det_deref_t = detected_t<deref_t, addlref_t<T>>;
 }
 
 // Input iterator type trait.
@@ -1109,22 +1114,25 @@ using is_input_iterator = conjunction<
     // *it returns it_traits::reference_type, both in mutable and const forms.
     // NOTE: it_traits::reference_type is never nonesuch, we tested its availability
     // in is_iterator.
-    std::is_same<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_reference, T>>,
-    std::is_same<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_reference, T>>,
+    std::is_same<det_deref_t<T>, detected_t<it_traits_reference, T>>,
+    std::is_same<det_deref_t<const T>, detected_t<it_traits_reference, T>>,
     // *it is convertible to it_traits::value_type.
     // NOTE: as above, it_traits::value_type does exist.
-    std::is_convertible<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_value_type, T>>,
-    std::is_convertible<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_value_type, T>>,
+    std::is_convertible<det_deref_t<T>, detected_t<it_traits_value_type, T>>,
+    std::is_convertible<det_deref_t<const T>, detected_t<it_traits_value_type, T>>,
     // it->m must be the same as (*it).m. What we test here is that the pointee type of the pointer type
     // yielded eventually by the arrow operator is the same as *it, but minus references: the arrow operator
     // always returns a pointer, but *it could return a new object (e.g., a transform iterator).
     // NOTE: we already verified earlier that T is dereferenceable, so deref_t will not be nonesuch.
-    dcond<std::is_class<unref_t<detected_t<deref_t, addlref_t<T>>>>,
+    // NOTE: make this check conditional on whether the ref type is a class or not. If it's not a class,
+    // no expression such as (*it).m is possible, and apparently some input iterators which are not
+    // expected to point to classes do *not* implement the arrow operator as a consequence (e.g.,
+    // see std::istreambuf_iterator).
+    dcond<std::is_class<unref_t<det_deref_t<T>>>,
           conjunction<
-              std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<T>>>>>,
-                           unref_t<detected_t<deref_t, addlref_t<T>>>>,
-              std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>>,
-                           unref_t<detected_t<deref_t, addlref_t<const T>>>>>,
+              std::is_same<unref_t<det_deref_t<detected_t<arrow_operator_t, addlref_t<T>>>>, unref_t<det_deref_t<T>>>,
+              std::is_same<unref_t<det_deref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>,
+                           unref_t<det_deref_t<const T>>>>,
           std::true_type>,
     // ++it returns &it. Only non-const needed.
     std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
