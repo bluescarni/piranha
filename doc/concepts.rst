@@ -74,7 +74,8 @@ Type properties
 
 .. cpp:concept:: template <typename T, typename U = T> piranha::Swappable
 
-   This concept is satisfied if the expressions
+   If at least C++17 is being used, this concept is equivalent to the ``std::is_swappable_with``
+   type trait. That is, the concept is satisfied if the expressions
 
    .. code-block:: c++
 
@@ -86,9 +87,9 @@ Type properties
 
       swap(std::declval<U>(), std::declval<T>())
 
-   are both well-formed in unevaluated context after ``using std::swap``. If at least
-   C++17 is being used, this concept is equivalent to the ``std::is_swappable_with``
-   type trait.
+   are both well-formed in unevaluated context after ``using std::swap``.
+
+   Before C++17, an emulation of the behaviour of ``std::is_swappable_with`` is implemented.
 
 Arithmetic and logical operators
 --------------------------------
