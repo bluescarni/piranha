@@ -1250,6 +1250,7 @@ template <typename T>
 const bool true_tt<T>::value;
 }
 
+// Ranges.
 namespace begin_adl
 {
 
@@ -1268,39 +1269,29 @@ template <typename T>
 using type = decltype(end(std::declval<T>()));
 }
 
+// Input range.
 template <typename T>
 using is_input_range = conjunction<is_input_iterator<detected_t<begin_adl::type, T>>,
                                    std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
 
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool InputRange = is_input_range<T>::value;
+
+#endif
+
+// Forward range.
 template <typename T>
 using is_forward_range = conjunction<is_forward_iterator<detected_t<begin_adl::type, T>>,
                                      std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
 
-/// Detect the availability of <tt>std::begin()</tt> and <tt>std::end()</tt>.
-/**
- * This type trait will be \p true if all the following conditions are fulfilled:
- *
- * - <tt>std::begin()</tt> and <tt>std::end()</tt> can be called on instances of \p T, yielding the type \p It,
- * - \p It is an input iterator.
- */
-template <typename T>
-class has_input_begin_end
-{
-    template <typename U>
-    using begin_t = decltype(std::begin(std::declval<U &>()));
-    template <typename U>
-    using end_t = decltype(std::end(std::declval<U &>()));
-    static const bool implementation_defined
-        = conjunction<is_input_iterator<detected_t<begin_t, T>>, is_input_iterator<detected_t<end_t, T>>,
-                      std::is_same<detected_t<begin_t, T>, detected_t<end_t, T>>>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+#if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-const bool has_input_begin_end<T>::value;
+concept bool ForwardRange = is_forward_range<T>::value;
+
+#endif
 
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:

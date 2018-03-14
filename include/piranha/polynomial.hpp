@@ -406,13 +406,13 @@ class polynomial
                                 int>::type;
     // Implementation of find_cf().
     template <typename T>
-    using find_cf_enabler = typename std::enable_if<
-        std::is_constructible<typename base::term_type::key_type, decltype(std::begin(std::declval<const T &>())),
-                              decltype(std::end(std::declval<const T &>())), const symbol_fset &>::value
-            && has_input_begin_end<const T>::value,
-        int>::type;
+    using find_cf_enabler = enable_if_t<
+        conjunction<is_input_range<T>,
+                    std::is_constructible<typename base::term_type::key_type, addlref_t<detected_t<begin_adl::type, T>>,
+                                          addlref_t<detected_t<begin_adl::type, T>>, const symbol_fset &>>::value,
+        int>;
     template <typename T>
-    using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T>>;
+    using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T> &>;
     template <typename Iterator>
     Cf find_cf_impl(Iterator begin, Iterator end) const
     {
@@ -739,7 +739,7 @@ public:
     /**
      * \note
      * This method is enabled only if:
-     * - \p T satisfies piranha::has_input_begin_end,
+     * - \p T satisfies piranha::is_input_range,
      * - \p Key can be constructed from the begin/end iterators of \p c and a piranha::symbol_fset.
      *
      * This method will first construct a term with zero coefficient and key initialised from the begin/end iterators
@@ -757,9 +757,11 @@ public:
      * - piranha::hash_set::find().
      */
     template <typename T, find_cf_enabler<T> = 0>
-    Cf find_cf(const T &c) const
+    Cf find_cf(T &&c) const
     {
-        return find_cf_impl(std::begin(c), std::end(c));
+        using std::begin;
+        using std::end;
+        return find_cf_impl(begin(std::forward<T>(c)), end(std::forward<T>(c)));
     }
     /// Find coefficient.
     /**
@@ -779,7 +781,9 @@ public:
     template <typename T, find_cf_init_list_enabler<T> = 0>
     Cf find_cf(std::initializer_list<T> l) const
     {
-        return find_cf_impl(std::begin(l), std::end(l));
+        using std::begin;
+        using std::end;
+        return find_cf_impl(begin(l), end(l));
     }
     /// Untruncated multiplication.
     /**

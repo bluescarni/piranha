@@ -159,3 +159,37 @@ Iterators
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
    for forward iterator types.
+
+.. cpp:concept:: template <typename T> piranha::InputRange
+
+   This concept is satisfied if the expressions
+
+   .. code-block:: c++
+
+      begin(std::declval<T>())
+
+   and
+
+   .. code-block:: c++
+
+      end(std::declval<T>())
+
+   are both well-formed in unevaluated context after ``using std::begin`` and ``using std::end``, and they yield
+   the same type satisfying the :cpp:concept:`piranha::InputIterator` concept.
+
+.. cpp:concept:: template <typename T> piranha::ForwardRange
+
+   This concept is satisfied if the expressions
+
+   .. code-block:: c++
+
+      begin(std::declval<T>())
+
+   and
+
+   .. code-block:: c++
+
+      end(std::declval<T>())
+
+   are both well-formed in unevaluated context after ``using std::begin`` and ``using std::end``, and they yield
+   the same type satisfying the :cpp:concept:`piranha::ForwardIterator` concept.

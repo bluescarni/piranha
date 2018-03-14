@@ -31,6 +31,8 @@ see https://www.gnu.org/licenses/. */
 #define BOOST_TEST_MODULE safe_cast_test
 #include <boost/test/included/unit_test.hpp>
 
+#include <iterator>
+#include <string>
 #include <type_traits>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -55,4 +57,50 @@ BOOST_AUTO_TEST_CASE(safe_cast_test_00)
     BOOST_CHECK_EXCEPTION(safe_cast<int>(123.456), safe_cast_failure, [](const safe_cast_failure &scf) {
         return boost::contains(scf.what(), "the safe conversion of a value of type");
     });
+}
+
+BOOST_AUTO_TEST_CASE(safe_cast_input_iterator)
+{
+    BOOST_CHECK((!is_safely_castable_input_iterator<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_input_iterator<std::vector<int>::iterator, void>::value));
+    BOOST_CHECK((!is_safely_castable_input_iterator<void, int>::value));
+    BOOST_CHECK((is_safely_castable_input_iterator<std::vector<int>::iterator, short>::value));
+    BOOST_CHECK((is_safely_castable_input_iterator<std::istreambuf_iterator<char>, short>::value));
+    BOOST_CHECK((!is_safely_castable_input_iterator<std::vector<int>::iterator, std::string>::value));
+}
+
+BOOST_AUTO_TEST_CASE(safe_cast_forward_iterator)
+{
+    BOOST_CHECK((!is_safely_castable_forward_iterator<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_forward_iterator<std::vector<int>::iterator, void>::value));
+    BOOST_CHECK((!is_safely_castable_forward_iterator<void, int>::value));
+    BOOST_CHECK((is_safely_castable_forward_iterator<std::vector<int>::iterator, short>::value));
+    BOOST_CHECK((!is_safely_castable_forward_iterator<std::istreambuf_iterator<char>, short>::value));
+    BOOST_CHECK((!is_safely_castable_forward_iterator<std::vector<int>::iterator, std::string>::value));
+}
+
+BOOST_AUTO_TEST_CASE(safe_cast_input_range)
+{
+    BOOST_CHECK((!is_safely_castable_input_range<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_input_range<std::vector<int> &, void>::value));
+    BOOST_CHECK((!is_safely_castable_input_range<void, int>::value));
+    BOOST_CHECK((is_safely_castable_input_range<std::vector<int> &, short>::value));
+    BOOST_CHECK((!is_safely_castable_input_range<std::vector<int> &, std::string>::value));
+}
+
+struct foo0 {
+};
+
+std::istreambuf_iterator<char> begin(const foo0 &);
+std::istreambuf_iterator<char> end(const foo0 &);
+
+BOOST_AUTO_TEST_CASE(safe_cast_forward_range)
+{
+    BOOST_CHECK((!is_safely_castable_forward_range<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_forward_range<std::vector<int> &, void>::value));
+    BOOST_CHECK((!is_safely_castable_forward_range<void, int>::value));
+    BOOST_CHECK((is_safely_castable_forward_range<std::vector<int> &, short>::value));
+    BOOST_CHECK((!is_safely_castable_forward_range<std::vector<int> &, std::string>::value));
+    BOOST_CHECK((is_safely_castable_input_range<foo0 &, int>::value));
+    BOOST_CHECK((!is_safely_castable_forward_range<foo0 &, int>::value));
 }

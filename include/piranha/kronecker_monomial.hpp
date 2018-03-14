@@ -154,14 +154,9 @@ public:
     kronecker_monomial(kronecker_monomial &&) = default;
 
 private:
-    // Enablers for the ctor from container.
+    // Enabler for the ctor from container.
     template <typename U>
-    using container_ctor_enabler
-        = enable_if_t<conjunction<has_input_begin_end<const U>,
-                                  is_safely_castable<const typename std::iterator_traits<decltype(
-                                                         std::begin(std::declval<const U &>()))>::value_type &,
-                                                     T>>::value,
-                      int>;
+    using container_ctor_enabler = enable_if_t<is_safely_castable_input_range<U, T>::value, int>;
     // Implementation of the ctor from range.
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
@@ -177,8 +172,7 @@ public:
     /// Constructor from container.
     /**
      * \note
-     * This constructor is enabled only if \p U satisfies piranha::has_input_begin_end, and the value type
-     * of the iterator type of \p U can be safely cast to \p T.
+     * This constructor is enabled only if \p U satisfies piranha::is_safely_castable_input_range.
      *
      * This constructor will build internally a vector of values from the input container \p c, encode it and assign the
      * result to the internal integer instance. The value type of the container is converted to \p T using
@@ -189,13 +183,16 @@ public:
      * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
      */
     template <typename U, container_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(const U &c) : kronecker_monomial(std::begin(c), std::end(c))
+    explicit kronecker_monomial(U &&c)
     {
+        using std::begin;
+        using std::end;
+        construct_from_range(begin(std::forward<U>(c)), end(std::forward<U>(c)));
     }
 
 private:
     template <typename U>
-    using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U>>;
+    using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U> &>;
 
 public:
     /// Constructor from initializer list.
@@ -208,8 +205,11 @@ public:
      * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
      */
     template <typename U, init_list_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(std::initializer_list<U> list) : kronecker_monomial(list.begin(), list.end())
+    explicit kronecker_monomial(std::initializer_list<U> list)
     {
+        using std::begin;
+        using std::end;
+        construct_from_range(begin(list), end(list));
     }
 
 private:
