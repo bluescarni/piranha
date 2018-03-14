@@ -295,8 +295,14 @@ template <typename T, typename U>
 using std_swap_t = decltype(std::swap(std::declval<T>(), std::declval<U>()));
 
 template <typename T, typename U>
-using std_swap_viable = conjunction<is_detected<std_swap_t, T, U>, std::is_move_constructible<unref_t<T>>,
-                                    std::is_move_assignable<unref_t<T>>>;
+using std_swap_viable = conjunction<
+    is_detected<std_swap_t, T, U>,
+    // NOTE: we need to distinguish is T is an array or not, when checking
+    // for move operations.
+    dcond<std::is_array<unref_t<T>>, std::is_move_constructible<typename std::remove_extent<unref_t<T>>::type>,
+          std::is_move_constructible<unref_t<T>>>,
+    dcond<std::is_array<unref_t<T>>, std::is_move_assignable<typename std::remove_extent<unref_t<T>>::type>,
+          std::is_move_assignable<unref_t<T>>>>;
 }
 
 // Two possibilities:
@@ -1089,6 +1095,11 @@ struct arrow_operator_type<T, enable_if_t<is_detected<arrow_operator_t, mem_arro
 // *it++ expression, used below.
 template <typename T>
 using it_inc_deref_t = decltype(*std::declval<T>()++);
+
+// The type resulting from dereferencing an lvalue of T,
+// or nonesuch. Shortcut useful below.
+template <typename T>
+using det_deref_t = detected_t<deref_t, addlref_t<T>>;
 }
 
 // Input iterator type trait.
@@ -1103,20 +1114,26 @@ using is_input_iterator = conjunction<
     // *it returns it_traits::reference_type, both in mutable and const forms.
     // NOTE: it_traits::reference_type is never nonesuch, we tested its availability
     // in is_iterator.
-    std::is_same<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_reference, T>>,
-    std::is_same<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_reference, T>>,
+    std::is_same<det_deref_t<T>, detected_t<it_traits_reference, T>>,
+    std::is_same<det_deref_t<const T>, detected_t<it_traits_reference, T>>,
     // *it is convertible to it_traits::value_type.
     // NOTE: as above, it_traits::value_type does exist.
-    std::is_convertible<detected_t<deref_t, addlref_t<T>>, detected_t<it_traits_value_type, T>>,
-    std::is_convertible<detected_t<deref_t, addlref_t<const T>>, detected_t<it_traits_value_type, T>>,
+    std::is_convertible<det_deref_t<T>, detected_t<it_traits_value_type, T>>,
+    std::is_convertible<det_deref_t<const T>, detected_t<it_traits_value_type, T>>,
     // it->m must be the same as (*it).m. What we test here is that the pointee type of the pointer type
     // yielded eventually by the arrow operator is the same as *it, but minus references: the arrow operator
     // always returns a pointer, but *it could return a new object (e.g., a transform iterator).
     // NOTE: we already verified earlier that T is dereferenceable, so deref_t will not be nonesuch.
-    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<T>>>>>,
-                 unref_t<detected_t<deref_t, addlref_t<T>>>>,
-    std::is_same<unref_t<detected_t<deref_t, addlref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>>,
-                 unref_t<detected_t<deref_t, addlref_t<const T>>>>,
+    // NOTE: make this check conditional on whether the ref type is a class or not. If it's not a class,
+    // no expression such as (*it).m is possible, and apparently some input iterators which are not
+    // expected to point to classes do *not* implement the arrow operator as a consequence (e.g.,
+    // see std::istreambuf_iterator).
+    dcond<std::is_class<unref_t<det_deref_t<T>>>,
+          conjunction<
+              std::is_same<unref_t<det_deref_t<detected_t<arrow_operator_t, addlref_t<T>>>>, unref_t<det_deref_t<T>>>,
+              std::is_same<unref_t<det_deref_t<detected_t<arrow_operator_t, addlref_t<const T>>>>,
+                           unref_t<det_deref_t<const T>>>>,
+          std::true_type>,
     // ++it returns &it. Only non-const needed.
     std::is_same<detected_t<preinc_t, addlref_t<T>>, addlref_t<T>>,
     // it is post-incrementable. Only non-const needed.
@@ -1233,31 +1250,48 @@ template <typename T>
 const bool true_tt<T>::value;
 }
 
-/// Detect the availability of <tt>std::begin()</tt> and <tt>std::end()</tt>.
-/**
- * This type trait will be \p true if all the following conditions are fulfilled:
- *
- * - <tt>std::begin()</tt> and <tt>std::end()</tt> can be called on instances of \p T, yielding the type \p It,
- * - \p It is an input iterator.
- */
-template <typename T>
-class has_input_begin_end
+// Ranges.
+namespace begin_adl
 {
-    template <typename U>
-    using begin_t = decltype(std::begin(std::declval<U &>()));
-    template <typename U>
-    using end_t = decltype(std::end(std::declval<U &>()));
-    static const bool implementation_defined
-        = conjunction<is_input_iterator<detected_t<begin_t, T>>, is_input_iterator<detected_t<end_t, T>>,
-                      std::is_same<detected_t<begin_t, T>, detected_t<end_t, T>>>::value;
 
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
+using std::begin;
 
 template <typename T>
-const bool has_input_begin_end<T>::value;
+using type = decltype(begin(std::declval<T>()));
+}
+
+namespace end_adl
+{
+
+using std::end;
+
+template <typename T>
+using type = decltype(end(std::declval<T>()));
+}
+
+// Input range.
+template <typename T>
+using is_input_range = conjunction<is_input_iterator<detected_t<begin_adl::type, T>>,
+                                   std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool InputRange = is_input_range<T>::value;
+
+#endif
+
+// Forward range.
+template <typename T>
+using is_forward_range = conjunction<is_forward_iterator<detected_t<begin_adl::type, T>>,
+                                     std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool ForwardRange = is_forward_range<T>::value;
+
+#endif
 
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:
