@@ -1676,8 +1676,29 @@ struct input_only_00 {
     std::istreambuf_iterator<char> end();
 };
 
+// Forward with adl.
+struct forward_adl_00 {
+};
+
+int *begin(const forward_adl_00 &);
+int *end(const forward_adl_00 &);
+
+// Forward with adl, broken (type mismatch).
+struct forward_adl_01 {
+};
+
+int *begin(const forward_adl_01 &);
+double *end(const forward_adl_01 &);
+
+// Forward with adl, broken (missing end).
+struct forward_adl_02 {
+};
+
+int *begin(const forward_adl_02 &);
+
 BOOST_AUTO_TEST_CASE(type_traits_input_range_test)
 {
+    BOOST_CHECK((!is_input_range<void>::value));
     BOOST_CHECK((is_input_range<std::vector<int> &>::value));
     BOOST_CHECK((is_input_range<const std::vector<int> &>::value));
     BOOST_CHECK((is_input_range<std::vector<int> &&>::value));
@@ -1693,51 +1714,32 @@ BOOST_AUTO_TEST_CASE(type_traits_input_range_test)
     BOOST_CHECK(is_input_range<const good_begin_end_const &>::value);
     BOOST_CHECK(!is_input_range<bad_begin_end_00 &>::value);
     BOOST_CHECK(is_input_range<input_only_00 &>::value);
+    BOOST_CHECK(is_input_range<forward_adl_00 &>::value);
+    BOOST_CHECK(!is_input_range<forward_adl_01 &>::value);
+    BOOST_CHECK(!is_input_range<forward_adl_02 &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_forward_range_test)
 {
+    BOOST_CHECK((!is_forward_range<void>::value));
+    BOOST_CHECK((is_forward_range<std::vector<int> &>::value));
+    BOOST_CHECK((is_forward_range<const std::vector<int> &>::value));
+    BOOST_CHECK((is_forward_range<std::vector<int> &&>::value));
+    BOOST_CHECK((is_forward_range<std::initializer_list<int> &&>::value));
+    BOOST_CHECK(is_forward_range<std::list<int> &>::value);
+    BOOST_CHECK(is_forward_range<const std::list<double> &>::value);
+    BOOST_CHECK(is_forward_range<std::set<int> &>::value);
+    BOOST_CHECK(is_forward_range<const std::set<long> &>::value);
+    BOOST_CHECK(is_forward_range<int(&)[3]>::value);
+    BOOST_CHECK(is_forward_range<good_begin_end_mut &>::value);
+    BOOST_CHECK(!is_forward_range<const good_begin_end_mut &>::value);
+    BOOST_CHECK(is_forward_range<good_begin_end_const &>::value);
+    BOOST_CHECK(is_forward_range<const good_begin_end_const &>::value);
+    BOOST_CHECK(!is_forward_range<bad_begin_end_00 &>::value);
     BOOST_CHECK(!is_forward_range<input_only_00 &>::value);
-}
-
-BOOST_AUTO_TEST_CASE(type_traits_has_input_begin_end_test)
-{
-    BOOST_CHECK(has_input_begin_end<std::vector<int>>::value);
-    BOOST_CHECK(has_input_begin_end<std::vector<double>>::value);
-    BOOST_CHECK(has_input_begin_end<std::initializer_list<int>>::value);
-    BOOST_CHECK(has_input_begin_end<std::initializer_list<long>>::value);
-    BOOST_CHECK(has_input_begin_end<std::vector<int> &>::value);
-    BOOST_CHECK(has_input_begin_end<std::vector<double> &>::value);
-    BOOST_CHECK(has_input_begin_end<std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_input_begin_end<std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_input_begin_end<const std::vector<int>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::vector<double>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::vector<int> &>::value);
-    BOOST_CHECK(has_input_begin_end<const std::vector<double> &>::value);
-    BOOST_CHECK(has_input_begin_end<const std::initializer_list<int> &>::value);
-    BOOST_CHECK(has_input_begin_end<const std::initializer_list<long> &>::value);
-    BOOST_CHECK(has_input_begin_end<good_begin_end_mut>::value);
-    // No const version.
-    BOOST_CHECK(!has_input_begin_end<const good_begin_end_mut>::value);
-    BOOST_CHECK(has_input_begin_end<good_begin_end_const>::value);
-    BOOST_CHECK(has_input_begin_end<const good_begin_end_const>::value);
-    BOOST_CHECK(!has_input_begin_end<bad_begin_end_00>::value);
-    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_00>::value);
-    BOOST_CHECK(!has_input_begin_end<bad_begin_end_01>::value);
-    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_01>::value);
-    BOOST_CHECK(!has_input_begin_end<bad_begin_end_02>::value);
-    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_02>::value);
-    BOOST_CHECK(!has_input_begin_end<bad_begin_end_03>::value);
-    BOOST_CHECK(!has_input_begin_end<const bad_begin_end_03>::value);
-    // Some tests with other containers.
-    BOOST_CHECK(has_input_begin_end<std::list<int>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::list<double>>::value);
-    BOOST_CHECK(has_input_begin_end<std::set<int>>::value);
-    BOOST_CHECK(has_input_begin_end<const std::set<long>>::value);
-    // C array.
-    BOOST_CHECK(has_input_begin_end<int[3]>::value);
+    BOOST_CHECK(is_forward_range<forward_adl_00 &>::value);
+    BOOST_CHECK(!is_forward_range<forward_adl_01 &>::value);
+    BOOST_CHECK(!is_forward_range<forward_adl_02 &>::value);
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_shift_test)
