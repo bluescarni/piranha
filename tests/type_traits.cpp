@@ -1757,6 +1757,34 @@ BOOST_AUTO_TEST_CASE(type_traits_forward_range_test)
     BOOST_CHECK(is_forward_range<forward_adl_00 &>::value);
     BOOST_CHECK(!is_forward_range<forward_adl_01 &>::value);
     BOOST_CHECK(!is_forward_range<forward_adl_02 &>::value);
+    BOOST_CHECK((is_forward_range<std::map<int, int> &>::value));
+    BOOST_CHECK((is_forward_range<const std::map<int, int> &>::value));
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_mutable_forward_range_test)
+{
+    BOOST_CHECK((!is_mutable_forward_range<void>::value));
+    BOOST_CHECK((is_mutable_forward_range<std::vector<int> &>::value));
+    BOOST_CHECK((!is_mutable_forward_range<const std::vector<int> &>::value));
+    BOOST_CHECK((!is_mutable_forward_range<std::vector<int> &&>::value));
+    BOOST_CHECK((!is_mutable_forward_range<std::initializer_list<int> &&>::value));
+    BOOST_CHECK(is_mutable_forward_range<std::list<int> &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<const std::list<double> &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<std::set<int> &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<const std::set<long> &>::value);
+    BOOST_CHECK(is_mutable_forward_range<int(&)[3]>::value);
+    BOOST_CHECK(!is_mutable_forward_range<const int(&)[3]>::value);
+    BOOST_CHECK(is_mutable_forward_range<good_begin_end_mut &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<const good_begin_end_mut &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<good_begin_end_const &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<const good_begin_end_const &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<bad_begin_end_00 &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<input_only_00 &>::value);
+    BOOST_CHECK(is_mutable_forward_range<forward_adl_00 &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<forward_adl_01 &>::value);
+    BOOST_CHECK(!is_mutable_forward_range<forward_adl_02 &>::value);
+    BOOST_CHECK((is_mutable_forward_range<std::map<int, int> &>::value));
+    BOOST_CHECK((!is_mutable_forward_range<const std::map<int, int> &>::value));
 }
 
 BOOST_AUTO_TEST_CASE(type_traits_shift_test)

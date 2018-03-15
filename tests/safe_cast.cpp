@@ -79,12 +79,24 @@ BOOST_AUTO_TEST_CASE(safe_cast_forward_iterator)
     BOOST_CHECK((!is_safely_castable_forward_iterator<std::vector<int>::iterator, std::string>::value));
 }
 
+BOOST_AUTO_TEST_CASE(safe_cast_mutable_forward_iterator)
+{
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<std::vector<int>::iterator, void>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<void, int>::value));
+    BOOST_CHECK((is_safely_castable_mutable_forward_iterator<std::vector<int>::iterator, short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<std::vector<int>::const_iterator, short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<std::istreambuf_iterator<char>, short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_iterator<std::vector<int>::iterator, std::string>::value));
+}
+
 BOOST_AUTO_TEST_CASE(safe_cast_input_range)
 {
     BOOST_CHECK((!is_safely_castable_input_range<void, void>::value));
     BOOST_CHECK((!is_safely_castable_input_range<std::vector<int> &, void>::value));
     BOOST_CHECK((!is_safely_castable_input_range<void, int>::value));
     BOOST_CHECK((is_safely_castable_input_range<std::vector<int> &, short>::value));
+    BOOST_CHECK((is_safely_castable_input_range<int(&)[3], short>::value));
     BOOST_CHECK((!is_safely_castable_input_range<std::vector<int> &, std::string>::value));
 }
 
@@ -100,7 +112,21 @@ BOOST_AUTO_TEST_CASE(safe_cast_forward_range)
     BOOST_CHECK((!is_safely_castable_forward_range<std::vector<int> &, void>::value));
     BOOST_CHECK((!is_safely_castable_forward_range<void, int>::value));
     BOOST_CHECK((is_safely_castable_forward_range<std::vector<int> &, short>::value));
+    BOOST_CHECK((is_safely_castable_forward_range<int(&)[3], short>::value));
     BOOST_CHECK((!is_safely_castable_forward_range<std::vector<int> &, std::string>::value));
     BOOST_CHECK((is_safely_castable_input_range<foo0 &, int>::value));
     BOOST_CHECK((!is_safely_castable_forward_range<foo0 &, int>::value));
+}
+
+BOOST_AUTO_TEST_CASE(safe_cast_mutable_forward_range)
+{
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<void, void>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<std::vector<int> &, void>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<void, int>::value));
+    BOOST_CHECK((is_safely_castable_mutable_forward_range<std::vector<int> &, short>::value));
+    BOOST_CHECK((is_safely_castable_mutable_forward_range<int(&)[3], short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<const int(&)[3], short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<const std::vector<int> &, short>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<std::vector<int> &, std::string>::value));
+    BOOST_CHECK((!is_safely_castable_mutable_forward_range<foo0 &, int>::value));
 }
