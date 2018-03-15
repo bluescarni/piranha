@@ -1201,9 +1201,12 @@ using is_forward_iterator = conjunction<
     // If it is a mutable (i.e., output) iterator, it_traits::reference
     // must be a reference to the value type. Otherwise, it_traits::reference
     // must be a reference to const value type.
-    dcond<is_output_iterator<T, addlref_t<detected_t<it_traits_value_type, T>>>,
-          std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>,
-          std::is_same<detected_t<it_traits_reference, T>, addlref_t<const detected_t<it_traits_value_type, T>>>>,
+    // NOTE: we do not do the is_output_iterator check here, as we don't really know
+    // what to put as a second template parameter.
+    // NOTE: if the ref type is a mutable reference, then a forward iterator satisfies
+    // also all the reqs of an output iterator.
+    disjunction<std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>,
+                std::is_same<detected_t<it_traits_reference, T>, addlref_t<const detected_t<it_traits_value_type, T>>>>,
     // Post-incrementable lvalue returns convertible to const T &.
     std::is_convertible<detected_t<postinc_t, addlref_t<T>>, addlref_t<const T>>,
     // *r++ returns it_traits::reference.
@@ -1215,6 +1218,18 @@ using is_forward_iterator = conjunction<
 
 template <typename T>
 concept bool ForwardIterator = is_forward_iterator<T>::value;
+
+#endif
+
+template <typename T>
+using is_mutable_forward_iterator
+    = conjunction<is_forward_iterator<T>,
+                  std::is_same<detected_t<it_traits_reference, T>, addlref_t<detected_t<it_traits_value_type, T>>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool MutableForwardIterator = is_mutable_forward_iterator<T>::value;
 
 #endif
 
@@ -1292,6 +1307,12 @@ template <typename T>
 concept bool ForwardRange = is_forward_range<T>::value;
 
 #endif
+
+// Mutable forward range.
+template <typename T>
+using is_mutable_forward_range
+    = conjunction<is_mutable_forward_iterator<detected_t<begin_adl::type, T>>,
+                  std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
 
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:
