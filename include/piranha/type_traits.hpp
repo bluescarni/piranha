@@ -1314,6 +1314,13 @@ using is_mutable_forward_range
     = conjunction<is_mutable_forward_iterator<detected_t<begin_adl::type, T>>,
                   std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
 
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool MutableForwardRange = is_mutable_forward_range<T>::value;
+
+#endif
+
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:
 // https://cplusplus.github.io/LWG/issue2116
