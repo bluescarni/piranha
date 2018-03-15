@@ -31,6 +31,7 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -171,36 +172,29 @@ struct kronecker_array_statics {
             auto tmp = determine_limit(i);
             if (std::get<0>(tmp).empty()) {
                 break;
-            } else {
-                retval.emplace_back(std::move(tmp));
             }
+            retval.emplace_back(std::move(tmp));
         }
         return retval;
     }
     // Static vector of limits built at startup.
     static const std::vector<std::tuple<std::vector<T>, T, T, T>> s_limits;
 };
+
+// Static init.
+template <typename T>
+const std::vector<std::tuple<std::vector<T>, T, T, T>> kronecker_array_statics<T>::s_limits
+    = kronecker_array_statics<T>::determine_limits();
 }
 
 template <typename T>
 using is_uncv_cpp_signed_integral
-    = conjunction<std::is_integral<T>, negation<std::is_const<T>>, negation<std::is_volatile<T>>, std::is_signed<T>>;
+    = conjunction<negation<std::is_const<T>>, negation<std::is_volatile<T>>, std::is_integral<T>, std::is_signed<T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
 concept bool UncvCppSignedIntegral = is_uncv_cpp_signed_integral<T>::value;
-
-#endif
-
-template <typename It, typename T>
-using is_safely_castable_forward_iterator
-    = conjunction<is_forward_iterator<It>, is_safely_castable<detected_t<it_traits_reference, It>, T>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename It, typename T>
-concept bool SafelyCastableForwardIterator = is_safely_castable_forward_iterator<It, T>::value;
 
 #endif
 
@@ -214,14 +208,13 @@ inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
     return kronecker_array_statics<T>::s_limits;
 }
 
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, SafelyCastableForwardIterator<T> It>
-#else
-template <typename T, typename It,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_iterator<It, T>>::value,
-                      int> = 0>
-#endif
-inline T k_encode(It begin, It end)
+inline namespace impl
+{
+
+// The actual implementation of the k encoding. Make it a non-constrained
+// function, we'll do the concept checking from the outside.
+template <typename T, typename It>
+inline T k_encode_impl(It begin, It end)
 {
     const auto size = safe_cast<std::size_t>(std::distance(begin, end));
     const auto &limits = k_limits<T>();
@@ -267,6 +260,44 @@ inline T k_encode(It begin, It end)
         cur_c = static_cast<T>(cur_c * (2 * minmax_vec[i] + 1));
     }
     return static_cast<T>(retval + std::get<1>(limit));
+}
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, SafelyCastableForwardIterator<T> It>
+#else
+template <typename T, typename It,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_iterator<It, T>>::value,
+                      int> = 0>
+#endif
+inline T k_encode(It begin, It end)
+{
+    return k_encode_impl<T>(begin, end);
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, SafelyCastableForwardRange<T> Range>
+#else
+template <typename T, typename Range,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_range<Range, T>>::value,
+                      int> = 0>
+#endif
+inline T k_encode(Range &&r)
+{
+    using std::begin;
+    using std::end;
+    return k_encode_impl<T>(begin(std::forward<Range>(r)), end(std::forward<Range>(r)));
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, SafelyCastable<T> U>
+#else
+template <typename T, typename U,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable<U, T>>::value, int> = 0>
+#endif
+inline T k_encode(std::initializer_list<U> l)
+{
+    return k_encode_impl<T>(l.begin(), l.end());
 }
 
 inline namespace impl
