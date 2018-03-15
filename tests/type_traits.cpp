@@ -42,6 +42,7 @@ see https://www.gnu.org/licenses/. */
 #include <iterator>
 #include <limits>
 #include <list>
+#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -1581,6 +1582,7 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_forward_iterator<std::vector<int>::const_iterator>::value);
     BOOST_CHECK(!is_forward_iterator<std::vector<int>::iterator &>::value);
     BOOST_CHECK(!is_forward_iterator<std::istream_iterator<char>>::value);
+    BOOST_CHECK((is_forward_iterator<std::map<int, int>::iterator>::value));
     BOOST_CHECK(is_forward_iterator<iter14>::value);
     BOOST_CHECK((is_output_iterator<iter14, int>::value));
     BOOST_CHECK(!is_forward_iterator<iter14 &>::value);
@@ -1624,6 +1626,21 @@ BOOST_AUTO_TEST_CASE(type_traits_iterator_test)
     BOOST_CHECK(is_iterator<iter21>::value);
     BOOST_CHECK(!is_iterator<iter21 &>::value);
     BOOST_CHECK(!is_iterator<const iter21>::value);
+}
+
+BOOST_AUTO_TEST_CASE(type_traits_mutable_forward_iterator)
+{
+    BOOST_CHECK((!is_mutable_forward_iterator<void>::value));
+    BOOST_CHECK((is_mutable_forward_iterator<int *>::value));
+    BOOST_CHECK((is_mutable_forward_iterator<std::vector<int>::iterator>::value));
+    BOOST_CHECK((is_mutable_forward_iterator<std::list<int>::iterator>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<const int *>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<std::vector<int>::const_iterator>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<std::istreambuf_iterator<char>>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<std::list<int>::const_iterator>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<std::set<int>::iterator>::value));
+    BOOST_CHECK((is_mutable_forward_iterator<std::map<int, int>::iterator>::value));
+    BOOST_CHECK((!is_mutable_forward_iterator<std::map<int, int>::const_iterator>::value));
 }
 
 template <typename S>
