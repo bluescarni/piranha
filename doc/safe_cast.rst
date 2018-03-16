@@ -81,6 +81,19 @@ Concepts
 
    is well-defined.
 
+.. cpp:concept:: template <typename T, typename To> piranha::SafelyCastableMutableForwardIterator
+
+   This concept is satisfied if ``T`` is a :cpp:concept:`mutable forward iterator <piranha::MutableForwardIterator>`
+   whose reference type is :cpp:concept:`safely castable <piranha::SafelyCastable>` to ``To``.
+
+   Specifically, given a mutable forward iterator lvalue ``it``, this concept is satisfied if the expression
+
+   .. code-block:: c++
+
+      piranha::safe_cast<To>(*it)
+
+   is well-defined.
+
 .. cpp:concept:: template <typename T, typename To> piranha::SafelyCastableInputRange
 
    This concept is satisfied if ``T`` is an :cpp:concept:`input range <piranha::InputRange>`
@@ -90,3 +103,8 @@ Concepts
 
    This concept is satisfied if ``T`` is a :cpp:concept:`forward range <piranha::ForwardRange>`
    whose iterator type satisfies the :cpp:concept:`piranha::SafelyCastableForwardIterator` concept.
+
+.. cpp:concept:: template <typename T, typename To> piranha::SafelyCastableMutableForwardRange
+
+   This concept is satisfied if ``T`` is a :cpp:concept:`mutable forward range <piranha::MutableForwardRange>`
+   whose iterator type satisfies the :cpp:concept:`piranha::SafelyCastableMutableForwardIterator` concept.

@@ -153,12 +153,16 @@ Iterators
 .. cpp:concept:: template <typename T, typename U> piranha::OutputIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for output iterator types which instances of ``U`` can be written to.
+   for output iterator types to which lvalues of type ``U`` can be assigned.
 
 .. cpp:concept:: template <typename T> piranha::ForwardIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
    for forward iterator types.
+
+.. cpp:concept:: template <typename T> piranha::MutableForwardIterator
+
+   This concept is satisfied if ``T`` is a mutable :cpp:concept:`forward iterator <piranha::ForwardIterator>`.
 
 .. cpp:concept:: template <typename T> piranha::InputRange
 
@@ -193,3 +197,20 @@ Iterators
 
    are both well-formed in unevaluated context after ``using std::begin`` and ``using std::end``, and they yield
    the same type satisfying the :cpp:concept:`piranha::ForwardIterator` concept.
+
+.. cpp:concept:: template <typename T> piranha::MutableForwardRange
+
+   This concept is satisfied if the expressions
+
+   .. code-block:: c++
+
+      begin(std::declval<T>())
+
+   and
+
+   .. code-block:: c++
+
+      end(std::declval<T>())
+
+   are both well-formed in unevaluated context after ``using std::begin`` and ``using std::end``, and they yield
+   the same type satisfying the :cpp:concept:`piranha::MutableForwardIterator` concept.

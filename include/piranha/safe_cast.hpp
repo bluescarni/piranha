@@ -104,10 +104,25 @@ concept bool SafelyCastableForwardIterator = is_safely_castable_forward_iterator
 
 #endif
 
+// Mutable forward iterator whose ref type is safely castable to To.
+template <typename T, typename To>
+using is_safely_castable_mutable_forward_iterator
+    = conjunction<is_mutable_forward_iterator<T>, is_safely_castable<det_deref_t<T>, To>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename To>
+concept bool SafelyCastableMutableForwardIterator = is_safely_castable_mutable_forward_iterator<T, To>::value;
+
+#endif
+
 // Input range whose ref type is safely castable to To.
 template <typename T, typename To>
 using is_safely_castable_input_range
-    = conjunction<is_input_range<T>, is_safely_castable_input_iterator<detected_t<begin_adl::type, T>, To>>;
+    // NOTE: we avoid re-using is_safely_castable_input_iterator in the implementation:
+    // we already know from is_input_range that the iterator type of T is an input iterator,
+    // we just need to check for the safe castability.
+    = conjunction<is_input_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
@@ -119,12 +134,24 @@ concept bool SafelyCastableInputRange = is_safely_castable_input_range<T, To>::v
 // Forward range whose ref type is safely castable to To.
 template <typename T, typename To>
 using is_safely_castable_forward_range
-    = conjunction<is_forward_range<T>, is_safely_castable_forward_iterator<detected_t<begin_adl::type, T>, To>>;
+    = conjunction<is_forward_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T, typename To>
 concept bool SafelyCastableForwardRange = is_safely_castable_forward_range<T, To>::value;
+
+#endif
+
+// Mutable forward range whose ref type is safely castable to To.
+template <typename T, typename To>
+using is_safely_castable_mutable_forward_range
+    = conjunction<is_mutable_forward_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename To>
+concept bool SafelyCastableMutableForwardRange = is_safely_castable_mutable_forward_range<T, To>::value;
 
 #endif
 }
