@@ -294,6 +294,7 @@ inline T k_encode_impl(It begin, It end)
 }
 }
 
+// Encode from iterators.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T, KEncodableIterator<T> It>
 #else
@@ -305,6 +306,7 @@ inline T k_encode(It begin, It end)
     return k_encode_impl<T>(begin, end);
 }
 
+// Encode range.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T, KEncodableRange<T> R>
 #else
@@ -318,6 +320,7 @@ inline T k_encode(R &&r)
     return k_encode_impl<T>(begin(std::forward<R>(r)), end(std::forward<R>(r)));
 }
 
+// Encode initializer list.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T, SafelyCastable<T> U>
 #else
