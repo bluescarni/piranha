@@ -1233,6 +1233,72 @@ concept bool MutableForwardIterator = is_mutable_forward_iterator<T>::value;
 
 #endif
 
+// Ranges.
+namespace begin_using_adl
+{
+
+using std::begin;
+
+template <typename T>
+using type = decltype(begin(std::declval<T>()));
+}
+
+namespace end_using_adl
+{
+
+using std::end;
+
+template <typename T>
+using type = decltype(end(std::declval<T>()));
+}
+
+inline namespace impl
+{
+
+// The types resulting from applying using std + being/end to type T,
+// or nonesuch if such types do not exist.
+template <typename T>
+using range_begin_t = detected_t<begin_using_adl::type, T>;
+
+template <typename T>
+using range_end_t = detected_t<end_using_adl::type, T>;
+}
+
+// Input range.
+template <typename T>
+using is_input_range = conjunction<is_input_iterator<range_begin_t<T>>, std::is_same<range_begin_t<T>, range_end_t<T>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool InputRange = is_input_range<T>::value;
+
+#endif
+
+// Forward range.
+template <typename T>
+using is_forward_range
+    = conjunction<is_forward_iterator<range_begin_t<T>>, std::is_same<range_begin_t<T>, range_end_t<T>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool ForwardRange = is_forward_range<T>::value;
+
+#endif
+
+// Mutable forward range.
+template <typename T>
+using is_mutable_forward_range
+    = conjunction<is_mutable_forward_iterator<range_begin_t<T>>, std::is_same<range_begin_t<T>, range_end_t<T>>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool MutableForwardRange = is_mutable_forward_range<T>::value;
+
+#endif
+
 inline namespace impl
 {
 
@@ -1264,62 +1330,6 @@ struct true_tt {
 template <typename T>
 const bool true_tt<T>::value;
 }
-
-// Ranges.
-namespace begin_adl
-{
-
-using std::begin;
-
-template <typename T>
-using type = decltype(begin(std::declval<T>()));
-}
-
-namespace end_adl
-{
-
-using std::end;
-
-template <typename T>
-using type = decltype(end(std::declval<T>()));
-}
-
-// Input range.
-template <typename T>
-using is_input_range = conjunction<is_input_iterator<detected_t<begin_adl::type, T>>,
-                                   std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool InputRange = is_input_range<T>::value;
-
-#endif
-
-// Forward range.
-template <typename T>
-using is_forward_range = conjunction<is_forward_iterator<detected_t<begin_adl::type, T>>,
-                                     std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool ForwardRange = is_forward_range<T>::value;
-
-#endif
-
-// Mutable forward range.
-template <typename T>
-using is_mutable_forward_range
-    = conjunction<is_mutable_forward_iterator<detected_t<begin_adl::type, T>>,
-                  std::is_same<detected_t<begin_adl::type, T>, detected_t<end_adl::type, T>>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool MutableForwardRange = is_mutable_forward_range<T>::value;
-
-#endif
 
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:
