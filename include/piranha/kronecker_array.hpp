@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <mp++/integer.hpp>
 
 #include <piranha/config.hpp>
+#include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
@@ -185,8 +186,16 @@ struct kronecker_array_statics {
 template <typename T>
 const std::vector<std::tuple<std::vector<T>, T, T, T>> kronecker_array_statics<T>::s_limits
     = kronecker_array_statics<T>::determine_limits();
+
+// Handy getter for the limits.
+template <typename T>
+inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
+{
+    return kronecker_array_statics<T>::s_limits;
+}
 }
 
+// Signed C++ integral, without cv qualifications.
 template <typename T>
 using is_uncv_cpp_signed_integral
     = conjunction<negation<std::is_const<T>>, negation<std::is_volatile<T>>, std::is_integral<T>, std::is_signed<T>>;
@@ -198,15 +207,38 @@ concept bool UncvCppSignedIntegral = is_uncv_cpp_signed_integral<T>::value;
 
 #endif
 
+// Codification.
+
+// NOTE: the way this is currently written we are in the situation in which:
+// - the iterator being dereferenced is an lvalue (see definition of det_deref_t),
+// - we are checking the expression safe_cast<To>(*it), that is, we are applying
+//   safe_cast() directly to the rvalue result of the dereferencing (rather than, say,
+//   storing the dereference somewhere and casting it later as an lvalue),
+// - we are checking that an rvalue of the difference type is castable safely to std::size_t.
+template <typename It, typename T>
+using is_k_encodable_iterator = conjunction<is_forward_iterator<It>, is_safely_castable<det_deref_t<It>, T>,
+                                            is_safely_castable<detected_t<it_traits_difference_type, It>, std::size_t>>;
+
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T>
-#else
-template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+
+template <typename It, typename T>
+concept bool KEncodableIterator = is_k_encodable_iterator<It, T>::value;
+
 #endif
-inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
-{
-    return kronecker_array_statics<T>::s_limits;
-}
+
+// Encodable range.
+// NOTE: this is fine written as this, as we will have functions which accept ranges as
+// forwarding references, and R will thus resolve appropriately to rvalue/lvalue while
+// being perfectly forwarded to begin()/end().
+template <typename R, typename T>
+using is_k_encodable_range = conjunction<is_forward_range<R>, is_k_encodable_iterator<range_begin_t<R>, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename R, typename T>
+concept bool KEncodableRange = is_k_encodable_range<R, T>::value;
+
+#endif
 
 inline namespace impl
 {
@@ -216,14 +248,13 @@ inline namespace impl
 template <typename T, typename It>
 inline T k_encode_impl(It begin, It end)
 {
-    const auto size = safe_cast<std::size_t>(std::distance(begin, end));
+    const auto size = piranha::safe_cast<std::size_t>(std::distance(begin, end));
     const auto &limits = k_limits<T>();
     // NOTE: here the check is >= because indices in the limits vector correspond to the
-    // sizes of the sequences to be encoded.
+    // sizes of the ranges to be encoded.
     if (unlikely(size >= limits.size())) {
-        piranha_throw(std::invalid_argument, "cannot procede to the Kronecker encoding of a sequence of size "
-                                                 + std::to_string(size) + " (the maximum size is "
-                                                 + std::to_string(limits.size() - 1u) + ")");
+        piranha_throw(std::invalid_argument, "cannot Kronecker-encode a range of size " + std::to_string(size)
+                                                 + ": the size must be less than " + std::to_string(limits.size()));
     }
     // Special case for zero size.
     if (!size) {
@@ -233,11 +264,11 @@ inline T k_encode_impl(It begin, It end)
     const auto &limit = limits[static_cast<decltype(limits.size())>(size)];
     const auto &minmax_vec = std::get<0>(limit);
     piranha_assert(minmax_vec[0] > T(0));
-    // Small helper to check that the value val in the input sequence
+    // Small helper to check that the value val in the input range
     // is within the allowed bounds (from minmax_vec).
     auto range_checker = [](T val, T minmax) {
         if (unlikely(val < -minmax || val > minmax)) {
-            piranha_throw(std::invalid_argument, "one of the elements of a sequence to be Kronecker-encoded is out of "
+            piranha_throw(std::invalid_argument, "one of the elements of a range to be Kronecker-encoded is out of "
                                                  "bounds: the value of the element is "
                                                      + std::to_string(val) + ", while the bounds are ["
                                                      + std::to_string(-minmax) + ", " + std::to_string(minmax) + "]");
@@ -264,11 +295,10 @@ inline T k_encode_impl(It begin, It end)
 }
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, SafelyCastableForwardIterator<T> It>
+template <UncvCppSignedIntegral T, KEncodableIterator<T> It>
 #else
 template <typename T, typename It,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_iterator<It, T>>::value,
-                      int> = 0>
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_encodable_iterator<It, T>>::value, int> = 0>
 #endif
 inline T k_encode(It begin, It end)
 {
@@ -276,17 +306,16 @@ inline T k_encode(It begin, It end)
 }
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, SafelyCastableForwardRange<T> Range>
+template <UncvCppSignedIntegral T, KEncodableRange<T> R>
 #else
-template <typename T, typename Range,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable_forward_range<Range, T>>::value,
-                      int> = 0>
+template <typename T, typename R,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_encodable_range<R, T>>::value, int> = 0>
 #endif
-inline T k_encode(Range &&r)
+inline T k_encode(R &&r)
 {
     using std::begin;
     using std::end;
-    return k_encode_impl<T>(begin(std::forward<Range>(r)), end(std::forward<Range>(r)));
+    return k_encode_impl<T>(begin(std::forward<R>(r)), end(std::forward<R>(r)));
 }
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
@@ -298,6 +327,113 @@ template <typename T, typename U,
 inline T k_encode(std::initializer_list<U> l)
 {
     return k_encode_impl<T>(l.begin(), l.end());
+}
+
+// Decodification.
+
+// NOTE: here we are checking that:
+// - an rvalue of T is safely castable to the value type,
+// - the value type is move assignable,
+// - an rvalue of the difference type is safely castable to std::size_t.
+// That is, we are testing an expression like *it = safe_cast<value_type>(T &&);
+template <typename It, typename T>
+using is_k_decodable_iterator
+    = conjunction<is_mutable_forward_iterator<It>, is_safely_castable<T, detected_t<it_traits_value_type, It>>,
+                  std::is_move_assignable<detected_t<it_traits_value_type, It>>,
+                  is_safely_castable<detected_t<it_traits_difference_type, It>, std::size_t>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename It, typename T>
+concept bool KDecodableIterator = is_k_decodable_iterator<It, T>::value;
+
+#endif
+
+template <typename R, typename T>
+using is_k_decodable_range = conjunction<is_mutable_forward_range<R>, is_k_decodable_iterator<range_begin_t<R>, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename R, typename T>
+concept bool KDecodableRange = is_k_decodable_range<R, T>::value;
+
+#endif
+
+inline namespace impl
+{
+
+template <typename T, typename It>
+inline void k_decode_impl(T n, It begin, It end)
+{
+    using v_type = typename std::iterator_traits<It>::value_type;
+    const auto m = piranha::safe_cast<std::size_t>(std::distance(begin, end));
+    const auto &limits = k_limits<T>();
+    if (unlikely(m >= limits.size())) {
+        piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
+                                                 + " of type '" + demangle<T>() + "' into an output range of size "
+                                                 + std::to_string(m) + ": the size of the range must be less than "
+                                                 + std::to_string(limits.size()));
+    }
+    if (!m) {
+        if (unlikely(n != T(0))) {
+            piranha_throw(std::invalid_argument,
+                          "only a value of zero can be Kronecker-decoded into an empty output range, but a value of "
+                              + std::to_string(n) + " was provided instead");
+        }
+        return;
+    }
+    // Cache values.
+    const auto &limit = limits[static_cast<decltype(limits.size())>(m)];
+    const auto &minmax_vec = std::get<0>(limit);
+    const auto hmin = std::get<1>(limit), hmax = std::get<2>(limit);
+    if (unlikely(n < hmin || n > hmax)) {
+        piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
+                                                 + " of type '" + demangle<T>() + "' into a range of size "
+                                                 + std::to_string(m) + ": its value is outside the allowed range ["
+                                                 + std::to_string(hmin) + ", " + std::to_string(hmax) + "]");
+    }
+    // NOTE: the static_cast here is useful when working with short integral types. In that case,
+    // the binary operation on the RHS produces an int (due to integer promotion rules), which gets
+    // assigned back to the short integral causing the compiler to complain about potentially lossy conversion.
+    const auto code = static_cast<T>(n - hmin);
+    piranha_assert(code >= T(0));
+    piranha_assert(minmax_vec[0] > T(0));
+    auto mod_arg = static_cast<T>(2 * minmax_vec[0] + 1);
+    // Do the first value manually.
+    *begin = piranha::safe_cast<v_type>(static_cast<T>((code % mod_arg) - minmax_vec[0]));
+    // Do the rest.
+    ++begin;
+    for (decltype(minmax_vec.size()) i = 1; i < m; ++i, ++begin) {
+        piranha_assert(minmax_vec[i] > T(0));
+        *begin = piranha::safe_cast<v_type>(
+            static_cast<T>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]));
+        mod_arg = static_cast<T>(mod_arg * (2 * minmax_vec[i] + 1));
+    }
+}
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, KDecodableIterator<T> It>
+#else
+template <typename T, typename It,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_decodable_iterator<It, T>>::value, int> = 0>
+#endif
+inline void k_decode(T n, It begin, It end)
+{
+    k_decode_impl(n, begin, end);
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T, KDecodableRange<T> R>
+#else
+template <typename T, typename R,
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_decodable_range<R, T>>::value, int> = 0>
+#endif
+inline void k_decode(T n, R &&r)
+{
+    using std::begin;
+    using std::end;
+    return k_decode_impl(n, begin(std::forward<R>(r)), end(std::forward<R>(r)));
 }
 
 inline namespace impl

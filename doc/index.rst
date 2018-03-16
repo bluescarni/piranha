@@ -16,6 +16,6 @@ and performance.
 .. warning:: This documentation is a (currently incomplete) work in progress.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    reference.rst

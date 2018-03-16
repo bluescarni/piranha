@@ -162,7 +162,8 @@ Iterators
 
 .. cpp:concept:: template <typename T> piranha::MutableForwardIterator
 
-   This concept is satisfied if ``T`` is a mutable :cpp:concept:`forward iterator <piranha::ForwardIterator>`.
+   This concept is satisfied if ``T`` is a :cpp:concept:`forward iterator <piranha::ForwardIterator>` whose reference
+   type is non-const.
 
 .. cpp:concept:: template <typename T> piranha::InputRange
 

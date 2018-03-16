@@ -406,11 +406,11 @@ class polynomial
                                 int>::type;
     // Implementation of find_cf().
     template <typename T>
-    using find_cf_enabler = enable_if_t<
-        conjunction<is_input_range<T>,
-                    std::is_constructible<typename base::term_type::key_type, addlref_t<detected_t<begin_adl::type, T>>,
-                                          addlref_t<detected_t<begin_adl::type, T>>, const symbol_fset &>>::value,
-        int>;
+    using find_cf_enabler
+        = enable_if_t<conjunction<is_input_range<T>,
+                                  std::is_constructible<typename base::term_type::key_type, addlref_t<range_begin_t<T>>,
+                                                        addlref_t<range_begin_t<T>>, const symbol_fset &>>::value,
+                      int>;
     template <typename T>
     using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T> &>;
     template <typename Iterator>
