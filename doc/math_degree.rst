@@ -19,7 +19,7 @@ Degree
    For instance, for an expression such as
 
    .. math::
-      
+
       3xy^2z - 2xyz + xz
 
    the total degree should be 4 (i.e., the degree of the term with the highest degree).

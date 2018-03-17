@@ -19,7 +19,7 @@ Low degree
    For instance, for an expression such as
 
    .. math::
-      
+
       3xy^2z - 2xyz + xz
 
    the total low degree should be 2 (i.e., the degree of the term with the lowest degree).
