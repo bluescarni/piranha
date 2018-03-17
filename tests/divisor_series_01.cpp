@@ -316,12 +316,11 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
-        if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-            BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
+        if (safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+            BOOST_CHECK_THROW(math::invert((safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
         }
-        if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-            BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value - 1_q) * x + y),
-                              std::invalid_argument);
+        if (-safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+            BOOST_CHECK_THROW(math::invert((-safe_abs_sint<short>::value - 1_q) * x + y), std::invalid_argument);
         }
     }
     {
@@ -346,12 +345,11 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
-        if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-            BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
+        if (safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+            BOOST_CHECK_THROW(math::invert((safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
         }
-        if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-            BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value - 1_q) * x + y),
-                              std::invalid_argument);
+        if (-safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+            BOOST_CHECK_THROW(math::invert((-safe_abs_sint<short>::value - 1_q) * x + y), std::invalid_argument);
         }
     }
     {
@@ -376,12 +374,11 @@ BOOST_AUTO_TEST_CASE(divisor_series_invert_test)
         // Out of bounds for short.
         BOOST_CHECK_THROW(math::invert((std::numeric_limits<short>::max() + 1_q) * x + y), std::invalid_argument);
         // Check, if appropriate, construction from outside the bounds defined in divisor.
-        if (detail::safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
-            BOOST_CHECK_THROW(math::invert((detail::safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
+        if (safe_abs_sint<short>::value < std::numeric_limits<short>::max()) {
+            BOOST_CHECK_THROW(math::invert((safe_abs_sint<short>::value + 1_q) * x + y), std::invalid_argument);
         }
-        if (-detail::safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
-            BOOST_CHECK_THROW(math::invert((-detail::safe_abs_sint<short>::value - 1_q) * x + y),
-                              std::invalid_argument);
+        if (-safe_abs_sint<short>::value > std::numeric_limits<short>::min()) {
+            BOOST_CHECK_THROW(math::invert((-safe_abs_sint<short>::value - 1_q) * x + y), std::invalid_argument);
         }
     }
     {

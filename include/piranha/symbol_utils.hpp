@@ -346,7 +346,7 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
     const auto max_size = std::min(s1.size(), s2.size());
     // Enlarge vidx if needed.
     if (vidx.size() < max_size) {
-        vidx.resize(safe_cast<decltype(vidx.size())>(max_size));
+        vidx.resize(piranha::safe_cast<decltype(vidx.size())>(max_size));
     }
     auto vidx_it = vidx.begin();
     const auto s1_it_b = s1.begin(), s1_it_f = s1.end();
@@ -370,7 +370,7 @@ inline symbol_idx_fset ss_intersect_idx(const symbol_fset &s1, const symbol_fset
             // and the unsigned counterpart of it_diff_t might be different (in reality, safe_cast
             // will probably be optimised out).
             piranha_assert(vidx_it != vidx.end());
-            *(vidx_it++) = safe_cast<symbol_idx>(static_cast<it_udiff_t>(s1_it - s1_it_b));
+            *(vidx_it++) = piranha::safe_cast<symbol_idx>(static_cast<it_udiff_t>(s1_it - s1_it_b));
             // Bump up s1_it: we want to start searching from the next
             // element in the next loop iteration.
             ++s1_it;
@@ -446,7 +446,7 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
         = std::min<typename std::common_type<decltype(s.size()), decltype(m.size())>::type>(s.size(), m.size());
     // Enlarge vidx if needed.
     if (vidx.size() < max_size) {
-        vidx.resize(safe_cast<decltype(vidx.size())>(max_size));
+        vidx.resize(piranha::safe_cast<decltype(vidx.size())>(max_size));
     }
     auto vidx_it = vidx.begin();
     const auto s_it_b = s.begin(), s_it_f = s.end();
@@ -472,7 +472,7 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
             // will probably be optimised out).
             piranha_assert(vidx_it != vidx.end());
             // Store the index and the mapped value.
-            vidx_it->first = safe_cast<symbol_idx>(static_cast<it_udiff_t>(s_it - s_it_b));
+            vidx_it->first = piranha::safe_cast<symbol_idx>(static_cast<it_udiff_t>(s_it - s_it_b));
             vidx_it->second = p.second;
             ++vidx_it;
             // Bump up s_it: we want to start searching from the next

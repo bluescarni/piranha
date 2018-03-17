@@ -9,7 +9,7 @@ Cosine
 
 *#include <piranha/math/cos.hpp>*
 
-.. cpp:function:: template <typename T> auto piranha::cos(T &&x)
+.. cpp:function:: template <piranha::CosineType T> auto piranha::cos(T &&x)
 
    This function computes :math:`\cos\left( x \right)`.
 
@@ -22,9 +22,6 @@ Cosine
 
    where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
    and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::cos_impl`.
-   If the expression above is invalid, or if it returns a type which does not satisfy the
-   :cpp:concept:`piranha::Returnable` concept,
-   then this function will be disabled (i.e., it will not participate in overload resolution).
 
    Piranha provides specialisations of :cpp:class:`piranha::cos_impl` for the following types:
 
@@ -48,14 +45,14 @@ Concepts
 .. cpp:concept:: template <typename T> piranha::CosineType
 
    This concept is satisfied if :cpp:func:`piranha::cos()` can be called
-   with an argument of type ``T``. Specifically,
-   this concept will be satisfied if
+   with an argument of type ``T``. Specifically, this concept will be satisfied if
 
    .. code-block:: c++
 
-      piranha::cos(x)
+      piranha::cos_impl<Tp>{}(std::declval<T>())
 
-   is a valid expression, where ``x`` is a reference to const ``T``.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) is a valid expression whose
+   type is :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_cos_impls:
 
@@ -88,7 +85,7 @@ Implementations
    Specialisation of the function object implementing :cpp:func:`piranha::cos()` for :cpp:class:`mppp::integer <mppp::integer>`.
 
    The operation is successful only if the input argument is zero, in which case the result will be an instance of
-   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from zero.
+   :cpp:class:`mppp::integer\<SSize\> <mppp::integer>` constructed from one.
 
    :exception std\:\:domain_error: if the input argument is not zero.
 

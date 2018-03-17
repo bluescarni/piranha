@@ -56,19 +56,40 @@ class binomial_impl
 inline namespace impl
 {
 
-// Enabler for binomial().
+// Candidate result type for piranha::binomial().
 template <typename T, typename U>
-using binomial_type_ = decltype(binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+using binomial_t_ = decltype(binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+}
+
+template <typename T, typename U = T>
+struct are_binomial_types : is_returnable<detected_t<binomial_t_, T, U>> {
+};
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool BinomialTypes = are_binomial_types<T, U>::value;
+
+#endif
+
+inline namespace impl
+{
 
 template <typename T, typename U>
-using binomial_type = enable_if_t<is_returnable<binomial_type_<T, U>>::value, binomial_type_<T, U>>;
+using binomial_t = enable_if_t<are_binomial_types<T, U>::value, binomial_t_<T, U>>;
 }
 
 // Generalised binomial coefficient.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T>
+inline auto binomial(BinomialTypes<T> &&x, T &&y)
+#else
 template <typename T, typename U>
-inline binomial_type<T &&, U &&> binomial(T &&x, U &&y)
+inline binomial_t<T, U> binomial(T &&x, U &&y)
+#endif
 {
-    return binomial_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
+    return binomial_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>>{}(std::forward<decltype(x)>(x),
+                                                                           std::forward<decltype(y)>(y));
 }
 
 // Specialisation for C++ integrals.
@@ -103,25 +124,6 @@ public:
         return mppp::binomial(std::forward<T1>(x), std::forward<U1>(y));
     }
 };
-
-// Implementation of the type trait to detect the availability of binomial().
-inline namespace impl
-{
-
-template <typename T, typename U>
-using binomial_t = decltype(piranha::binomial(std::declval<const T &>(), std::declval<const U &>()));
-}
-
-template <typename T, typename U = T>
-struct are_binomial_types : is_detected<binomial_t, T, U> {
-};
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U = T>
-concept bool BinomialTypes = are_binomial_types<T, U>::value;
-
-#endif
 }
 
 #endif

@@ -110,14 +110,14 @@ public:
         // http://msdn.microsoft.com/en-us/library/cc230318(v=prot.10).aspx
         unsigned retval = 0u;
         try {
-            retval = safe_cast<unsigned>(info.dwNumberOfProcessors);
+            retval = piranha::safe_cast<unsigned>(info.dwNumberOfProcessors);
         } catch (...) {
             // Do not do anything, just keep zero.
         }
         return retval;
 #elif defined(__APPLE_CC__)
         try {
-            return safe_cast<unsigned>(::sysconf(_SC_NPROCESSORS_ONLN));
+            return piranha::safe_cast<unsigned>(::sysconf(_SC_NPROCESSORS_ONLN));
         } catch (...) {
             return 0u;
         }
@@ -151,7 +151,7 @@ public:
         if (ls > 0) {
             unsigned retval = 0u;
             try {
-                retval = safe_cast<unsigned>(ls);
+                retval = piranha::safe_cast<unsigned>(ls);
             } catch (...) {
             }
             return retval;
@@ -179,7 +179,8 @@ public:
             // http://en.cppreference.com/w/cpp/language/default_constructor#Trivial_default_constructor
             // http://stackoverflow.com/questions/40873520/reinterpret-cast-creating-a-trivially-default-constructible-object
             // http://wg21.link/p0137
-            buffer = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(safe_cast<std::size_t>(buffer_size));
+            buffer
+                = (::SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)std::malloc(piranha::safe_cast<std::size_t>(buffer_size));
             if (unlikely(!buffer)) {
                 piranha_throw(std::bad_alloc, );
             }
@@ -195,7 +196,7 @@ public:
                 }
             }
             std::free(buffer);
-            return safe_cast<unsigned>(line_size);
+            return piranha::safe_cast<unsigned>(line_size);
         } catch (...) {
         }
         return 0u;
@@ -205,7 +206,7 @@ public:
         // Compare to the usage above for the FreeBSD cpu count, were we expect ints.
         std::size_t ls, size = sizeof(ls);
         try {
-            return ::sysctlbyname("hw.cachelinesize", &ls, &size, NULL, 0) ? 0u : safe_cast<unsigned>(ls);
+            return ::sysctlbyname("hw.cachelinesize", &ls, &size, NULL, 0) ? 0u : piranha::safe_cast<unsigned>(ls);
         } catch (...) {
             return 0u;
         }

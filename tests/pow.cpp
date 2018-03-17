@@ -63,6 +63,9 @@ struct b_01 {
     ~b_01() = delete;
 };
 
+struct foo {
+};
+
 namespace piranha
 {
 
@@ -78,6 +81,14 @@ class pow_impl<b_01, b_01>
 {
 public:
     b_01 operator()(const b_01 &, const b_01 &) const;
+};
+
+template <>
+class pow_impl<foo, foo>
+{
+public:
+    foo operator()(const foo &, const foo &) const;
+    foo operator()(foo &, foo &) const = delete;
 };
 }
 
@@ -116,6 +127,12 @@ BOOST_AUTO_TEST_CASE(pow_fp_test)
     BOOST_CHECK((is_exponentiable<double, int>::value));
     BOOST_CHECK((is_exponentiable<float, char>::value));
     BOOST_CHECK((!is_exponentiable<std::string>::value));
+    BOOST_CHECK((is_exponentiable<foo>::value));
+    BOOST_CHECK((is_exponentiable<const foo>::value));
+    BOOST_CHECK((is_exponentiable<const foo &>::value));
+    BOOST_CHECK((!is_exponentiable<foo &>::value));
+    BOOST_CHECK((!is_exponentiable<foo &, foo &>::value));
+    BOOST_CHECK((is_exponentiable<const foo &, foo &>::value));
 }
 
 using int_types = std::tuple<char, signed char, unsigned char, short, unsigned short, int, unsigned, long,

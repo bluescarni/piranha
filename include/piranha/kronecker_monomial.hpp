@@ -156,20 +156,16 @@ public:
     kronecker_monomial(kronecker_monomial &&) = default;
 
 private:
-    // Enablers for the ctor from container.
+    // Enabler for the ctor from container.
     template <typename U>
-    using container_ctor_enabler
-        = enable_if_t<conjunction<has_input_begin_end<const U>,
-                                  has_safe_cast<T, typename std::iterator_traits<decltype(
-                                                       std::begin(std::declval<const U &>()))>::value_type>>::value,
-                      int>;
+    using container_ctor_enabler = enable_if_t<is_safely_castable_input_range<U, T>::value, int>;
     // Implementation of the ctor from range.
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
     {
         v_type tmp;
         std::transform(begin, end, std::back_inserter(tmp),
-                       [](const uncvref_t<decltype(*begin)> &v) { return safe_cast<T>(v); });
+                       [](const uncvref_t<decltype(*begin)> &v) { return piranha::safe_cast<T>(v); });
         m_value = ka::encode(tmp);
         return tmp.size();
     }
@@ -178,8 +174,7 @@ public:
     /// Constructor from container.
     /**
      * \note
-     * This constructor is enabled only if \p U satisfies piranha::has_input_begin_end, and the value type
-     * of the iterator type of \p U can be safely cast to \p T.
+     * This constructor is enabled only if \p U satisfies piranha::is_safely_castable_input_range.
      *
      * This constructor will build internally a vector of values from the input container \p c, encode it and assign the
      * result to the internal integer instance. The value type of the container is converted to \p T using
@@ -190,13 +185,16 @@ public:
      * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
      */
     template <typename U, container_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(const U &c) : kronecker_monomial(std::begin(c), std::end(c))
+    explicit kronecker_monomial(U &&c)
     {
+        using std::begin;
+        using std::end;
+        construct_from_range(begin(std::forward<U>(c)), end(std::forward<U>(c)));
     }
 
 private:
     template <typename U>
-    using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U>>;
+    using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U> &>;
 
 public:
     /// Constructor from initializer list.
@@ -209,16 +207,19 @@ public:
      * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
      */
     template <typename U, init_list_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(std::initializer_list<U> list) : kronecker_monomial(list.begin(), list.end())
+    explicit kronecker_monomial(std::initializer_list<U> list)
     {
+        using std::begin;
+        using std::end;
+        construct_from_range(begin(list), end(list));
     }
 
 private:
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  has_safe_cast<T, typename std::iterator_traits<Iterator>::value_type>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<is_input_iterator<Iterator>,
+                    is_safely_castable<const typename std::iterator_traits<Iterator>::value_type &, T>>::value,
+        int>;
 
 public:
     /// Constructor from range.
@@ -913,9 +914,11 @@ public:
 private:
     // ipow subs utilities.
     template <typename U>
-    using ipow_subs_type = enable_if_t<
-        conjunction<std::is_constructible<pow_t<U, integer>, int>, is_returnable<pow_t<U, integer>>>::value,
-        pow_t<U, integer>>;
+    using ipow_subs_t_ = pow_t<const U &, const integer &>;
+    template <typename U>
+    using ipow_subs_type
+        = enable_if_t<conjunction<std::is_constructible<ipow_subs_t_<U>, int>, is_returnable<ipow_subs_t_<U>>>::value,
+                      ipow_subs_t_<U>>;
 
 public:
     /// Substitution of integral power.

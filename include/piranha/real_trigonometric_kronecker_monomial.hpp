@@ -161,7 +161,7 @@ public:
 private:
     // Enabler for ctor from init list.
     template <typename U>
-    using init_list_enabler = enable_if_t<has_safe_cast<value_type, U>::value, int>;
+    using init_list_enabler = enable_if_t<is_safely_castable<const U &, value_type>::value, int>;
 
 public:
     /// Constructor from initalizer list.
@@ -191,10 +191,12 @@ public:
 private:
     // Enabler for ctor from iterator.
     template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>,
-                                  has_safe_cast<value_type, decltype(*std::declval<const Iterator &>())>>::value,
-                      int>;
+    using it_ctor_enabler = enable_if_t<
+        conjunction<
+            is_input_iterator<Iterator>,
+            // A bit of trickery to avoid declaring a const reference, which GCC 4.8 does not like.
+            is_safely_castable<addlref_t<const uncvref_t<decltype(*std::declval<Iterator &>())>>, value_type>>::value,
+        int>;
 
 public:
     /// Constructor from range.
@@ -221,9 +223,10 @@ public:
         : m_value(0), m_flavour(flavour)
     {
         v_type tmp;
-        std::transform(
-            start, end, std::back_inserter(tmp),
-            [](const typename std::iterator_traits<Iterator>::value_type &v) { return safe_cast<value_type>(v); });
+        std::transform(start, end, std::back_inserter(tmp),
+                       [](const typename std::iterator_traits<Iterator>::value_type &v) {
+                           return piranha::safe_cast<value_type>(v);
+                       });
         m_value = ka::encode(tmp);
     }
     /// Constructor from set of symbols.
@@ -910,9 +913,9 @@ public:
 private:
     // The candidate type, resulting from piranha::cos()/piranha::sin() on T * U.
     template <typename U>
-    using eval_t_cos = cos_t<mul_t<T, U>>;
+    using eval_t_cos = cos_t<const mul_t<T, U> &>;
     template <typename U>
-    using eval_t_sin = sin_t<mul_t<T, U>>;
+    using eval_t_sin = sin_t<const mul_t<T, U> &>;
     // Definition of the evaluation type.
     template <typename U>
     using eval_type
@@ -1208,20 +1211,19 @@ public:
             s_map[static_cast<T>(k + 1)] = s_map[k] * s;
         }
         // Init with the first element in the summation.
-        // NOTE: we promote abs_n to integer in these formulae in order to force
-        // the use of the binomial() overload for integer. In the future we might want
-        // to disable the binomial() overload for integral C++ types.
+        // NOTE: binomial of two C++ integrals will produce an integer.
         // TREQ: t_subs_type<U> move-ctible, dtible.
-        t_subs_type<U> cos_nx(cos_phase(abs_n) * piranha::binomial(integer(abs_n), T(0))
-                              * (c_map[T(0)] * s_map[abs_n])),
-            sin_nx(sin_phase(abs_n) * piranha::binomial(integer(abs_n), T(0)) * (c_map[T(0)] * s_map[abs_n]));
+        static_assert(std::is_same<decltype(piranha::binomial(abs_n, T(0))), integer>::value,
+                      "Invalid type: the result should be an integer.");
+        t_subs_type<U> cos_nx(cos_phase(abs_n) * piranha::binomial(abs_n, T(0)) * (c_map[T(0)] * s_map[abs_n])),
+            sin_nx(sin_phase(abs_n) * piranha::binomial(abs_n, T(0)) * (c_map[T(0)] * s_map[abs_n]));
         // Run the main iteration.
         for (T k = 0; k < abs_n; ++k) {
             const auto p = static_cast<T>(abs_n - (k + 1));
             piranha_assert(p >= T(0));
             // TREQ: mult_t<U,U> move ctible.
             const auto tmp = c_map[static_cast<T>(k + 1)] * s_map[p];
-            const auto tmp_bin = piranha::binomial(integer(abs_n), k + T(1));
+            const auto tmp_bin = piranha::binomial(abs_n, static_cast<T>(k + 1));
             // TREQ: t_subs_type<U> addable in-place.
             cos_nx += cos_phase(p) * tmp_bin * tmp;
             sin_nx += sin_phase(p) * tmp_bin * tmp;

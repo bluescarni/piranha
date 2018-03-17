@@ -30,16 +30,11 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_PIRANHA_HPP
 
 /*
- * \todo explain in general section the base assumptions of move semantics and thread safety (e.g., require implicitly
- * that
- * all moved-from objects are assignable and destructable, and everything not thread-safe by default).
  * \todo base_series test: missing merge terms with negative+move (that actually swaps the contents of the series) and
  * negative+move with different series types.
  * \todo check usage of max_load_factor (especially wrt flukes in * instead of / or viceversa).
  * \todo review use of numeric_cast: in some places we might be using it in such a way we expect errors if converting
  * floating point to int, but this is not the case (from the doc)
- * \todo the tuning parameters should be tested and justified (e.g., when to go into mt mode, etc.).
- * \todo series multadd to speed-up series multiplication when coefficients are series?
  * \todo look into perfect forwarding of members, for use in series, hash set (?)
  * http://stackoverflow.com/questions/8570655/perfect-forwarding-a-member-of-object
  * update: tried this on the series insertion methods, it seems like GCC does not implement this correctly (while clang
@@ -56,13 +51,6 @@ see https://www.gnu.org/licenses/. */
  * in the from-python converters? -> if we do this last bit, we must make sure that our custom converter does not
  * override any other
  * converter that might be registered in boost python. We need to query the registry and check at runtime.
- * \todo after the switch to 4.8, we can drop in many places the forward ctor macro in favour of just inheriting
- * constructors (in other
- * places, e.g., polynomial, we still need them as we are adding new custom ctors). Probably the assignment macro must
- * stay anyway.
- * update: tried this for a while, it looks like the semantics of inheriting ctors might not be what we need, and the
- * support in compilers
- * is still brittle. Maybe revisit in the future.
  * \todo consider replacing the & operator with std::addressof in positional new forms. It seems there might be a perf.
  * penalty
  * involved in doing that, if that is the case we can either do it only if the type is not POD or maybe even if it does
@@ -81,7 +69,6 @@ see https://www.gnu.org/licenses/. */
  * sure they behave consistently wrt locale settings. UPDATE: we can actually switch to std::to_string() in many cases,
  * and keep lexical_cast only for the conversion of piranha's types to string. UPDATE: it looks like to_string is
  * influenced by the locale setting, it's probably better to roll our implementation.
- * \todo review the use of return statements with const objects, if any.
  * \todo review the usage of _fwd headers. It seems it is ok for friend declarations for instance, but wherever we might
  * need the full definition of the object we might want to reorganise the code.
  * \todo the prepare_for_print() should probably become a public print_exponent(), that also takes care of putting
@@ -105,13 +92,6 @@ see https://www.gnu.org/licenses/. */
  * - the program will terminate anyway). We should also probably check the uses of std::move in order to make sure we do
  * not use
  * exception guarantees throughout the code.
- * \todo there could be some tension between SFINAE and the hard errors from static asserts in certain type traits such
- * as key_is_*,
- * series_is_*, etc. So far this has resulted in no practical problems, but in the future we might want to look again at
- * this.
- * UPDATE: this came up and was solved in series_is_rebindable by replacing the hard assertion errors with simply
- * setting the value
- * of the type trait to false via a specialisation. Keep this solution in mind if the problem arises elsewhere.
  * \todo serialization: it seems like if the text in the archive is complete garbage, the destructor will throw. Check
  * that this behaviour
  * is ok in Python, and that the exception from boost serialization is thrown and translated properly. Maybe test
@@ -154,21 +134,12 @@ see https://www.gnu.org/licenses/. */
  * This should probably be an is_base_of check, as done in forwarding.hpp, so that if one derives from the class then we
  * are still not mixing
  * up generic ctor and standard copy/move ones in the derived class.
- * \todo we need to review the documentation/implementation of type traits were we strip away cv qualifications vs,
- * e.g., implementing the test() method
- * in terms of const references. I think in some cases it should be made more explicit and consistent across the type
- * traits.
  * \todo the multiplication of a series by single coefficient can probably be handled in the binary_mul_impl() method.
  * \todo it seems like, at least in some cases, it is possible to avoid extra template arguments for enabling purposes
  * if one uses static methods rather than instance methods (something related to the calling class not being a complete
  * type). Keep this in mind in order to simplify signatures when dealing with compelx sfinae stuff.
  * \todo need probably to provide an overload to math::evaluate() taking init list, for ease of use from C++.
- * \todo the evaluate requirements and type trait do not fail when the second type is a reference. this should be fixed
- * in the type-traits rework.
  * \todo the series multiplier estimation factor should probably be 1, but let's track performance before changing it.
- * \todo guidelines for type traits modernization:
- * - key_* type traits should probably deal with cvref types (with respect, for instance, to the is_key check),
- *   in the same fashion as the s11n type traits.
  */
 
 #include <mp++/config.hpp>
@@ -221,6 +192,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/runtime_info.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 #include <piranha/series.hpp>
 #include <piranha/series_multiplier.hpp>
 #include <piranha/settings.hpp>

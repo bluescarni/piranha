@@ -20,6 +20,10 @@ conda config --add channels conda-forge --force
 
 conda_pkgs="cmake boost-cpp bzip2 zlib msgpack-c mppp"
 
+if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+    conda_pkgs="$conda_pkgs backtrace"
+fi
+
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
     conda_pkgs="$conda_pkgs pip python=3"
 fi

@@ -30,9 +30,10 @@ see https://www.gnu.org/licenses/. */
 #define PIRANHA_CONFIG_GCC_HPP
 
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
-#error Minimum GCC version supported is 4.8.0.
+#error The minimum supported GCC version is 4.8.0.
 #endif
 
 #define PIRANHA_COMPILER_IS_GCC
+#define PIRANHA_PRETTY_FUNCTION __PRETTY_FUNCTION__
 
 #endif

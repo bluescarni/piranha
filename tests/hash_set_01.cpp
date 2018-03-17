@@ -223,6 +223,7 @@ struct random_failure {
     {
         return m_str == rf.m_str;
     }
+    random_failure &operator=(const random_failure &) = default;
     random_failure &operator=(random_failure &&other) noexcept
     {
         m_str = std::move(other.m_str);
@@ -636,7 +637,7 @@ struct type_traits_tester {
     void operator()(const T &)
     {
         BOOST_CHECK(is_container_element<hash_set<T>>::value);
-        BOOST_CHECK(!is_equality_comparable<hash_set<T>>::value);
+        BOOST_CHECK(!is_equality_comparable<const hash_set<T> &>::value);
         BOOST_CHECK(!is_addable<hash_set<T>>::value);
         BOOST_CHECK(!is_ostreamable<hash_set<T>>::value);
     }

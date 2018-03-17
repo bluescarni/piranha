@@ -56,6 +56,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
+#include <piranha/safe_convert.hpp>
 
 // NOTE: in these tests we are assuming a few things:
 // - we can generally go a few elements beyond the numerical limits of sizes without wrapping over,
@@ -88,6 +89,7 @@ struct time_bomb {
         }
         ++s_counter;
     }
+    time_bomb &operator=(const time_bomb &) = default;
     time_bomb &operator=(time_bomb &&other) noexcept
     {
         m_vector = std::move(other.m_vector);
@@ -665,6 +667,7 @@ struct time_bomb2 {
         }
         ++s_counter;
     }
+    time_bomb2 &operator=(const time_bomb2 &) = default;
     time_bomb2 &operator=(time_bomb2 &&other) noexcept
     {
         m_vector = std::move(other.m_vector);
@@ -679,13 +682,14 @@ namespace piranha
 {
 
 template <>
-struct safe_cast_impl<time_bomb2, int, void> {
-    time_bomb2 operator()(int n) const
+struct safe_convert_impl<time_bomb2, int> {
+    bool operator()(time_bomb2 &tb2, int n) const
     {
         try {
-            return time_bomb2(n);
+            tb2 = time_bomb2(n);
+            return true;
         } catch (...) {
-            piranha_throw(safe_cast_failure, "noooo");
+            return false;
         }
     }
 };

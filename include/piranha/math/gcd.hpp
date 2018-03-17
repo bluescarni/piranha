@@ -57,19 +57,40 @@ class gcd_impl
 inline namespace impl
 {
 
-// Enabler for gcd().
+// Candidate result type for piranha::gcd().
 template <typename T, typename U>
-using gcd_type_ = decltype(gcd_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+using gcd_t_ = decltype(gcd_impl<uncvref_t<T>, uncvref_t<U>>{}(std::declval<T>(), std::declval<U>()));
+}
+
+template <typename T, typename U = T>
+struct are_gcd_types : is_returnable<detected_t<gcd_t_, T, U>> {
+};
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool GcdTypes = are_gcd_types<T, U>::value;
+
+#endif
+
+inline namespace impl
+{
 
 template <typename T, typename U>
-using gcd_type = enable_if_t<is_returnable<gcd_type_<T, U>>::value, gcd_type_<T, U>>;
+using gcd_t = enable_if_t<are_gcd_types<T, U>::value, gcd_t_<T, U>>;
 }
 
 // GCD.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T>
+inline auto gcd(GcdTypes<T> &&x, T &&y)
+#else
 template <typename T, typename U>
-inline gcd_type<T &&, U &&> gcd(T &&x, U &&y)
+inline gcd_t<T, U> gcd(T &&x, U &&y)
+#endif
 {
-    return gcd_impl<uncvref_t<T>, uncvref_t<U>>{}(std::forward<T>(x), std::forward<U>(y));
+    return gcd_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>>{}(std::forward<decltype(x)>(x),
+                                                                      std::forward<decltype(y)>(y));
 }
 
 // Specialisation for C++ integrals.
@@ -136,25 +157,6 @@ public:
         return impl(x, y);
     }
 };
-
-// Implementation of the type trait to detect the availability of gcd().
-inline namespace impl
-{
-
-template <typename T, typename U>
-using gcd_t = decltype(piranha::gcd(std::declval<const T &>(), std::declval<const U &>()));
-}
-
-template <typename T, typename U = T>
-struct are_gcd_types : is_detected<gcd_t, T, U> {
-};
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename U = T>
-concept bool GcdTypes = are_gcd_types<T, U>::value;
-
-#endif
 }
 
 #endif

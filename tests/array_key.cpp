@@ -628,7 +628,7 @@ struct tt_tester {
         {
             typedef g_key_type<T, U> key_type;
             BOOST_CHECK(is_hashable<key_type>::value);
-            BOOST_CHECK(is_equality_comparable<key_type>::value);
+            BOOST_CHECK(is_equality_comparable<const key_type &>::value);
         }
     };
     template <typename T>

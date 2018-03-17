@@ -48,19 +48,39 @@ public:
     // the comparison must be convertible to bool.
     template <
         typename U,
-        enable_if_t<conjunction<std::is_constructible<U, const int &>, is_equality_comparable<U>>::value, int> = 0>
+        enable_if_t<conjunction<std::is_constructible<U, int>, is_equality_comparable<const U &>>::value, int> = 0>
     bool operator()(const U &x) const
     {
         return x == U(0);
     }
 };
 
-template <
-    typename T,
-    enable_if_t<std::is_convertible<decltype(is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int> = 0>
-inline bool is_zero(const T &x)
+inline namespace impl
 {
-    return is_zero_impl<T>{}(x);
+
+template <typename T>
+using is_zero_t_ = decltype(is_zero_impl<uncvref_t<T>>{}(std::declval<T>()));
+}
+
+template <typename T>
+using is_is_zero_type = std::is_convertible<detected_t<is_zero_t_, T>, bool>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T>
+concept bool IsZeroType = is_is_zero_type<T>::value;
+
+#endif
+
+// Zero detection.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <IsZeroType T>
+#else
+template <typename T, enable_if_t<is_is_zero_type<T>::value, int> = 0>
+#endif
+inline bool is_zero(T &&x)
+{
+    return is_zero_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
 
 // Specialisation of the piranha::is_zero() functor for C++ complex floating-point types.
@@ -78,24 +98,6 @@ public:
         return c.real() == typename T::value_type(0) && c.imag() == typename T::value_type(0);
     }
 };
-
-inline namespace impl
-{
-
-template <typename T>
-using is_zero_t = decltype(piranha::is_zero(std::declval<const T &>()));
-}
-
-// Type trait to detect the presence of the piranha::is_zero() function.
-template <typename T>
-using is_is_zero_type = is_detected<is_zero_t, T>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T>
-concept bool IsZeroType = is_is_zero_type<T>::value;
-
-#endif
 }
 
 #endif

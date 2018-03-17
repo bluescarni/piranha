@@ -9,7 +9,7 @@ Detect zero
 
 *#include <piranha/math/is_zero.hpp>*
 
-.. cpp:function:: template <typename T> bool piranha::is_zero(const T &x)
+.. cpp:function:: template <piranha::IsZeroType T> bool piranha::is_zero(T &&x)
 
    This function returns ``true`` if *x* is equal to zero, ``false`` otherwise.
 
@@ -18,11 +18,10 @@ Detect zero
 
    .. code-block:: c++
 
-      return piranha::is_zero_impl<T>{}(x);
+      return piranha::is_zero_impl<Tp>{}(x);
 
-   If the expression above is invalid, or if it returns a type which is not
-   :cpp:concept:`~piranha::Convertible` to ``bool``, then this function will
-   be disabled (i.e., it will not participate in overload resolution).
+   where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
+   and *x* is perfectly forwarded to the call operator of :cpp:class:`piranha::is_zero_impl`.
 
    Piranha provides specialisations of :cpp:class:`piranha::is_zero_impl` for the following types:
 
@@ -51,9 +50,10 @@ Concepts
 
    .. code-block:: c++
 
-      piranha::is_zero(x)
+      piranha::is_zero_impl<Tp>{}(std::declval<T>())
 
-   is a valid expression, where ``x`` is a reference to const ``T``.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) is a valid expression whose
+   type is :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
 
 .. _math_is_zero_impls:
 
@@ -71,9 +71,10 @@ Implementations
       return x == T(0);
    
    The call operator is enabled (i.e., it participates in overload resolution) only if ``T``
-   is :cpp:concept:`constructible <piranha::Constructible>` from ``const int &`` and
+   is :cpp:concept:`constructible <piranha::Constructible>` from ``int`` and
    :cpp:concept:`equality-comparable <piranha::EqualityComparable>`. In other words, this default
-   implementation is activated only if the expression ``x == T(0)`` is valid.
+   implementation is activated only if ``x == T(0)`` is a valid expression of a type
+   :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
 
    :exception unspecified: any exception thrown by the expression ``x == T(0)``.
 

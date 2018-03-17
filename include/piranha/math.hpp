@@ -67,10 +67,8 @@ struct negate_impl {
 private:
     // NOTE: inside this type trait, U is always a non-const non-reference type.
     template <typename U>
-    using generic_enabler =
-        typename std::enable_if<!std::is_integral<U>::value
-                                    && detail::true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value,
-                                int>::type;
+    using generic_enabler = typename std::enable_if<
+        !std::is_integral<U>::value && true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value, int>::type;
     template <typename U>
     using integral_enabler = typename std::enable_if<std::is_integral<U>::value, int>::type;
 
@@ -804,10 +802,11 @@ namespace detail
 {
 
 template <typename T>
-using is_canonical_enabler = typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<pbracket_type<T>>::value
-                                                         && std::is_constructible<pbracket_type<T>, int>::value
-                                                         && is_equality_comparable<pbracket_type<T>>::value,
-                                                     int>::type;
+using is_canonical_enabler =
+    typename std::enable_if<has_pbracket<T>::value && is_is_zero_type<const pbracket_type<T> &>::value
+                                && std::is_constructible<pbracket_type<T>, int>::value
+                                && is_equality_comparable<const pbracket_type<T> &>::value,
+                            int>::type;
 
 template <typename T>
 inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::vector<T const *> &new_q,

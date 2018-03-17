@@ -222,8 +222,8 @@ struct insert_tester {
         divisor<T> d;
         std::vector<T> tmp;
         T exponent(1);
-        if (std::numeric_limits<T>::min() < -detail::safe_abs_sint<T>::value
-            && std::numeric_limits<T>::max() > detail::safe_abs_sint<T>::value) {
+        if (std::numeric_limits<T>::min() < -safe_abs_sint<T>::value
+            && std::numeric_limits<T>::max() > safe_abs_sint<T>::value) {
             tmp = {std::numeric_limits<T>::min()};
             BOOST_CHECK_THROW(d.insert(tmp.begin(), tmp.end(), exponent), std::invalid_argument);
             BOOST_CHECK_EQUAL(d.size(), 0u);
