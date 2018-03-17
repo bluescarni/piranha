@@ -31,7 +31,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <algorithm>
 #include <cstddef>
-#include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <numeric>
@@ -254,7 +253,9 @@ inline T k_encode_impl(It begin, It end)
     // sizes of the ranges to be encoded.
     if (unlikely(size >= limits.size())) {
         piranha_throw(std::invalid_argument, "cannot Kronecker-encode a range of size " + std::to_string(size)
-                                                 + ": the size must be less than " + std::to_string(limits.size()));
+                                                 + " to the signed integral type '" + demangle<T>()
+                                                 + "': the maximum allowed size for the range is "
+                                                 + std::to_string(limits.size() - 1u));
     }
     // Special case for zero size.
     if (!size) {
@@ -320,25 +321,13 @@ inline T k_encode(R &&r)
     return k_encode_impl<T>(begin(std::forward<R>(r)), end(std::forward<R>(r)));
 }
 
-// Encode initializer list.
-#if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, SafelyCastable<T> U>
-#else
-template <typename T, typename U,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_safely_castable<U, T>>::value, int> = 0>
-#endif
-inline T k_encode(std::initializer_list<U> l)
-{
-    return k_encode_impl<T>(l.begin(), l.end());
-}
-
 // Decodification.
 
 // NOTE: here we are checking that:
 // - an rvalue of T is safely castable to the value type,
 // - the value type is move assignable,
 // - an rvalue of the difference type is safely castable to std::size_t.
-// That is, we are testing an expression like *it = safe_cast<value_type>(T &&);
+// That is, we are testing an expression like *it = safe_cast<value_type>(T &&).
 template <typename It, typename T>
 using is_k_decodable_iterator
     = conjunction<is_mutable_forward_iterator<It>, is_safely_castable<T, detected_t<it_traits_value_type, It>>,
@@ -352,6 +341,7 @@ concept bool KDecodableIterator = is_k_decodable_iterator<It, T>::value;
 
 #endif
 
+// Decodable range.
 template <typename R, typename T>
 using is_k_decodable_range = conjunction<is_mutable_forward_range<R>, is_k_decodable_iterator<range_begin_t<R>, T>>;
 
@@ -365,6 +355,7 @@ concept bool KDecodableRange = is_k_decodable_range<R, T>::value;
 inline namespace impl
 {
 
+// Implementation of the decodification.
 template <typename T, typename It>
 inline void k_decode_impl(T n, It begin, It end)
 {
@@ -374,8 +365,8 @@ inline void k_decode_impl(T n, It begin, It end)
     if (unlikely(m >= limits.size())) {
         piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
                                                  + " of type '" + demangle<T>() + "' into an output range of size "
-                                                 + std::to_string(m) + ": the size of the range must be less than "
-                                                 + std::to_string(limits.size()));
+                                                 + std::to_string(m) + ": the maximum allowed size for the range is "
+                                                 + std::to_string(limits.size() - 1u));
     }
     if (!m) {
         if (unlikely(n != T(0))) {
@@ -392,7 +383,8 @@ inline void k_decode_impl(T n, It begin, It end)
     if (unlikely(n < hmin || n > hmax)) {
         piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
                                                  + " of type '" + demangle<T>() + "' into a range of size "
-                                                 + std::to_string(m) + ": its value is outside the allowed range ["
+                                                 + std::to_string(m)
+                                                 + ": the value of the integer is outside the allowed range ["
                                                  + std::to_string(hmin) + ", " + std::to_string(hmax) + "]");
     }
     // NOTE: the static_cast here is useful when working with short integral types. In that case,
@@ -415,6 +407,7 @@ inline void k_decode_impl(T n, It begin, It end)
 }
 }
 
+// Decodification into an iterator pair.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T, KDecodableIterator<T> It>
 #else
@@ -426,6 +419,7 @@ inline void k_decode(T n, It begin, It end)
     k_decode_impl(n, begin, end);
 }
 
+// Decodification into a range.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T, KDecodableRange<T> R>
 #else
