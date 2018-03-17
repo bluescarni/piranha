@@ -116,8 +116,6 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
  */
 // NOTE:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
-// - it might be better to rework the machinery for the unpacking. An idea is to just use std::vectors
-//   with TLS, and have the unpack function take retval as mutable ref rather than returning a vector.
 template <typename T = std::make_signed<std::size_t>::type>
 class kronecker_monomial
 {
@@ -156,7 +154,8 @@ public:
 private:
     // Enabler for the ctor from container.
     template <typename U>
-    using container_ctor_enabler = enable_if_t<is_safely_castable_input_range<U, T>::value, int>;
+    using container_ctor_enabler
+        = enable_if_t<conjunction<is_input_range<U>, is_safely_castable<det_deref_t<range_begin_t<U>>, T>>::value, int>;
     // Implementation of the ctor from range.
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
@@ -349,22 +348,23 @@ public:
      */
     bool is_compatible(const symbol_fset &args) const
     {
-        // NOTE: the idea here is to avoid unpack()ing for performance reasons: these checks
-        // are already part of unpack(), and that's why unpack() is used instead of is_compatible()
-        // in other methods.
+        // NOTE: the idea here is to avoid unpacking for performance reasons.
+        // NOTE: these checks are part of the k decodification, so wherever
+        // we decode we are also testing for compatibility and we don't have
+        // to call is_compatible() explicitly.
         const auto s = args.size();
         // No args means the value must also be zero.
         if (!s) {
             return !m_value;
         }
-        const auto &limits = ka::get_limits();
+        const auto &limits = k_limits<T>();
         // If we overflow the maximum size available, we cannot use this object as key in series.
         if (s >= limits.size()) {
             return false;
         }
         const auto &l = limits[static_cast<decltype(limits.size())>(s)];
         // Value is compatible if it is within the bounds for the given size.
-        return (m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l));
+        return m_value >= std::get<1u>(l) && m_value <= std::get<2u>(l);
     }
     /// Merge symbols.
     /**
@@ -561,18 +561,18 @@ public:
      *
      * @return a pair indicating if the monomial is linear.
      *
-     * @throws unspecified any exception thrown by unpack().
+     * @throws unspecified any exception thrown by piranha::safe_cast() or
+     * piranha::k_decode().
      */
     std::pair<bool, symbol_idx> is_linear(const symbol_fset &args) const
     {
-        const auto v = unpack(args);
-        const auto size = v.size();
-        decltype(v.size()) n_linear = 0, candidate = 0;
-        for (decltype(v.size()) i = 0; i < size; ++i) {
-            if (!v[i]) {
+        auto p = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
+        decltype(args.size()) n_linear = 0, candidate = 0;
+        for (decltype(args.size()) i = 0; i < args.size(); ++i, ++p.first) {
+            if (!*p.first) {
                 continue;
             }
-            if (v[i] != T(1)) {
+            if (*p.first != T(1)) {
                 return std::make_pair(false, symbol_idx{0});
             }
             candidate = i;

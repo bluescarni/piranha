@@ -323,6 +323,116 @@ inline T k_encode(R &&r)
 
 // Decodification.
 
+// Kronecker-decoding iterator. This implements the decodification into iterators/ranges as well.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
+class k_decode_iterator
+{
+public:
+    // The typedefs to satisfy std::iterator_traits.
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T *;
+    using reference = T;
+    // NOTE: let's just make it an input iterator for now.
+    using iterator_category = std::input_iterator_tag;
+    // NOTE: these constructors will not be documented, they are implementation details
+    // kept public for ease of testing.
+    // end iterator for decoding into a range of a given size. For the end iterator, we don't
+    // care about the code, mod_arg, etc.
+    k_decode_iterator(std::size_t size) : m_cur_idx(size), m_size(size), m_code(0), m_mod_arg(0), m_value(0) {}
+    // begin iterator for decoding the value n into a range of a given size.
+    k_decode_iterator(T n, std::size_t size) : m_cur_idx(0), m_size(size), m_code(0), m_mod_arg(0), m_value(0)
+    {
+        const auto &limits = k_limits<T>();
+        if (unlikely(m_size >= limits.size())) {
+            piranha_throw(std::invalid_argument,
+                          "cannot Kronecker-decode the signed integer " + std::to_string(n) + " of type '"
+                              + demangle<T>() + "' into an output range of size " + std::to_string(m_size)
+                              + ": the maximum allowed size for the range is " + std::to_string(limits.size() - 1u));
+        }
+        if (!m_size) {
+            if (unlikely(n != T(0))) {
+                piranha_throw(std::invalid_argument,
+                              "only zero can be Kronecker-decoded into an empty output range, but a value of "
+                                  + std::to_string(n) + " was provided instead");
+            }
+            return;
+        }
+        // Cache values.
+        const auto &limit = limits[static_cast<decltype(limits.size())>(m_size)];
+        const auto &minmax_vec = std::get<0>(limit);
+        const auto hmin = std::get<1>(limit), hmax = std::get<2>(limit);
+        if (unlikely(n < hmin || n > hmax)) {
+            piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
+                                                     + " of type '" + demangle<T>() + "' into a range of size "
+                                                     + std::to_string(m_size)
+                                                     + ": the value of the integer is outside the allowed bounds ["
+                                                     + std::to_string(hmin) + ", " + std::to_string(hmax) + "]");
+        }
+        // NOTE: the static_cast here is useful when working with short integral types. In that case,
+        // the binary operation on the RHS produces an int (due to integer promotion rules), which gets
+        // assigned back to the short integral causing the compiler to complain about potentially lossy conversion.
+        m_code = static_cast<T>(n - hmin);
+        piranha_assert(m_code >= T(0));
+        piranha_assert(minmax_vec[0] > T(0));
+        m_mod_arg = static_cast<T>(2 * minmax_vec[0] + 1);
+        // Compute the first value.
+        m_value = static_cast<T>((m_code % m_mod_arg) - minmax_vec[0]);
+    }
+    // NOTE: for the comparison, we just care to verify that the index within
+    // the range is the same.
+    bool operator==(const k_decode_iterator &k) const
+    {
+        return m_cur_idx == k.m_cur_idx;
+    }
+    bool operator!=(const k_decode_iterator &k) const
+    {
+        return !(*this == k);
+    }
+    // Derefencing just returns the current value.
+    T operator*() const
+    {
+        piranha_assert(m_cur_idx < m_size);
+        return m_value;
+    }
+    // NOTE: the increment step takes care of computing the new value.
+    k_decode_iterator &operator++()
+    {
+        // Make sure we are not at the end already.
+        piranha_assert(m_cur_idx < m_size);
+        // Increas the current position into the range.
+        ++m_cur_idx;
+        // Don't do anything if we moved to the end.
+        if (m_cur_idx < m_size) {
+            const auto &limits = k_limits<T>();
+            const auto &minmax_vec = std::get<0>(limits[static_cast<decltype(limits.size())>(m_size)]);
+            const auto minmax_v = minmax_vec[static_cast<decltype(minmax_vec.size())>(m_cur_idx)];
+            piranha_assert(minmax_v > T(0));
+            m_value = static_cast<T>((m_code % (m_mod_arg * (2 * minmax_v + 1))) / m_mod_arg - minmax_v);
+            m_mod_arg = static_cast<T>(m_mod_arg * (2 * minmax_v + 1));
+        }
+        return *this;
+    }
+    // The usual implementation of post-increment.
+    k_decode_iterator operator++(int)
+    {
+        k_decode_iterator retval(*this);
+        ++(*this);
+        return retval;
+    }
+
+private:
+    std::size_t m_cur_idx;
+    std::size_t m_size;
+    T m_code;
+    T m_mod_arg;
+    T m_value;
+};
+
 // NOTE: here we are checking that:
 // - an rvalue of T is safely castable to the value type,
 // - the value type is move assignable,
@@ -355,54 +465,15 @@ concept bool KDecodableRange = is_k_decodable_range<R, T>::value;
 inline namespace impl
 {
 
-// Implementation of the decodification.
+// Decodification into output iterators.
 template <typename T, typename It>
 inline void k_decode_impl(T n, It begin, It end)
 {
+    // The value type of the iterator.
     using v_type = typename std::iterator_traits<It>::value_type;
     const auto m = piranha::safe_cast<std::size_t>(std::distance(begin, end));
-    const auto &limits = k_limits<T>();
-    if (unlikely(m >= limits.size())) {
-        piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
-                                                 + " of type '" + demangle<T>() + "' into an output range of size "
-                                                 + std::to_string(m) + ": the maximum allowed size for the range is "
-                                                 + std::to_string(limits.size() - 1u));
-    }
-    if (!m) {
-        if (unlikely(n != T(0))) {
-            piranha_throw(std::invalid_argument,
-                          "only a value of zero can be Kronecker-decoded into an empty output range, but a value of "
-                              + std::to_string(n) + " was provided instead");
-        }
-        return;
-    }
-    // Cache values.
-    const auto &limit = limits[static_cast<decltype(limits.size())>(m)];
-    const auto &minmax_vec = std::get<0>(limit);
-    const auto hmin = std::get<1>(limit), hmax = std::get<2>(limit);
-    if (unlikely(n < hmin || n > hmax)) {
-        piranha_throw(std::invalid_argument, "cannot Kronecker-decode the signed integer " + std::to_string(n)
-                                                 + " of type '" + demangle<T>() + "' into a range of size "
-                                                 + std::to_string(m)
-                                                 + ": the value of the integer is outside the allowed range ["
-                                                 + std::to_string(hmin) + ", " + std::to_string(hmax) + "]");
-    }
-    // NOTE: the static_cast here is useful when working with short integral types. In that case,
-    // the binary operation on the RHS produces an int (due to integer promotion rules), which gets
-    // assigned back to the short integral causing the compiler to complain about potentially lossy conversion.
-    const auto code = static_cast<T>(n - hmin);
-    piranha_assert(code >= T(0));
-    piranha_assert(minmax_vec[0] > T(0));
-    auto mod_arg = static_cast<T>(2 * minmax_vec[0] + 1);
-    // Do the first value manually.
-    *begin = piranha::safe_cast<v_type>(static_cast<T>((code % mod_arg) - minmax_vec[0]));
-    // Do the rest.
-    ++begin;
-    for (decltype(minmax_vec.size()) i = 1; i < m; ++i, ++begin) {
-        piranha_assert(minmax_vec[i] > T(0));
-        *begin = piranha::safe_cast<v_type>(
-            static_cast<T>((code % (mod_arg * (2 * minmax_vec[i] + 1))) / mod_arg - minmax_vec[i]));
-        mod_arg = static_cast<T>(mod_arg * (2 * minmax_vec[i] + 1));
+    for (k_decode_iterator<T> bk(n, m); begin != end; ++begin, ++bk) {
+        *begin = piranha::safe_cast<v_type>(*bk);
     }
 }
 }
@@ -431,6 +502,36 @@ inline void k_decode(T n, R &&r)
     using std::begin;
     using std::end;
     return k_decode_impl(n, begin(std::forward<R>(r)), end(std::forward<R>(r)));
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
+inline std::pair<k_decode_iterator<T>, k_decode_iterator<T>> k_decode(T n, std::size_t size)
+{
+    return std::make_pair(k_decode_iterator<T>(n, size), k_decode_iterator<T>(size));
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
+inline k_decode_iterator<T> begin(const std::pair<k_decode_iterator<T>, k_decode_iterator<T>> &r)
+{
+    return r.first;
+}
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
+inline k_decode_iterator<T> end(const std::pair<k_decode_iterator<T>, k_decode_iterator<T>> &r)
+{
+    return r.second;
 }
 
 inline namespace impl
