@@ -9,8 +9,8 @@ Degree
 
 *#include <piranha/math/degree.hpp>*
 
-.. cpp:function:: template <typename T> auto piranha::degree(T &&x)
-.. cpp:function:: template <typename T> auto piranha::degree(T &&x, const piranha::symbol_fset &s)
+.. cpp:function:: template <piranha::DegreeType T> auto piranha::degree(T &&x)
+.. cpp:function:: template <piranha::DegreeType T> auto piranha::degree(T &&x, const piranha::symbol_fset &s)
 
    These functions return respectively the total and partial degree of *x*.
 
@@ -44,9 +44,6 @@ Degree
 
    where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
    and *x* is perfectly forwarded to the call operators of :cpp:class:`piranha::degree_impl`.
-   If the expressions above are invalid, or if they return a type which does not satisfy the
-   :cpp:concept:`piranha::Returnable` concept,
-   then these functions will be disabled (i.e., they will not participate in overload resolution).
 
    See the :ref:`implementation <math_degree_impls>` section below for more details about the available
    specialisations.
@@ -61,23 +58,23 @@ Degree
 Concepts
 --------
 
-.. cpp:concept:: template <typename T> piranha::IsDegreeType
+.. cpp:concept:: template <typename T> piranha::DegreeType
 
    This concept is satisfied if both overloads of :cpp:func:`piranha::degree()` can be called
    with a first argument of type ``T``. Specifically, this concept will be satisfied if both
 
    .. code-block:: c++
 
-      piranha::degree(x)
+      piranha::degree_impl<Tp>{}(std::declval<T>())
 
    and
 
    .. code-block:: c++
 
-      piranha::degree(x, s)
+      piranha::degree_impl<Tp>{}(std::declval<T>(), std::declval<const piranha::symbol_fset &>())
 
-   are valid expressions, where ``x`` is a reference to const ``T`` and ``s`` a reference to const
-   :cpp:type:`piranha::symbol_fset`.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) are valid expressions
+   whose types are :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_degree_impls:
 

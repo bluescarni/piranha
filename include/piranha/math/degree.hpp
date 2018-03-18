@@ -48,57 +48,61 @@ class degree_impl
 inline namespace impl
 {
 
-// Enabler for degree() (total degree overload).
+// Candidate result type for piranha::degree() (both total and partial degree overloads).
 template <typename T>
-using tot_degree_type_ = decltype(degree_impl<uncvref_t<T>>{}(std::declval<T>()));
-
-template <typename T>
-using tot_degree_type = enable_if_t<is_returnable<tot_degree_type_<T>>::value, tot_degree_type_<T>>;
-}
+using total_degree_t_ = decltype(degree_impl<uncvref_t<T>>{}(std::declval<T>()));
 
 template <typename T>
-inline tot_degree_type<T &&> degree(T &&x)
-{
-    return degree_impl<uncvref_t<T>>{}(std::forward<T>(x));
-}
+using partial_degree_t_ = decltype(degree_impl<uncvref_t<T>>{}(std::declval<T>(), std::declval<const symbol_fset &>()));
 
-inline namespace impl
-{
-
-// Enabler for degree() (partial degree overload).
-template <typename T>
-using par_degree_type_ = decltype(degree_impl<uncvref_t<T>>{}(std::declval<T>(), std::declval<const symbol_fset &>()));
+} // namespace impl
 
 template <typename T>
-using par_degree_type = enable_if_t<is_returnable<par_degree_type_<T>>::value, par_degree_type_<T>>;
-}
-
-template <typename T>
-inline par_degree_type_<T &&> degree(T &&x, const symbol_fset &s)
-{
-    return degree_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
-}
-
-inline namespace impl
-{
-
-template <typename T>
-using tot_degree_t = decltype(piranha::degree(std::declval<const T &>()));
-
-template <typename T>
-using par_degree_t = decltype(piranha::degree(std::declval<const T &>(), std::declval<const symbol_fset &>()));
-}
-
-// Type trait to detect the presence of the piranha::degree() overloads.
-template <typename T>
-using is_degree_type = conjunction<is_detected<tot_degree_t, T>, is_detected<par_degree_t, T>>;
+using is_degree_type
+    = conjunction<is_returnable<detected_t<total_degree_t_, T>>, is_returnable<detected_t<partial_degree_t_, T>>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-concept bool IsDegreeType = is_degree_type<T>::value;
+concept bool DegreeType = is_degree_type<T>::value;
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using total_degree_t = enable_if_t<is_degree_type<T>::value, total_degree_t_<T>>;
+
+template <typename T>
+using partial_degree_t = enable_if_t<is_degree_type<T>::value, partial_degree_t_<T>>;
+} // namespace impl
+
+// Total degree.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <DegreeType T>
+inline auto
+#else
+template <typename T>
+inline total_degree_t<T>
+#endif
+degree(T &&x)
+{
+    return degree_impl<uncvref_t<T>>{}(std::forward<T>(x));
 }
+
+// Partial degree.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <DegreeType T>
+inline auto
+#else
+template <typename T>
+inline partial_degree_t<T>
+#endif
+degree(T &&x, const symbol_fset &s)
+{
+    return degree_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
+}
+} // namespace piranha
 
 #endif

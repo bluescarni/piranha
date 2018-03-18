@@ -9,8 +9,8 @@ Low degree
 
 *#include <piranha/math/ldegree.hpp>*
 
-.. cpp:function:: template <typename T> auto piranha::ldegree(T &&x)
-.. cpp:function:: template <typename T> auto piranha::ldegree(T &&x, const piranha::symbol_fset &s)
+.. cpp:function:: template <piranha::LdegreeType T> auto piranha::ldegree(T &&x)
+.. cpp:function:: template <piranha::LdegreeType T> auto piranha::ldegree(T &&x, const piranha::symbol_fset &s)
 
    These functions return respectively the total and partial low degree of *x*.
 
@@ -44,9 +44,6 @@ Low degree
 
    where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers,
    and *x* is perfectly forwarded to the call operators of :cpp:class:`piranha::ldegree_impl`.
-   If the expressions above are invalid, or if they return a type which does not satisfy the
-   :cpp:concept:`piranha::Returnable` concept,
-   then these functions will be disabled (i.e., they will not participate in overload resolution).
 
    See the :ref:`implementation <math_ldegree_impls>` section below for more details about the available
    specialisations.
@@ -61,23 +58,23 @@ Low degree
 Concepts
 --------
 
-.. cpp:concept:: template <typename T> piranha::IsLdegreeType
+.. cpp:concept:: template <typename T> piranha::LdegreeType
 
    This concept is satisfied if both overloads of :cpp:func:`piranha::ldegree()` can be called
    with a first argument of type ``T``. Specifically, this concept will be satisfied if both
 
    .. code-block:: c++
 
-      piranha::ldegree(x)
+      piranha::ldegree_impl<Tp>{}(std::declval<T>())
 
    and
 
    .. code-block:: c++
 
-      piranha::ldegree(x, s)
+      piranha::ldegree_impl<Tp>{}(std::declval<T>(), std::declval<const piranha::symbol_fset &>())
 
-   are valid expressions, where ``x`` is a reference to const ``T`` and ``s`` a reference to const
-   :cpp:type:`piranha::symbol_fset`.
+   (where ``Tp`` is ``T`` after the removal of reference and cv-qualifiers) are valid expressions
+   whose types are :cpp:concept:`returnable <piranha::Returnable>`.
 
 .. _math_ldegree_impls:
 
