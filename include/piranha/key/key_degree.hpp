@@ -53,62 +53,62 @@ class key_degree_impl
 inline namespace impl
 {
 
-// Enabler for key_degree() (total degree overload).
+// Candidate result type for piranha::key_degree() (both total and partial degree overloads).
 template <typename T>
-using tot_key_degree_type_
+using total_key_degree_t_
     = decltype(key_degree_impl<uncvref_t<T>>{}(std::declval<T>(), std::declval<const symbol_fset &>()));
 
 template <typename T>
-using tot_key_degree_type = enable_if_t<is_returnable<tot_key_degree_type_<T>>::value, tot_key_degree_type_<T>>;
-}
-
-// Total degree of a key.
-template <typename T>
-inline tot_key_degree_type<T &&> key_degree(T &&x, const symbol_fset &s)
-{
-    return key_degree_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
-}
-
-inline namespace impl
-{
-
-// Enabler for key_degree() (partial degree overload).
-template <typename T>
-using par_key_degree_type_ = decltype(key_degree_impl<uncvref_t<T>>{}(
+using partial_key_degree_t_ = decltype(key_degree_impl<uncvref_t<T>>{}(
     std::declval<T>(), std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));
-
-template <typename T>
-using par_key_degree_type = enable_if_t<is_returnable<par_key_degree_type_<T>>::value, par_key_degree_type_<T>>;
 }
 
-// Partial degree of a key.
 template <typename T>
-inline par_key_degree_type<T &&> key_degree(T &&x, const symbol_idx_fset &p, const symbol_fset &s)
-{
-    return key_degree_impl<uncvref_t<T>>{}(std::forward<T>(x), p, s);
-}
-
-inline namespace impl
-{
-
-template <typename T>
-using tot_key_degree_t = decltype(piranha::key_degree(std::declval<const T &>(), std::declval<const symbol_fset &>()));
-
-template <typename T>
-using par_key_degree_t = decltype(piranha::key_degree(
-    std::declval<const T &>(), std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));
-}
-
-// Type trait to detect the presence of the piranha::key_degree() overloads.
-template <typename T>
-using is_key_degree_type = conjunction<is_detected<tot_key_degree_t, T>, is_detected<par_key_degree_t, T>>;
+using is_key_degree_type = conjunction<is_returnable<detected_t<total_key_degree_t_, T>>,
+                                       is_returnable<detected_t<partial_key_degree_t_, T>>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename T>
-concept bool IsKeyDegreeType = is_key_degree_type<T>::value;
+concept bool KeyDegreeType = is_key_degree_type<T>::value;
 
 #endif
+
+inline namespace impl
+{
+
+template <typename T>
+using total_key_degree_t = enable_if_t<is_key_degree_type<T>::value, total_key_degree_t_<T>>;
+
+template <typename T>
+using partial_key_degree_t = enable_if_t<is_key_degree_type<T>::value, partial_key_degree_t_<T>>;
+} // namespace impl
+
+// Total degree of a key.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <KeyDegreeType T>
+inline auto
+#else
+template <typename T>
+inline total_key_degree_t<T>
+#endif
+key_degree(T &&x, const symbol_fset &s)
+{
+    return key_degree_impl<uncvref_t<T>>{}(std::forward<T>(x), s);
+}
+
+// Partial degree of a key.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <KeyDegreeType T>
+inline auto
+#else
+template <typename T>
+inline partial_key_degree_t<T>
+#endif
+key_degree(T &&x, const symbol_idx_fset &idx, const symbol_fset &s)
+{
+    return key_degree_impl<uncvref_t<T>>{}(std::forward<T>(x), idx, s);
+}
 }
 
 #endif

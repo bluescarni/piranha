@@ -159,8 +159,10 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
