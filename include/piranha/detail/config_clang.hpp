@@ -63,6 +63,7 @@ see https://www.gnu.org/licenses/. */
 // and activated in debug builds. It sometimes generates a warning
 // in unevaluated contexts which gets turned into an error by -Werror, so we want
 // to be able to disable it selectively.
+// NOTE: since clang 3.8, there's also a -Wincrement-bool flag.
 
 #if defined(__apple_build_version__)
 
@@ -73,11 +74,25 @@ see https://www.gnu.org/licenses/. */
 
 #endif
 
+// clang 3.8 is available since Xcode 7.3.
+// https://en.wikipedia.org/wiki/Xcode#8.x_series
+#if __clang_major__ > 7 || (__clang_major__ == 7 && __clang_minor__ >= 3)
+
+#define PIRANHA_CLANG_HAS_WINCREMENT_BOOL
+
+#endif
+
 #else
 
 #if __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 4)
 
 #define PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL
+
+#endif
+
+#if __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ >= 8)
+
+#define PIRANHA_CLANG_HAS_WINCREMENT_BOOL
 
 #endif
 

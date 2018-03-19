@@ -182,7 +182,7 @@ using addlref_t = typename std::add_lvalue_reference<T>::type;
 
 template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
-}
+} // namespace impl
 
 template <typename T, typename... Args>
 using are_same = conjunction<std::is_same<T, Args>...>;
@@ -269,7 +269,7 @@ using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
 
 template <typename T, typename U>
 using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
-}
+} // namespace using_std_adl_swap
 
 // Pure ADL-based swap detection.
 namespace adl_swap
@@ -283,7 +283,7 @@ using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
 
 template <typename T, typename U>
 using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
-}
+} // namespace adl_swap
 
 inline namespace impl
 {
@@ -303,7 +303,7 @@ using std_swap_viable = conjunction<
           std::is_move_constructible<unref_t<T>>>,
     dcond<std::is_array<unref_t<T>>, std::is_move_assignable<typename std::remove_extent<unref_t<T>>::type>,
           std::is_move_assignable<unref_t<T>>>>;
-}
+} // namespace impl
 
 // Two possibilities:
 // - std::swap() is available for the types T and U, check the availability of "using std::swap" + ADL;
@@ -328,7 +328,7 @@ inline namespace impl
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
 using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
-}
+} // namespace impl
 
 // Addable type trait.
 template <typename T, typename U = T>
@@ -366,13 +366,18 @@ inline namespace impl
 #pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
+#if defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincrement-bool"
+#endif
+
 template <typename T>
 using preinc_t = decltype(++std::declval<T>());
 
-#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL) || defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
 #pragma clang diagnostic pop
 #endif
-}
+} // namespace impl
 
 // Pre-incrementable type-trait.
 template <typename T>
@@ -393,13 +398,18 @@ inline namespace impl
 #pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
+#if defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincrement-bool"
+#endif
+
 template <typename T>
 using postinc_t = decltype(std::declval<T>()++);
 
-#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL) || defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
 #pragma clang diagnostic pop
 #endif
-}
+} // namespace impl
 
 // Post-incrementable type-trait.
 template <typename T>
@@ -464,7 +474,7 @@ inline namespace impl
 // Type resulting from the multiplication of T and U.
 template <typename T, typename U>
 using mul_t = decltype(std::declval<const T &>() * std::declval<const U &>());
-}
+} // namespace impl
 
 /// Multipliable type trait.
 /**
@@ -657,7 +667,7 @@ using eq_t = decltype(std::declval<T>() == std::declval<U>());
 
 template <typename T, typename U>
 using ineq_t = decltype(std::declval<T>() != std::declval<U>());
-}
+} // namespace impl
 
 // Equality-comparable type trait.
 // NOTE: if the expressions above for eq/ineq return a type which is not bool,
@@ -895,7 +905,7 @@ public:
 
 template <typename T>
 const bool is_hashable<T>::value;
-}
+} // namespace piranha
 
 /// Macro for static type trait checks.
 /**
@@ -946,7 +956,7 @@ struct max_int_impl<T> {
     static_assert(std::is_integral<T>::value, "The type trait's arguments must all be (un)signed integers.");
     using type = T;
 };
-}
+} // namespace impl
 
 /// Detect narrowest integer type
 /**
@@ -1005,7 +1015,7 @@ template <typename T, typename... Args>
 struct base_type_in_tuple<T, std::tuple<Args...>> : disjunction<std::is_base_of<Args, T>...> {
     static_assert(sizeof...(Args) > 0u, "Invalid parameter pack.");
 };
-}
+} // namespace impl
 
 // Detect iterator types.
 template <typename T>
@@ -1084,7 +1094,7 @@ using it_inc_deref_t = decltype(*std::declval<T>()++);
 // or nonesuch. Shortcut useful below.
 template <typename T>
 using det_deref_t = detected_t<deref_t, addlref_t<T>>;
-}
+} // namespace impl
 
 // Input iterator type trait.
 template <typename T>
@@ -1144,7 +1154,7 @@ using out_iter_assign_t = decltype(*std::declval<T>() = std::declval<U>());
 
 template <typename T, typename U>
 using out_iter_pia_t = decltype(*std::declval<T>()++ = std::declval<U>());
-}
+} // namespace impl
 
 // Output iterator type trait.
 template <typename T, typename U>
@@ -1247,7 +1257,7 @@ struct true_tt {
 
 template <typename T>
 const bool true_tt<T>::value;
-}
+} // namespace impl
 
 // Ranges.
 namespace begin_adl
@@ -1257,7 +1267,7 @@ using std::begin;
 
 template <typename T>
 using type = decltype(begin(std::declval<T>()));
-}
+} // namespace begin_adl
 
 namespace end_adl
 {
@@ -1266,7 +1276,7 @@ using std::end;
 
 template <typename T>
 using type = decltype(end(std::declval<T>()));
-}
+} // namespace end_adl
 
 // Input range.
 template <typename T>
@@ -1353,7 +1363,7 @@ template <typename T>
 using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_t<T>>::value
                                                  && (std::numeric_limits<uncvref_t<T>>::has_quiet_NaN
                                                      || std::numeric_limits<uncvref_t<T>>::has_signaling_NaN)>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::zero_is_absorbing for floating-point types.
 /**
@@ -1376,6 +1386,6 @@ public:
 
 template <typename T>
 const bool zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>>::value;
-}
+} // namespace piranha
 
 #endif
