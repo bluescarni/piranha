@@ -538,7 +538,7 @@ public:
         return m_container.size_begin_end();
     }
 };
-}
+} // namespace piranha
 
 namespace std
 {
@@ -561,6 +561,6 @@ struct hash<piranha::array_key<T, Derived, S>> {
         return a.hash();
     }
 };
-}
+} // namespace std
 
 #endif

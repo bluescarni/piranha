@@ -327,13 +327,20 @@ inline namespace impl
 
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
-using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
+using add_t = decltype(std::declval<T>() + std::declval<U>());
 } // namespace impl
 
 // Addable type trait.
 template <typename T, typename U = T>
 struct is_addable : is_detected<add_t, T, U> {
 };
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool Addable = is_addable<T, U>::value;
+
+#endif
 
 /// In-place addable type trait.
 /**

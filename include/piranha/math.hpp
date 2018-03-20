@@ -380,10 +380,11 @@ template <typename T, typename U, typename = void>
 class evaluate_impl
 {
     template <typename T1, typename U1>
-    using ret_t = typename std::conditional<is_detected<add_t, T1, U1>::value, detected_t<add_t, T1, U1>, T1>::type;
+    using ret_t = typename std::conditional<is_detected<add_t, addlref_t<const T1>, addlref_t<const U1>>::value,
+                                            detected_t<add_t, addlref_t<const T1>, addlref_t<const U1>>, T1>::type;
     template <typename T1, typename U1>
     using ret_type = enable_if_t<
-        conjunction<is_returnable<ret_t<T1, U1>>, std::is_constructible<ret_t<T1, U1>, const T1 &>>::value,
+        conjunction<is_returnable<ret_t<T1, U1>>, std::is_constructible<ret_t<T1, U1>, addlref_t<const T1>>>::value,
         ret_t<T1, U1>>;
 
 public:

@@ -246,9 +246,12 @@ public:
 private:
     // Machinery to determine the degree type.
     template <typename U>
-    using degree_type = enable_if_t<conjunction<std::is_constructible<add_t<U, U>, int>,
-                                                is_addable_in_place<add_t<U, U>, U>, is_returnable<add_t<U, U>>>::value,
-                                    add_t<U, U>>;
+    using degree_type_ = add_t<addlref_t<const U>, addlref_t<const U>>;
+    template <typename U>
+    using degree_type
+        = enable_if_t<conjunction<std::is_constructible<degree_type_<U>, int>, is_addable_in_place<degree_type_<U>, U>,
+                                  is_returnable<degree_type_<U>>>::value,
+                      degree_type_<U>>;
     // Helpers to add exponents in the degree computation.
     template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
     static void expo_add(degree_type<U> &retval, const U &n)
@@ -1222,7 +1225,7 @@ public:
                            [](const T &element) { return piranha::is_zero(element); });
     }
 };
-}
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -1263,8 +1266,8 @@ inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::mono
 {
     split_free(ar, k, version);
 }
-}
-}
+} // namespace serialization
+} // namespace boost
 
 namespace piranha
 {
@@ -1280,7 +1283,7 @@ using monomial_boost_save_enabler
 template <typename Archive, typename T, typename S>
 using monomial_boost_load_enabler
     = enable_if_t<has_boost_load<Archive, typename monomial<T, S>::container_type>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::monomial.
 /**
@@ -1310,7 +1313,7 @@ template <typename Archive, typename T, typename S>
 struct boost_load_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial_boost_load_enabler<Archive, T, S>>
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<monomial<T, S>>> {
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -1324,6 +1327,6 @@ namespace std
 template <typename T, typename S>
 struct hash<piranha::monomial<T, S>> : public hash<piranha::array_key<T, piranha::monomial<T, S>, S>> {
 };
-}
+} // namespace std
 
 #endif
