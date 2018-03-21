@@ -60,7 +60,8 @@ struct ps_term_score {
     typedef typename T::cf_type cf_type;
     typedef typename T::key_type key_type;
     static const unsigned value
-        = static_cast<unsigned>(is_degree_type<cf_type>::value && is_ldegree_type<cf_type>::value)
+        = static_cast<unsigned>(is_degree_type<addlref_t<const cf_type>>::value
+                                && is_ldegree_type<addlref_t<const cf_type>>::value)
           + (static_cast<unsigned>(key_has_degree<key_type>::value && key_has_ldegree<key_type>::value) << 1u);
 };
 
@@ -273,7 +274,7 @@ inline std::pair<bool, Term> ps_truncate_term(const Term &t, const T &max_degree
     return std::make_pair(true,
                           Term(math::truncate_degree(t.m_cf, max_degree - t.m_key.ldegree(p, s), names), t.m_key));
 }
-}
+} // namespace impl
 
 /// Power series toolbox.
 /**
@@ -563,7 +564,7 @@ inline namespace impl
 // Enabler for the implementation of degree-related math functions for power_series.
 template <typename Series>
 using ps_degree_enabler = enable_if_t<std::is_base_of<power_series_tag, Series>::value>;
-}
+} // namespace impl
 
 /// Specialisation of the piranha::degree() functor for instances of piranha::power_series.
 /**
@@ -648,7 +649,7 @@ struct truncate_degree_impl<Series, T, ps_degree_enabler<Series>> {
         return s.truncate_degree(max_degree, args...);
     }
 };
-}
-}
+} // namespace math
+} // namespace piranha
 
 #endif

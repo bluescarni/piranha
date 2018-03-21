@@ -106,7 +106,7 @@ public:
         x = static_cast<U>(-x);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -115,7 +115,7 @@ namespace detail
 template <typename T>
 using math_negate_enabler = typename std::enable_if<
     !std::is_const<T>::value && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value, int>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -188,7 +188,7 @@ inline namespace impl
 // Enabler for the fast floating-point implementation of multiply_accumulate().
 template <typename T>
 using math_multiply_accumulate_float_enabler = enable_if_t<std::is_floating_point<T>::value>;
-}
+} // namespace impl
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for floating-point types.
 /**
@@ -211,7 +211,7 @@ struct multiply_accumulate_impl<T, math_multiply_accumulate_float_enabler<T>> {
 };
 
 #endif
-}
+} // namespace math
 
 inline namespace impl
 {
@@ -223,7 +223,7 @@ using math_multiply_accumulate_t = decltype(
 
 template <typename T>
 using math_multiply_accumulate_enabler = enable_if_t<is_detected<math_multiply_accumulate_t, T>::value, int>;
-}
+} // namespace impl
 
 namespace math
 {
@@ -276,7 +276,7 @@ struct partial_impl<T, typename std::enable_if<std::is_arithmetic<T>::value>::ty
         return T(0);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -289,7 +289,7 @@ using math_partial_type_
 template <typename T>
 using math_partial_type =
     typename std::enable_if<is_returnable<math_partial_type_<T>>::value, math_partial_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -328,7 +328,7 @@ inline detail::math_partial_type<T> partial(const T &x, const std::string &str)
 template <typename T, typename Enable = void>
 struct integrate_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -341,7 +341,7 @@ using math_integrate_type_
 template <typename T>
 using math_integrate_type =
     typename std::enable_if<is_returnable<math_integrate_type_<T>>::value, math_integrate_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -417,7 +417,7 @@ public:
         return ret_type<T1, U1>(x);
     }
 };
-}
+} // namespace math
 
 inline namespace impl
 {
@@ -429,7 +429,7 @@ using math_evaluate_t_
 
 template <typename T, typename U>
 using math_evaluate_t = enable_if_t<is_returnable<math_evaluate_t_<T, U>>::value, math_evaluate_t_<T, U>>;
-}
+} // namespace impl
 
 namespace math
 {
@@ -469,7 +469,7 @@ inline math_evaluate_t<T, U> evaluate(const T &x, const symbol_fmap<U> &dict)
 template <typename T, typename U, typename Enable = void>
 struct subs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -481,7 +481,7 @@ using math_subs_type_
 
 template <typename T, typename U>
 using math_subs_type = enable_if_t<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>;
-}
+} // namespace detail
 
 namespace math
 {
@@ -519,7 +519,7 @@ inline detail::math_subs_type<T, U> subs(const T &x, const symbol_fmap<U> &dict)
 template <typename T, typename U, typename V, typename = void>
 struct t_subs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -533,7 +533,7 @@ using math_t_subs_type_
 template <typename T, typename U, typename V>
 using math_t_subs_type =
     typename std::enable_if<is_returnable<math_t_subs_type_<T, U, V>>::value, math_t_subs_type_<T, U, V>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -574,7 +574,7 @@ inline detail::math_t_subs_type<T, U, V> t_subs(const T &x, const std::string &n
 template <typename T, typename Enable = void>
 struct abs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -647,7 +647,7 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
 {
     return abs_impl<T>()(x);
 }
-}
+} // namespace math
 
 /// Type trait to detect the presence of the piranha::math::abs() function.
 /**
@@ -717,7 +717,7 @@ struct pbracket_type_<
 // The final typedef.
 template <typename T>
 using pbracket_type = typename pbracket_type_<T>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -774,7 +774,7 @@ inline detail::pbracket_type<T> pbracket(const T &f, const T &g, const std::vect
     }
     return retval;
 }
-}
+} // namespace math
 
 /// Detect piranha::math::pbracket().
 /**
@@ -849,7 +849,7 @@ inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::ve
     }
     return true;
 }
-}
+} // namespace detail
 
 namespace math
 {
@@ -1152,7 +1152,7 @@ inline auto t_lorder(const T &x, const symbol_fset &names) -> decltype(t_lorder_
 template <typename T, typename U, typename = void>
 struct truncate_degree_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -1170,7 +1170,7 @@ using truncate_pdegree_enabler = typename std::enable_if<
                                                              std::declval<const symbol_fset &>())),
                  T>::value,
     int>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -1229,7 +1229,7 @@ inline T truncate_degree(const T &x, const U &max_degree, const symbol_fset &nam
 {
     return truncate_degree_impl<T, U>()(x, max_degree, names);
 }
-}
+} // namespace math
 
 /// Type trait to detect if types can be used in piranha::math::truncate_degree().
 /**
@@ -1290,7 +1290,7 @@ struct is_differential_key_pair : std::false_type {
 template <typename Key, typename T>
 struct is_differential_key_pair<Key, std::pair<T, Key>> : std::true_type {
 };
-}
+} // namespace impl
 
 /// Type trait to detect differentiable keys.
 /**
@@ -1472,72 +1472,6 @@ public:
 // Static init.
 template <typename T>
 const bool has_t_lorder<T>::value;
-
-/// Type trait to detect if a key type has a degree property.
-/**
- * The type trait has the same meaning as piranha::has_degree, but it's meant for use with key types.
- * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
- * @code{.unparsed}
- * T degree(const symbol_fset &) const;
- * U degree(const symbol_idx_fset &, const symbol_fset &) const;
- * @endcode
- * where \p T and \p U can be any types.
- *
- * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
- * produced.
- */
-template <typename Key>
-class key_has_degree
-{
-    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename U>
-    using total_degree_t = decltype(std::declval<const U &>().degree(std::declval<const symbol_fset &>()));
-    template <typename U>
-    using partial_degree_t = decltype(
-        std::declval<const U &>().degree(std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()));
-    static const bool implementation_defined
-        = conjunction<is_detected<total_degree_t, Key>, is_detected<partial_degree_t, Key>>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-template <typename Key>
-const bool key_has_degree<Key>::value;
-
-/// Type trait to detect if a key type has a low degree property.
-/**
- * The type trait has the same meaning as piranha::has_ldegree, but it's meant for use with key types.
- * The type trait will be \p true if \p Key is a key type providing two methods with the following signatures:
- * @code{.unparsed}
- * T ldegree(const symbol_fset &) const;
- * U ldegree(const symbol_idx_fset &, const symbol_fset &) const;
- * @endcode
- * where \p T and \p U can be any types.
- *
- * If \p Key does not satisfy piranha::is_key, after the removal of cv/reference qualifiers, a compilation error will be
- * produced.
- */
-template <typename Key>
-class key_has_ldegree
-{
-    PIRANHA_TT_CHECK(is_key, uncvref_t<Key>);
-    template <typename U>
-    using total_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_fset &>()));
-    template <typename U>
-    using partial_ldegree_t = decltype(std::declval<const U &>().ldegree(std::declval<const symbol_idx_fset &>(),
-                                                                         std::declval<const symbol_fset &>()));
-    static const bool implementation_defined
-        = conjunction<is_detected<total_ldegree_t, Key>, is_detected<partial_ldegree_t, Key>>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
-};
-
-template <typename Key>
-const bool key_has_ldegree<Key>::value;
 
 /// Type trait to detect if a key type has a trigonometric degree property.
 /**
@@ -1739,7 +1673,7 @@ struct key_subs_check_type : std::false_type {
 template <typename Key, typename T>
 struct key_subs_check_type<Key, std::vector<std::pair<T, Key>>> : std::true_type {
 };
-}
+} // namespace impl
 
 /// Type trait to detect the presence of the trigonometric substitution method in keys.
 /**
@@ -2189,7 +2123,7 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a, b, 
 {
     return div3_impl<T>()(a, b, c);
 }
-}
+} // namespace math
 
 /// Detect piranha::math::add3().
 /**
@@ -2270,6 +2204,6 @@ public:
 
 template <typename T>
 const bool has_div3<T>::value;
-}
+} // namespace piranha
 
 #endif
