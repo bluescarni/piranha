@@ -1089,8 +1089,9 @@ public:
     }
 };
 
+// Implementation of piranha::key_degree() for monomial.
 template <typename T, typename S>
-class key_degree<monomial<T, S>>
+class key_degree_impl<monomial<T, S>>
 {
     // Machinery to determine the degree type.
     template <typename U>
@@ -1101,13 +1102,13 @@ class key_degree<monomial<T, S>>
                                   is_returnable<degree_type_<U>>>::value,
                       degree_type_<U>>;
     // Helpers to add exponents in the degree computation.
-    template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
-    static void expo_add(degree_type<U> &retval, const U &n)
+    template <typename U>
+    static void expo_add(degree_type<U> &retval, const U &n, const std::true_type &)
     {
         retval = safe_int_add(retval, static_cast<degree_type<U>>(n));
     }
-    template <typename U, enable_if_t<!std::is_integral<U>::value, int> = 0>
-    static void expo_add(degree_type<U> &retval, const U &x)
+    template <typename U>
+    static void expo_add(degree_type<U> &retval, const U &x, const std::false_type &)
     {
         retval += x;
     }
@@ -1134,10 +1135,10 @@ public:
      * of the degree overflows.
      * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
      */
-    template <typename U = T>
-    degree_type<U> degree(const symbol_fset &args) const
+    template <typename U>
+    degree_type<U> operator()(const monomial<U, S> &m, const symbol_fset &args) const
     {
-        auto sbe = this->size_begin_end();
+        auto sbe = m.size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(
                 std::invalid_argument,
@@ -1147,7 +1148,7 @@ public:
         }
         degree_type<U> retval(0);
         for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
-            expo_add(retval, *std::get<1>(sbe));
+            expo_add(retval, *std::get<1>(sbe), std::is_integral<U>{});
         }
         return retval;
     }
@@ -1178,10 +1179,10 @@ public:
      * of the degree overflows.
      * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
      */
-    template <typename U = T>
-    degree_type<U> degree(const symbol_idx_fset &p, const symbol_fset &args) const
+    template <typename U>
+    degree_type<U> operator()(const monomial<U, S> &m, const symbol_idx_fset &p, const symbol_fset &args) const
     {
-        auto sbe = this->size_begin_end();
+        auto sbe = m.size_begin_end();
         if (unlikely(args.size() != std::get<0>(sbe))) {
             piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
                                                  "monomial: the size of the symbol set ("
@@ -1198,37 +1199,16 @@ public:
         }
         degree_type<U> retval(0);
         for (const auto &i : p) {
-            expo_add(retval, std::get<1>(sbe)[i]);
+            expo_add(retval, std::get<1>(sbe)[i], std::is_integral<U>{});
         }
         return retval;
     }
-    /// Low degree (equivalent to the degree).
-    /**
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_fset &args) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_fset &args) const.
-     */
-    template <typename U = T>
-    degree_type<U> ldegree(const symbol_fset &args) const
-    {
-        return degree(args);
-    }
-    /// Partial low degree (equivalent to the partial degree).
-    /**
-     * @param p positions of the symbols to be considered.
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_idx_fset &, const symbol_fset &) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_idx_fset &, const symbol_fset &) const.
-     */
-    template <typename U = T>
-    degree_type<U> ldegree(const symbol_idx_fset &p, const symbol_fset &args) const
-    {
-        return degree(p, args);
-    }
+};
+
+// Implementation of piranha::key_ldegree() for monomial.
+template <typename T, typename S>
+class key_ldegree_impl<monomial<T, S>> : public key_degree_impl<monomial<T, S>>
+{
 };
 } // namespace piranha
 

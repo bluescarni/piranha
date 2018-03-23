@@ -67,7 +67,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/ipow_substitutable_series.hpp>
 #include <piranha/is_cf.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
@@ -270,23 +272,23 @@ class polynomial
     using ic_res_type = decltype(std::declval<const i_cf_type_p<T> &>() * std::declval<const T &>());
     template <typename T>
     struct integrate_type_<
-        T,
-        typename std::enable_if<
-            is_integrable<typename T::term_type::cf_type>::value
-            && true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
-            // We need to be able to add the non-integrable type.
-            is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
-            // We need to be able to compute the partial degree and cast it to integer.
-            is_safely_castable<addlref_t<const decltype(std::declval<const typename T::term_type::key_type &>().degree(
-                                   std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()))>,
-                               integer>::value
-            &&
-            // This is required in the initialisation of the return value.
-            std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
-            // We need to be able to assign the integrated coefficient times key partial.
-            std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
-            // Needs math::negate().
-            has_negate<i_cf_type_p<T>>::value>::type> {
+        T, typename std::enable_if<
+               is_integrable<typename T::term_type::cf_type>::value
+               && true_tt<basic_integrate_requirements<T, ic_res_type<T>>>::value &&
+               // We need to be able to add the non-integrable type.
+               is_addable_in_place<ic_res_type<T>, nic_res_type<T>>::value &&
+               // We need to be able to compute the partial degree and cast it to integer.
+               is_safely_castable<addlref_t<const decltype(piranha::key_degree(
+                                      std::declval<const typename T::term_type::key_type &>(),
+                                      std::declval<const symbol_idx_fset &>(), std::declval<const symbol_fset &>()))>,
+                                  integer>::value
+               &&
+               // This is required in the initialisation of the return value.
+               std::is_constructible<i_cf_type_p<T>, i_cf_type<T>>::value &&
+               // We need to be able to assign the integrated coefficient times key partial.
+               std::is_assignable<i_cf_type_p<T> &, i_cf_type_p<T>>::value &&
+               // Needs math::negate().
+               has_negate<i_cf_type_p<T>>::value>::type> {
         using type = ic_res_type<T>;
     };
     // Final typedef.
@@ -307,7 +309,7 @@ class polynomial
         try {
             // Check if s is actually in the symbol set or not.
             if (*idx.begin() < this->m_symbol_set.size()) {
-                degree = piranha::safe_cast<integer>(term.m_key.degree(idx, this->m_symbol_set));
+                degree = piranha::safe_cast<integer>(piranha::key_degree(term.m_key, idx, this->m_symbol_set));
             } else {
                 degree = 0;
             }
