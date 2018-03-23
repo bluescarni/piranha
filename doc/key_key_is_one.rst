@@ -28,7 +28,7 @@ Detect unitary keys
    specialisations.
 
    :param x: the input key.
-   :param s: the :cpp:type:`piranha::symbol_fset` associated to *x*.
+   :param s: the symbol set associated to *x*.
 
    :return: ``true`` if *x* is equal to one, ``false`` otherwise.
 
