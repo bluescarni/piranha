@@ -182,7 +182,7 @@ using addlref_t = typename std::add_lvalue_reference<T>::type;
 
 template <typename T>
 using is_nonconst_rvalue_ref = conjunction<std::is_rvalue_reference<T>, negation<std::is_const<unref_t<T>>>>;
-}
+} // namespace impl
 
 template <typename T, typename... Args>
 using are_same = conjunction<std::is_same<T, Args>...>;
@@ -269,7 +269,7 @@ using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
 
 template <typename T, typename U>
 using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
-}
+} // namespace using_std_adl_swap
 
 // Pure ADL-based swap detection.
 namespace adl_swap
@@ -283,7 +283,7 @@ using swap2_t = decltype(swap(std::declval<U>(), std::declval<T>()));
 
 template <typename T, typename U>
 using detected = conjunction<is_detected<swap1_t, T, U>, is_detected<swap2_t, T, U>>;
-}
+} // namespace adl_swap
 
 inline namespace impl
 {
@@ -303,7 +303,7 @@ using std_swap_viable = conjunction<
           std::is_move_constructible<unref_t<T>>>,
     dcond<std::is_array<unref_t<T>>, std::is_move_assignable<typename std::remove_extent<unref_t<T>>::type>,
           std::is_move_assignable<unref_t<T>>>>;
-}
+} // namespace impl
 
 // Two possibilities:
 // - std::swap() is available for the types T and U, check the availability of "using std::swap" + ADL;
@@ -327,29 +327,20 @@ inline namespace impl
 
 // The type resulting from the addition of T and U.
 template <typename T, typename U>
-using add_t = decltype(std::declval<const T &>() + std::declval<const U &>());
-}
+using add_t = decltype(std::declval<T>() + std::declval<U>());
+} // namespace impl
 
-/// Addable type trait.
-/**
- * This type trait will be \p true if objects of type \p T can be added to objects of type \p U using the binary
- * addition operator, \p false otherwise. The operator will be tested in the form:
- * @code
- * operator+(const T &, const U &)
- * @endcode
- */
+// Addable type trait.
 template <typename T, typename U = T>
-class is_addable
-{
-    static const bool implementation_defined = is_detected<add_t, T, U>::value;
-
-public:
-    /// Value of the type trait.
-    static const bool value = implementation_defined;
+struct is_addable : is_detected<add_t, T, U> {
 };
 
-template <typename T, typename U>
-const bool is_addable<T, U>::value;
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename T, typename U = T>
+concept bool Addable = is_addable<T, U>::value;
+
+#endif
 
 /// In-place addable type trait.
 /**
@@ -382,13 +373,18 @@ inline namespace impl
 #pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
+#if defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincrement-bool"
+#endif
+
 template <typename T>
 using preinc_t = decltype(++std::declval<T>());
 
-#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL) || defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
 #pragma clang diagnostic pop
 #endif
-}
+} // namespace impl
 
 // Pre-incrementable type-trait.
 template <typename T>
@@ -409,13 +405,18 @@ inline namespace impl
 #pragma clang diagnostic ignored "-Wdeprecated-increment-bool"
 #endif
 
+#if defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincrement-bool"
+#endif
+
 template <typename T>
 using postinc_t = decltype(std::declval<T>()++);
 
-#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL)
+#if defined(PIRANHA_CLANG_HAS_WDEPRECATED_INCREMENT_BOOL) || defined(PIRANHA_CLANG_HAS_WINCREMENT_BOOL)
 #pragma clang diagnostic pop
 #endif
-}
+} // namespace impl
 
 // Post-incrementable type-trait.
 template <typename T>
@@ -480,7 +481,7 @@ inline namespace impl
 // Type resulting from the multiplication of T and U.
 template <typename T, typename U>
 using mul_t = decltype(std::declval<const T &>() * std::declval<const U &>());
-}
+} // namespace impl
 
 /// Multipliable type trait.
 /**
@@ -673,7 +674,7 @@ using eq_t = decltype(std::declval<T>() == std::declval<U>());
 
 template <typename T, typename U>
 using ineq_t = decltype(std::declval<T>() != std::declval<U>());
-}
+} // namespace impl
 
 // Equality-comparable type trait.
 // NOTE: if the expressions above for eq/ineq return a type which is not bool,
@@ -911,7 +912,7 @@ public:
 
 template <typename T>
 const bool is_hashable<T>::value;
-}
+} // namespace piranha
 
 /// Macro for static type trait checks.
 /**
@@ -962,7 +963,7 @@ struct max_int_impl<T> {
     static_assert(std::is_integral<T>::value, "The type trait's arguments must all be (un)signed integers.");
     using type = T;
 };
-}
+} // namespace impl
 
 /// Detect narrowest integer type
 /**
@@ -1021,7 +1022,7 @@ template <typename T, typename... Args>
 struct base_type_in_tuple<T, std::tuple<Args...>> : disjunction<std::is_base_of<Args, T>...> {
     static_assert(sizeof...(Args) > 0u, "Invalid parameter pack.");
 };
-}
+} // namespace impl
 
 // Detect iterator types.
 template <typename T>
@@ -1100,7 +1101,7 @@ using it_inc_deref_t = decltype(*std::declval<T>()++);
 // or nonesuch. Shortcut useful below.
 template <typename T>
 using det_deref_t = detected_t<deref_t, addlref_t<T>>;
-}
+} // namespace impl
 
 // Input iterator type trait.
 template <typename T>
@@ -1160,7 +1161,7 @@ using out_iter_assign_t = decltype(*std::declval<T>() = std::declval<U>());
 
 template <typename T, typename U>
 using out_iter_pia_t = decltype(*std::declval<T>()++ = std::declval<U>());
-}
+} // namespace impl
 
 // Output iterator type trait.
 template <typename T, typename U>
@@ -1240,8 +1241,13 @@ namespace begin_using_adl
 using std::begin;
 
 template <typename T>
+<<<<<<< HEAD
 using type = decltype(begin(std::declval<T>()));
 }
+=======
+const bool true_tt<T>::value;
+} // namespace impl
+>>>>>>> master
 
 namespace end_using_adl
 {
@@ -1249,8 +1255,13 @@ namespace end_using_adl
 using std::end;
 
 template <typename T>
+<<<<<<< HEAD
 using type = decltype(end(std::declval<T>()));
 }
+=======
+using type = decltype(begin(std::declval<T>()));
+} // namespace begin_adl
+>>>>>>> master
 
 inline namespace impl
 {
@@ -1261,8 +1272,13 @@ template <typename T>
 using range_begin_t = detected_t<begin_using_adl::type, T>;
 
 template <typename T>
+<<<<<<< HEAD
 using range_end_t = detected_t<end_using_adl::type, T>;
 }
+=======
+using type = decltype(end(std::declval<T>()));
+} // namespace end_adl
+>>>>>>> master
 
 // Input range.
 template <typename T>
@@ -1379,7 +1395,7 @@ template <typename T>
 using fp_zero_is_absorbing_enabler = enable_if_t<std::is_floating_point<uncvref_t<T>>::value
                                                  && (std::numeric_limits<uncvref_t<T>>::has_quiet_NaN
                                                      || std::numeric_limits<uncvref_t<T>>::has_signaling_NaN)>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::zero_is_absorbing for floating-point types.
 /**
@@ -1402,6 +1418,6 @@ public:
 
 template <typename T>
 const bool zero_is_absorbing<T, fp_zero_is_absorbing_enabler<T>>::value;
-}
+} // namespace piranha
 
 #endif

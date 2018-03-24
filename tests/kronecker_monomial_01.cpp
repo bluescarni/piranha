@@ -52,7 +52,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -314,47 +316,47 @@ struct degree_tester {
         using k_type = kronecker_monomial<T>;
         k_type k1;
         if (std::is_same<T, signed char>::value) {
-            BOOST_CHECK((std::is_same<decltype(k1.degree(symbol_fset{})), int>::value));
+            BOOST_CHECK((std::is_same<decltype(key_degree(k1, symbol_fset{})), int>::value));
         } else {
-            BOOST_CHECK((std::is_same<decltype(k1.degree(symbol_fset{})), T>::value));
+            BOOST_CHECK((std::is_same<decltype(key_degree(k1, symbol_fset{})), T>::value));
         }
-        BOOST_CHECK(k1.degree(symbol_fset{}) == 0);
-        BOOST_CHECK(k1.ldegree(symbol_fset{}) == 0);
+        BOOST_CHECK(key_degree(k1, symbol_fset{}) == 0);
+        BOOST_CHECK(key_ldegree(k1, symbol_fset{}) == 0);
         k_type k2({0});
-        BOOST_CHECK(k2.degree(symbol_fset{"a"}) == 0);
-        BOOST_CHECK(k2.ldegree(symbol_fset{"a"}) == 0);
+        BOOST_CHECK(key_degree(k2, symbol_fset{"a"}) == 0);
+        BOOST_CHECK(key_ldegree(k2, symbol_fset{"a"}) == 0);
         k_type k3({-1});
-        BOOST_CHECK(k3.degree(symbol_fset{"a"}) == -1);
-        BOOST_CHECK(k3.ldegree(symbol_fset{"a"}) == -1);
+        BOOST_CHECK(key_degree(k3, symbol_fset{"a"}) == -1);
+        BOOST_CHECK(key_ldegree(k3, symbol_fset{"a"}) == -1);
         k_type k4({0, 0});
-        BOOST_CHECK(k4.degree(symbol_fset{"a", "b"}) == 0);
-        BOOST_CHECK(k4.ldegree(symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(key_degree(k4, symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(key_ldegree(k4, symbol_fset{"a", "b"}) == 0);
         k_type k5({-1, -1});
-        BOOST_CHECK(k5.degree(symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(key_degree(k5, symbol_fset{"a", "b"}) == -2);
         if (std::is_same<T, signed char>::value) {
-            BOOST_CHECK((std::is_same<decltype(k5.degree(symbol_idx_fset{}, symbol_fset{})), int>::value));
+            BOOST_CHECK((std::is_same<decltype(key_degree(k5, symbol_idx_fset{}, symbol_fset{})), int>::value));
         } else {
-            BOOST_CHECK((std::is_same<decltype(k5.degree(symbol_idx_fset{}, symbol_fset{})), T>::value));
+            BOOST_CHECK((std::is_same<decltype(key_degree(k5, symbol_idx_fset{}, symbol_fset{})), T>::value));
         }
-        BOOST_CHECK(k5.degree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
-        BOOST_CHECK(k5.degree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
-        BOOST_CHECK(k5.degree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
-        BOOST_CHECK(k5.degree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
-        BOOST_CHECK(k5.ldegree(symbol_fset{"a", "b"}) == -2);
-        BOOST_CHECK(k5.ldegree(symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
-        BOOST_CHECK(k5.ldegree(symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
-        BOOST_CHECK(k5.ldegree(symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
-        BOOST_CHECK(k5.ldegree(symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(key_degree(k5, symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(key_degree(k5, symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(key_degree(k5, symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(key_degree(k5, symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(key_ldegree(k5, symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(key_ldegree(k5, symbol_idx_fset{0}, symbol_fset{"a", "b"}) == -1);
+        BOOST_CHECK(key_ldegree(k5, symbol_idx_fset{}, symbol_fset{"a", "b"}) == 0);
+        BOOST_CHECK(key_ldegree(k5, symbol_idx_fset{0, 1}, symbol_fset{"a", "b"}) == -2);
+        BOOST_CHECK(key_ldegree(k5, symbol_idx_fset{1}, symbol_fset{"a", "b"}) == -1);
         // Try partials with bogus positions.
         BOOST_CHECK_EXCEPTION(
-            (k5.degree(symbol_idx_fset{2}, symbol_fset{"a", "b"})), std::invalid_argument,
+            (key_degree(k5, symbol_idx_fset{2}, symbol_fset{"a", "b"})), std::invalid_argument,
             [](const std::invalid_argument &e) {
                 return boost::contains(
                     e.what(), "the largest value in the positions set for the computation of the "
                               "partial degree of a Kronecker monomial is 2, but the monomial has a size of only 2");
             });
         BOOST_CHECK_EXCEPTION(
-            (k5.ldegree(symbol_idx_fset{4}, symbol_fset{"a", "b"})), std::invalid_argument,
+            (key_ldegree(k5, symbol_idx_fset{4}, symbol_fset{"a", "b"})), std::invalid_argument,
             [](const std::invalid_argument &e) {
                 return boost::contains(
                     e.what(), "the largest value in the positions set for the computation of the "
@@ -396,8 +398,8 @@ namespace math
 template <typename T>
 struct mul3_impl<T, typename std::enable_if<std::is_same<T, mock_cf3>::value>::type> {
 };
-}
-}
+} // namespace math
+} // namespace piranha
 
 struct multiply_tester {
     template <typename T>
@@ -1177,8 +1179,8 @@ struct tt_tester {
         BOOST_CHECK((!key_has_t_subs<k_type &, int, int>::value));
         BOOST_CHECK((!key_has_t_subs<k_type const &, int, int>::value));
         BOOST_CHECK(is_hashable<k_type>::value);
-        BOOST_CHECK(key_has_degree<k_type>::value);
-        BOOST_CHECK(key_has_ldegree<k_type>::value);
+        BOOST_CHECK(is_key_degree_type<k_type>::value);
+        BOOST_CHECK(is_key_ldegree_type<k_type>::value);
         BOOST_CHECK(!key_has_t_degree<k_type>::value);
         BOOST_CHECK(!key_has_t_ldegree<k_type>::value);
         BOOST_CHECK(!key_has_t_order<k_type>::value);

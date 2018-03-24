@@ -94,7 +94,7 @@ inline namespace impl
 // Fwd declaration.
 template <typename S1, typename S2, typename F>
 auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forward<S1>(s1), std::forward<S2>(s2)));
-}
+} // namespace impl
 
 namespace detail
 {
@@ -133,7 +133,7 @@ inline RetT apply_cf_functor(const T &s)
     }
     return retval;
 }
-}
+} // namespace detail
 
 /// Type trait to detect series types.
 /**
@@ -177,7 +177,7 @@ struct series_is_rebindable_impl<
     T, Cf, enable_if_t<disjunction<negation<is_cf<uncvref_t<Cf>>>, negation<is_series<uncvref_t<T>>>>::value>> {
     static const bool value = false;
 };
-}
+} // namespace impl
 
 /// Check if a series can be rebound.
 /**
@@ -217,7 +217,7 @@ inline namespace impl
 // the series is not rebindable.
 template <typename T, typename Cf>
 using series_rebind_implementation = enable_if_t<series_is_rebindable<T, Cf>::value, series_rebind_t<T, Cf>>;
-}
+} // namespace impl
 
 /// Rebind series.
 /**
@@ -315,7 +315,7 @@ struct op_result {
 };
 
 template <typename T, typename U>
-struct op_result<T, U, 0, typename std::enable_if<is_addable<T, U>::value>::type> {
+struct op_result<T, U, 0, typename std::enable_if<is_addable<addlref_t<const T>, addlref_t<const U>>::value>::type> {
     using type = decltype(std::declval<const T &>() + std::declval<const U &>());
 };
 
@@ -473,7 +473,7 @@ struct binary_series_op_return_type<S1, S2, N,
     using type = series_rebind<S2, bsom_cf_op_t<S2, S1, N>>;
     static const unsigned value = 7u;
 };
-}
+} // namespace detail
 
 /// Series operators.
 /**
@@ -2891,7 +2891,7 @@ inline auto series_merge_f(S1 &&s1, S2 &&s2, const F &f) -> decltype(f(std::forw
     return f(s1.merge_arguments(std::get<0>(merge), std::get<1>(merge)),
              s2.merge_arguments(std::get<0>(merge), std::get<2>(merge)));
 }
-}
+} // namespace impl
 
 /// Specialisation of piranha::print_coefficient_impl for series.
 /**
@@ -2970,7 +2970,7 @@ struct negate_impl<T, typename std::enable_if<is_series<T>::value>::type> {
         s.negate();
     }
 };
-}
+} // namespace math
 
 /// Specialisation of the piranha::is_zero() functor for piranha::series.
 /**
@@ -3003,7 +3003,7 @@ using series_pow_member_t = decltype(std::declval<const Series &>().pow(std::dec
 template <typename Series, typename T>
 using pow_series_enabler
     = enable_if_t<conjunction<is_series<Series>, is_detected<series_pow_member_t, Series, T>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of the piranha::pow() functor for piranha::series.
 /**
@@ -3112,7 +3112,7 @@ series_invert_impl(const series<Cf, Key, Derived> &s)
 template <typename T>
 using series_invert_enabler =
     typename std::enable_if<true_tt<decltype(series_invert_impl(std::declval<const T &>()))>::value>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -3143,7 +3143,7 @@ struct invert_impl<Series, detail::series_invert_enabler<Series>> {
         return detail::series_invert_impl(s);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -3276,7 +3276,7 @@ series_cos_impl(const series<Cf, Key, Derived> &s)
 template <typename T>
 using series_cos_enabler =
     typename std::enable_if<true_tt<decltype(series_cos_impl(std::declval<const T &>()))>::value>::type;
-}
+} // namespace detail
 
 /// Specialisation of the piranha::sin() functor for piranha::series.
 /**
@@ -3353,7 +3353,7 @@ using series_integrate_enabler =
     typename std::enable_if<is_series<Series>::value
                             && is_returnable<decltype(std::declval<const Series &>().integrate(
                                    std::declval<const std::string &>()))>::value>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -3444,7 +3444,7 @@ using math_series_evaluate_enabler
                               std::is_constructible<series_eval_type<Series, T>, const int &>,
                               is_returnable<series_eval_type<Series, T>>, std::is_destructible<T>,
                               std::is_copy_constructible<T>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of the implementation of piranha::math::evaluate() for series types.
 /**
@@ -3541,7 +3541,7 @@ public:
         return retval;
     }
 };
-}
+} // namespace math
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -3565,7 +3565,7 @@ using series_boost_load_enabler = enable_if_t<conjunction<
     has_boost_load<Archive, decltype(std::declval<const Series &>().size())>,
     has_boost_load<Archive, typename Series::term_type::cf_type>,
     has_boost_load<Archive, boost_s11n_key_wrapper<typename Series::term_type::key_type>>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::series.
 /**
@@ -3626,7 +3626,7 @@ using series_msgpack_convert_enabler
     = enable_if_t<conjunction<is_series<Series>, has_msgpack_convert<std::string>,
                               has_msgpack_convert<typename Series::term_type::cf_type>,
                               key_has_msgpack_convert<typename Series::term_type::key_type>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::msgpack_pack() for piranha::series.
 /**
@@ -3776,6 +3776,6 @@ public:
 
 template <typename T>
 const bool zero_is_absorbing<T, series_zero_is_absorbing_enabler<T>>::value;
-}
+} // namespace piranha
 
 #endif

@@ -56,7 +56,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
@@ -91,14 +93,14 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
                                                  + std::to_string(s2) + ")");
     }
 }
-}
+} // namespace impl
 
 /// Kronecker monomial class.
 /**
  * This class represents a multivariate monomial with integral exponents. The values of the exponents are packed in a
  * signed integer using Kronecker substitution, using the facilities provided by piranha::kronecker_array.
  *
- * This class satisfies the piranha::is_key, piranha::key_has_degree, piranha::key_has_ldegree and
+ * This class satisfies the piranha::is_key, piranha::is_key_degree_type, piranha::is_key_ldegree_type and
  * piranha::key_is_differentiable type traits.
  *
  * ## Type requirements ##
@@ -297,8 +299,8 @@ public:
     ~kronecker_monomial()
     {
         PIRANHA_TT_CHECK(is_key, kronecker_monomial);
-        PIRANHA_TT_CHECK(key_has_degree, kronecker_monomial);
-        PIRANHA_TT_CHECK(key_has_ldegree, kronecker_monomial);
+        PIRANHA_TT_CHECK(is_key_degree_type, kronecker_monomial);
+        PIRANHA_TT_CHECK(is_key_ldegree_type, kronecker_monomial);
         PIRANHA_TT_CHECK(key_is_differentiable, kronecker_monomial);
     }
     /// Copy assignment operator.
@@ -395,95 +397,6 @@ public:
     kronecker_monomial merge_symbols(const symbol_idx_fmap<symbol_fset> &ins_map, const symbol_fset &args) const
     {
         return kronecker_monomial(detail::km_merge_symbols<v_type, ka>(ins_map, args, m_value));
-    }
-
-private:
-    // Degree utils.
-    using degree_type = add_t<T, T>;
-
-public:
-    /// Degree.
-    /**
-     * The type returned by this method is the type resulting from the addition of two instances
-     * of \p T.
-     *
-     * @param args the reference piranha::symbol_fset.
-     *
-     * @return the degree of the monomial.
-     *
-     * @throws std::overflow_error if the computation of the degree overflows.
-     * @throws unspecified any exception thrown by unpack().
-     */
-    degree_type degree(const symbol_fset &args) const
-    {
-        const auto tmp = unpack(args);
-        // NOTE: this should be guaranteed by the unpack function.
-        piranha_assert(tmp.size() == args.size());
-        degree_type retval(0);
-        for (const auto &x : tmp) {
-            // NOTE: here it might be possible to demonstrate that overflow can
-            // never occur, and that we can use a normal integral addition.
-            retval = safe_int_add(retval, static_cast<degree_type>(x));
-        }
-        return retval;
-    }
-    /// Low degree (equivalent to the degree).
-    /**
-     * @param args the reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_fset &) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_fset &) const.
-     */
-    degree_type ldegree(const symbol_fset &args) const
-    {
-        return degree(args);
-    }
-    /// Partial degree.
-    /**
-     * Partial degree of the monomial: only the symbols at the positions specified by \p p are considered.
-     * The type returned by this method is the type resulting from the addition of two instances
-     * of \p T.
-     *
-     * @param p the positions of the symbols to be considered in the calculation of the degree.
-     * @param args the reference piranha::symbol_fset.
-     *
-     * @return the summation of the exponents of the monomial at the positions specified by \p p.
-     *
-     * @throws std::invalid_argument if the last element of \p p, if existing, is not less than the size
-     * of \p args.
-     * @throws std::overflow_error if the computation of the degree overflows.
-     * @throws unspecified any exception thrown by unpack().
-     */
-    degree_type degree(const symbol_idx_fset &p, const symbol_fset &args) const
-    {
-        const auto tmp = unpack(args);
-        piranha_assert(tmp.size() == args.size());
-        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
-            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
-                                                 "partial degree of a Kronecker monomial is "
-                                                     + std::to_string(*p.rbegin())
-                                                     + ", but the monomial has a size of only "
-                                                     + std::to_string(tmp.size()));
-        }
-        degree_type retval(0);
-        for (auto idx : p) {
-            retval = safe_int_add(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
-        }
-        return retval;
-    }
-    /// Partial low degree (equivalent to the partial degree).
-    /**
-     * @param p the positions of the symbols to be considered in the calculation of the degree.
-     * @param args the reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_idx_fset &, const symbol_fset &) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_idx_fset &, const symbol_fset &) const.
-     */
-    degree_type ldegree(const symbol_idx_fset &p, const symbol_fset &args) const
-    {
-        return degree(p, args);
     }
 
 private:
@@ -1165,7 +1078,53 @@ public:
         return !k.get_int();
     }
 };
-}
+
+// Implementation of piranha::key_degree() for kronecker_monomial.
+template <typename T>
+class key_degree_impl<kronecker_monomial<T>>
+{
+    using degree_type = add_t<addlref_t<const T>, addlref_t<const T>>;
+
+public:
+    degree_type operator()(const kronecker_monomial<T> &k, const symbol_fset &s) const
+    {
+        const auto tmp = k.unpack(s);
+        // NOTE: this should be guaranteed by the unpack function.
+        piranha_assert(tmp.size() == s.size());
+        degree_type retval(0);
+        for (const auto &x : tmp) {
+            // NOTE: here it might be possible to demonstrate that overflow can
+            // never occur, and that we can use a normal integral addition.
+            retval = safe_int_add(retval, static_cast<degree_type>(x));
+        }
+        return retval;
+    }
+    degree_type operator()(const kronecker_monomial<T> &k, const symbol_idx_fset &p, const symbol_fset &s) const
+    {
+        const auto tmp = k.unpack(s);
+        piranha_assert(tmp.size() == s.size());
+        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
+            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
+                                                 "partial degree of a Kronecker monomial is "
+                                                     + std::to_string(*p.rbegin())
+                                                     + ", but the monomial has a size of only "
+                                                     + std::to_string(tmp.size()));
+        }
+        degree_type retval(0);
+        for (auto idx : p) {
+            retval = safe_int_add(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
+        }
+        return retval;
+    }
+};
+
+// Implementation of piranha::key_ldegree() for kronecker_monomial.
+template <typename T>
+class key_ldegree_impl<kronecker_monomial<T>> : public key_degree_impl<kronecker_monomial<T>>
+{
+};
+
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -1206,8 +1165,8 @@ inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::kron
 {
     split_free(ar, k, version);
 }
-}
-}
+} // namespace serialization
+} // namespace boost
 
 namespace piranha
 {
@@ -1222,7 +1181,7 @@ using k_monomial_boost_save_enabler = enable_if_t<
 template <typename Archive, typename T>
 using k_monomial_boost_load_enabler = enable_if_t<
     conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, typename kronecker_monomial<T>::v_type>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::kronecker_monomial.
 /**
@@ -1257,7 +1216,7 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>,
                        k_monomial_boost_load_enabler<Archive, T>>
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<kronecker_monomial<T>>> {
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -1282,6 +1241,6 @@ struct hash<piranha::kronecker_monomial<T>> {
         return a.hash();
     }
 };
-}
+} // namespace std
 
 #endif

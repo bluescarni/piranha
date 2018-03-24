@@ -53,6 +53,8 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/math.hpp>
+#include <piranha/math/degree.hpp>
+#include <piranha/math/ldegree.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
@@ -274,46 +276,46 @@ BOOST_AUTO_TEST_CASE(polynomial_degree_test)
     typedef polynomial<double, monomial<int>> p_type1;
     typedef polynomial<p_type1, monomial<int>> p_type11;
     typedef polynomial<p_type11, monomial<int>> p_type111;
-    BOOST_CHECK(has_degree<p_type1>::value);
-    BOOST_CHECK(has_ldegree<p_type1>::value);
-    BOOST_CHECK(has_degree<p_type11>::value);
-    BOOST_CHECK(has_ldegree<p_type11>::value);
-    BOOST_CHECK(has_degree<p_type111>::value);
-    BOOST_CHECK(has_ldegree<p_type111>::value);
+    BOOST_CHECK(is_degree_type<p_type1>::value);
+    BOOST_CHECK(is_ldegree_type<p_type1>::value);
+    BOOST_CHECK(is_degree_type<p_type11>::value);
+    BOOST_CHECK(is_ldegree_type<p_type11>::value);
+    BOOST_CHECK(is_degree_type<p_type111>::value);
+    BOOST_CHECK(is_ldegree_type<p_type111>::value);
     p_type1 x("x");
-    BOOST_CHECK(math::degree(x) == 1);
-    BOOST_CHECK(math::ldegree(x) == 1);
-    BOOST_CHECK(math::degree(x * x) == 2);
-    BOOST_CHECK(math::ldegree(x * x) == 2);
-    BOOST_CHECK(math::degree(x * x, {"y", "z"}) == 0);
-    BOOST_CHECK(math::ldegree(x * x, {"y", "z"}) == 0);
+    BOOST_CHECK(piranha::degree(x) == 1);
+    BOOST_CHECK(piranha::ldegree(x) == 1);
+    BOOST_CHECK(piranha::degree(x * x) == 2);
+    BOOST_CHECK(piranha::ldegree(x * x) == 2);
+    BOOST_CHECK(piranha::degree(x * x, {"y", "z"}) == 0);
+    BOOST_CHECK(piranha::ldegree(x * x, {"y", "z"}) == 0);
     p_type11 y("y");
     p_type111 z("z");
-    BOOST_CHECK(math::degree(x * y) == 2);
-    BOOST_CHECK(math::degree(x * y * z) == 3);
-    BOOST_CHECK(math::ldegree(x * y * z) == 3);
-    BOOST_CHECK(math::degree(x * y * z, {"x"}) == 1);
-    BOOST_CHECK(math::ldegree(x * y * z, {"x"}) == 1);
-    BOOST_CHECK(math::degree(x * y * z, {"y"}) == 1);
-    BOOST_CHECK(math::ldegree(x * y * z, {"y"}) == 1);
-    BOOST_CHECK(math::degree(x * y * z, {"z"}) == 1);
-    BOOST_CHECK(math::ldegree(x * y * z, {"z"}) == 1);
-    BOOST_CHECK(math::degree(x * y * z, {"z", "y"}) == 2);
-    BOOST_CHECK(math::ldegree(x * y * z, {"z", "y"}) == 2);
-    BOOST_CHECK(math::degree(x * y * z, {"z", "x"}) == 2);
-    BOOST_CHECK(math::ldegree(x * y * z, {"z", "x"}) == 2);
-    BOOST_CHECK(math::degree(x * y * z, {"y", "x"}) == 2);
-    BOOST_CHECK(math::ldegree(x * y * z, {"y", "x"}) == 2);
-    BOOST_CHECK(math::degree(x * y * z, {"y", "x", "z"}) == 3);
-    BOOST_CHECK(math::ldegree(x * y * z, {"y", "x", "z"}) == 3);
-    BOOST_CHECK(math::degree(x + y + z) == 1);
-    BOOST_CHECK(math::ldegree(x + y + z) == 1);
-    BOOST_CHECK(math::degree(x + y + z, {"x"}) == 1);
-    BOOST_CHECK(math::ldegree(x + y + z, {"x"}) == 0);
-    BOOST_CHECK(math::ldegree(x + y + z, {"x", "y"}) == 0);
-    BOOST_CHECK(math::ldegree(x + y + 1, {"x", "y"}) == 0);
-    BOOST_CHECK(math::ldegree(x + y + 1, {"x", "y", "t"}) == 0);
-    BOOST_CHECK(math::ldegree(x + y + 1) == 0);
+    BOOST_CHECK(piranha::degree(x * y) == 2);
+    BOOST_CHECK(piranha::degree(x * y * z) == 3);
+    BOOST_CHECK(piranha::ldegree(x * y * z) == 3);
+    BOOST_CHECK(piranha::degree(x * y * z, {"x"}) == 1);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"x"}) == 1);
+    BOOST_CHECK(piranha::degree(x * y * z, {"y"}) == 1);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"y"}) == 1);
+    BOOST_CHECK(piranha::degree(x * y * z, {"z"}) == 1);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"z"}) == 1);
+    BOOST_CHECK(piranha::degree(x * y * z, {"z", "y"}) == 2);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"z", "y"}) == 2);
+    BOOST_CHECK(piranha::degree(x * y * z, {"z", "x"}) == 2);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"z", "x"}) == 2);
+    BOOST_CHECK(piranha::degree(x * y * z, {"y", "x"}) == 2);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"y", "x"}) == 2);
+    BOOST_CHECK(piranha::degree(x * y * z, {"y", "x", "z"}) == 3);
+    BOOST_CHECK(piranha::ldegree(x * y * z, {"y", "x", "z"}) == 3);
+    BOOST_CHECK(piranha::degree(x + y + z) == 1);
+    BOOST_CHECK(piranha::ldegree(x + y + z) == 1);
+    BOOST_CHECK(piranha::degree(x + y + z, {"x"}) == 1);
+    BOOST_CHECK(piranha::ldegree(x + y + z, {"x"}) == 0);
+    BOOST_CHECK(piranha::ldegree(x + y + z, {"x", "y"}) == 0);
+    BOOST_CHECK(piranha::ldegree(x + y + 1, {"x", "y"}) == 0);
+    BOOST_CHECK(piranha::ldegree(x + y + 1, {"x", "y", "t"}) == 0);
+    BOOST_CHECK(piranha::ldegree(x + y + 1) == 0);
 }
 
 struct multiplication_tester {

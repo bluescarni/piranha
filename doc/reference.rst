@@ -12,3 +12,4 @@ Reference
    math.rst
    key_interface.rst
    conversions.rst
+   kronecker_monomial.rst

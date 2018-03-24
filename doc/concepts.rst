@@ -118,6 +118,18 @@ Arithmetic and logical operators
 
    is a valid expression.
 
+.. cpp:concept:: template <typename T, typename U = T> piranha::Addable
+
+   This concept is satisfied if instances of ``T`` can be added to instances of ``U``.
+
+   Specifically, this concept is satisfied if
+
+   .. code-block:: c++
+
+      std::declval<T>() + std::declval<U>()
+
+   is a valid expression.
+
 .. cpp:concept:: template <typename T, typename U = T> piranha::EqualityComparable
 
    This concept is satisfied if instances of type ``T`` can be compared to instances of type
