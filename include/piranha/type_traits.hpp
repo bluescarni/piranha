@@ -1241,13 +1241,8 @@ namespace begin_using_adl
 using std::begin;
 
 template <typename T>
-<<<<<<< HEAD
 using type = decltype(begin(std::declval<T>()));
-}
-=======
-const bool true_tt<T>::value;
-} // namespace impl
->>>>>>> master
+} // namespace begin_using_adl
 
 namespace end_using_adl
 {
@@ -1255,13 +1250,8 @@ namespace end_using_adl
 using std::end;
 
 template <typename T>
-<<<<<<< HEAD
 using type = decltype(end(std::declval<T>()));
-}
-=======
-using type = decltype(begin(std::declval<T>()));
-} // namespace begin_adl
->>>>>>> master
+} // namespace end_using_adl
 
 inline namespace impl
 {
@@ -1272,13 +1262,8 @@ template <typename T>
 using range_begin_t = detected_t<begin_using_adl::type, T>;
 
 template <typename T>
-<<<<<<< HEAD
 using range_end_t = detected_t<end_using_adl::type, T>;
-}
-=======
-using type = decltype(end(std::declval<T>()));
-} // namespace end_adl
->>>>>>> master
+} // namespace impl
 
 // Input range.
 template <typename T>
@@ -1345,7 +1330,7 @@ struct true_tt {
 
 template <typename T>
 const bool true_tt<T>::value;
-}
+} // namespace impl
 
 // Detect if type can be returned from a function.
 // NOTE: constructability implies destructability:
