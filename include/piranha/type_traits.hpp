@@ -1256,7 +1256,7 @@ using type = decltype(end(std::declval<T>()));
 inline namespace impl
 {
 
-// The types resulting from applying using std + being/end to type T,
+// The types resulting from applying using std + begin/end to type T,
 // or nonesuch if such types do not exist.
 template <typename T>
 using range_begin_t = detected_t<begin_using_adl::type, T>;
