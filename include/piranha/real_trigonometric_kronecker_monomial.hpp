@@ -438,7 +438,7 @@ public:
 
 private:
     // Degree utils.
-    using degree_type = add_t<T, T>;
+    using degree_type = add_t<const T &, const T &>;
 
 public:
     /// Trigonometric degree.
@@ -1442,7 +1442,7 @@ public:
         return r.get_int() == T(0) && r.get_flavour();
     }
 };
-}
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -1501,8 +1501,8 @@ inline void serialize(Archive &ar,
 {
     split_free(ar, k, version);
 }
-}
-}
+} // namespace serialization
+} // namespace boost
 
 namespace piranha
 {
@@ -1519,7 +1519,7 @@ template <typename Archive, typename T>
 using rtk_monomial_boost_load_enabler = enable_if_t<
     conjunction<has_boost_load<Archive, T>, has_boost_load<Archive, bool>,
                 has_boost_load<Archive, typename real_trigonometric_kronecker_monomial<T>::v_type>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::real_trigonometric_kronecker_monomial.
 /**
@@ -1557,7 +1557,7 @@ struct boost_load_impl<Archive, boost_s11n_key_wrapper<real_trigonometric_kronec
                        rtk_monomial_boost_load_enabler<Archive, T>>
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<real_trigonometric_kronecker_monomial<T>>> {
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -1582,6 +1582,6 @@ struct hash<piranha::real_trigonometric_kronecker_monomial<T>> {
         return a.hash();
     }
 };
-}
+} // namespace std
 
 #endif

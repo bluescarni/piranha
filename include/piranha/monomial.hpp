@@ -60,7 +60,9 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/integer.hpp>
 #include <piranha/is_cf.hpp>
 #include <piranha/is_key.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_one.hpp>
 #include <piranha/math/is_zero.hpp>
@@ -241,142 +243,6 @@ public:
     bool is_compatible(const symbol_fset &args) const
     {
         return this->size() == args.size();
-    }
-
-private:
-    // Machinery to determine the degree type.
-    template <typename U>
-    using degree_type = enable_if_t<conjunction<std::is_constructible<add_t<U, U>, int>,
-                                                is_addable_in_place<add_t<U, U>, U>, is_returnable<add_t<U, U>>>::value,
-                                    add_t<U, U>>;
-    // Helpers to add exponents in the degree computation.
-    template <typename U, enable_if_t<std::is_integral<U>::value, int> = 0>
-    static void expo_add(degree_type<U> &retval, const U &n)
-    {
-        retval = safe_int_add(retval, static_cast<degree_type<U>>(n));
-    }
-    template <typename U, enable_if_t<!std::is_integral<U>::value, int> = 0>
-    static void expo_add(degree_type<U> &retval, const U &x)
-    {
-        retval += x;
-    }
-
-public:
-    /// Degree.
-    /**
-     * \note
-     * This method is enabled only if:
-     * - \p T is addable, yielding a type ``degree_type``,
-     * - ``degree_type`` is constructible from \p int,
-     * - monomial::value_type can be added in-place to ``degree_type``,
-     * - ``degree_type`` satisfies piranha::is_returnable.
-     *
-     * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
-     * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
-     *
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the degree of the monomial.
-     *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
-     * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
-     * of the degree overflows.
-     * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
-     */
-    template <typename U = T>
-    degree_type<U> degree(const symbol_fset &args) const
-    {
-        auto sbe = this->size_begin_end();
-        if (unlikely(args.size() != std::get<0>(sbe))) {
-            piranha_throw(
-                std::invalid_argument,
-                "invalid symbol set for the computation of the degree of a monomial: the size of the symbol set ("
-                    + std::to_string(args.size()) + ") differs from the size of the monomial ("
-                    + std::to_string(std::get<0>(sbe)) + ")");
-        }
-        degree_type<U> retval(0);
-        for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
-            expo_add(retval, *std::get<1>(sbe));
-        }
-        return retval;
-    }
-    /// Partial degree.
-    /**
-     * \note
-     * This method is enabled only if:
-     * - \p T is addable, yielding a type ``degree_type``,
-     * - ``degree_type`` is constructible from \p int,
-     * - monomial::value_type can be added in-place to ``degree_type``,
-     * - ``degree_type`` satisfies piranha::is_returnable.
-     *
-     * This method will return the partial degree of the monomial, computed via the summation of the exponents of the
-     * monomial. If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
-     *
-     * The \p p argument is used to indicate the positions of the exponents to be taken into account when computing the
-     * partial degree. Exponents at positions not present in \p p will be discarded during the computation of the
-     * partial degree.
-     *
-     * @param p positions of the symbols to be considered.
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the partial degree of the monomial.
-     *
-     * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if the largest value in \p p is
-     * not less than the size of the monomial.
-     * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
-     * of the degree overflows.
-     * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
-     */
-    template <typename U = T>
-    degree_type<U> degree(const symbol_idx_fset &p, const symbol_fset &args) const
-    {
-        auto sbe = this->size_begin_end();
-        if (unlikely(args.size() != std::get<0>(sbe))) {
-            piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
-                                                 "monomial: the size of the symbol set ("
-                                                     + std::to_string(args.size())
-                                                     + ") differs from the size of the monomial ("
-                                                     + std::to_string(std::get<0>(sbe)) + ")");
-        }
-        if (unlikely(p.size() && *p.rbegin() >= args.size())) {
-            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
-                                                 "partial degree of a monomial is "
-                                                     + std::to_string(*p.rbegin())
-                                                     + ", but the monomial has a size of only "
-                                                     + std::to_string(args.size()));
-        }
-        degree_type<U> retval(0);
-        for (const auto &i : p) {
-            expo_add(retval, std::get<1>(sbe)[i]);
-        }
-        return retval;
-    }
-    /// Low degree (equivalent to the degree).
-    /**
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_fset &args) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_fset &args) const.
-     */
-    template <typename U = T>
-    degree_type<U> ldegree(const symbol_fset &args) const
-    {
-        return degree(args);
-    }
-    /// Partial low degree (equivalent to the partial degree).
-    /**
-     * @param p positions of the symbols to be considered.
-     * @param args reference piranha::symbol_fset.
-     *
-     * @return the output of degree(const symbol_idx_fset &, const symbol_fset &) const.
-     *
-     * @throws unspecified any exception thrown by degree(const symbol_idx_fset &, const symbol_fset &) const.
-     */
-    template <typename U = T>
-    degree_type<U> ldegree(const symbol_idx_fset &p, const symbol_fset &args) const
-    {
-        return degree(p, args);
     }
     /// Detect linear monomial.
     /**
@@ -1222,7 +1088,129 @@ public:
                            [](const T &element) { return piranha::is_zero(element); });
     }
 };
-}
+
+// Implementation of piranha::key_degree() for monomial.
+template <typename T, typename S>
+class key_degree_impl<monomial<T, S>>
+{
+    // Machinery to determine the degree type.
+    template <typename U>
+    using degree_type_ = add_t<addlref_t<const U>, addlref_t<const U>>;
+    template <typename U>
+    using degree_type
+        = enable_if_t<conjunction<std::is_constructible<degree_type_<U>, int>, is_addable_in_place<degree_type_<U>, U>,
+                                  is_returnable<degree_type_<U>>>::value,
+                      degree_type_<U>>;
+    // Helpers to add exponents in the degree computation.
+    template <typename U>
+    static void expo_add(degree_type<U> &retval, const U &n, const std::true_type &)
+    {
+        retval = safe_int_add(retval, static_cast<degree_type<U>>(n));
+    }
+    template <typename U>
+    static void expo_add(degree_type<U> &retval, const U &x, const std::false_type &)
+    {
+        retval += x;
+    }
+
+public:
+    /// Degree.
+    /**
+     * \note
+     * This method is enabled only if:
+     * - \p T is addable, yielding a type ``degree_type``,
+     * - ``degree_type`` is constructible from \p int,
+     * - monomial::value_type can be added in-place to ``degree_type``,
+     * - ``degree_type`` satisfies piranha::is_returnable.
+     *
+     * This method will return the degree of the monomial, computed via the summation of the exponents of the monomial.
+     * If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
+     *
+     * @param args reference piranha::symbol_fset.
+     *
+     * @return the degree of the monomial.
+     *
+     * @throws std::invalid_argument if the sizes of \p args and \p this differ.
+     * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+     * of the degree overflows.
+     * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
+     */
+    template <typename U>
+    degree_type<U> operator()(const monomial<U, S> &m, const symbol_fset &args) const
+    {
+        auto sbe = m.size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(
+                std::invalid_argument,
+                "invalid symbol set for the computation of the degree of a monomial: the size of the symbol set ("
+                    + std::to_string(args.size()) + ") differs from the size of the monomial ("
+                    + std::to_string(std::get<0>(sbe)) + ")");
+        }
+        degree_type<U> retval(0);
+        for (; std::get<1>(sbe) != std::get<2>(sbe); ++std::get<1>(sbe)) {
+            expo_add(retval, *std::get<1>(sbe), std::is_integral<U>{});
+        }
+        return retval;
+    }
+    /// Partial degree.
+    /**
+     * \note
+     * This method is enabled only if:
+     * - \p T is addable, yielding a type ``degree_type``,
+     * - ``degree_type`` is constructible from \p int,
+     * - monomial::value_type can be added in-place to ``degree_type``,
+     * - ``degree_type`` satisfies piranha::is_returnable.
+     *
+     * This method will return the partial degree of the monomial, computed via the summation of the exponents of the
+     * monomial. If \p T is a C++ integral type, the addition of the exponents will be checked for overflow.
+     *
+     * The \p p argument is used to indicate the positions of the exponents to be taken into account when computing the
+     * partial degree. Exponents at positions not present in \p p will be discarded during the computation of the
+     * partial degree.
+     *
+     * @param p positions of the symbols to be considered.
+     * @param args reference piranha::symbol_fset.
+     *
+     * @return the partial degree of the monomial.
+     *
+     * @throws std::invalid_argument if the sizes of \p args and \p this differ, or if the largest value in \p p is
+     * not less than the size of the monomial.
+     * @throws std::overflow_error if the exponent type is a C++ integral type and the computation
+     * of the degree overflows.
+     * @throws unspecified any exception thrown by the invoked constructor or arithmetic operators.
+     */
+    template <typename U>
+    degree_type<U> operator()(const monomial<U, S> &m, const symbol_idx_fset &p, const symbol_fset &args) const
+    {
+        auto sbe = m.size_begin_end();
+        if (unlikely(args.size() != std::get<0>(sbe))) {
+            piranha_throw(std::invalid_argument, "invalid symbol set for the computation of the partial degree of a "
+                                                 "monomial: the size of the symbol set ("
+                                                     + std::to_string(args.size())
+                                                     + ") differs from the size of the monomial ("
+                                                     + std::to_string(std::get<0>(sbe)) + ")");
+        }
+        if (unlikely(p.size() && *p.rbegin() >= args.size())) {
+            piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
+                                                 "partial degree of a monomial is "
+                                                     + std::to_string(*p.rbegin())
+                                                     + ", but the monomial has a size of only "
+                                                     + std::to_string(args.size()));
+        }
+        degree_type<U> retval(0);
+        for (const auto &i : p) {
+            expo_add(retval, std::get<1>(sbe)[i], std::is_integral<U>{});
+        }
+        return retval;
+    }
+};
+
+// Implementation of piranha::key_ldegree() for monomial.
+template <typename T, typename S>
+class key_ldegree_impl<monomial<T, S>> : public key_degree_impl<monomial<T, S>>
+{
+};
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -1263,8 +1251,8 @@ inline void serialize(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::mono
 {
     split_free(ar, k, version);
 }
-}
-}
+} // namespace serialization
+} // namespace boost
 
 namespace piranha
 {
@@ -1280,7 +1268,7 @@ using monomial_boost_save_enabler
 template <typename Archive, typename T, typename S>
 using monomial_boost_load_enabler
     = enable_if_t<has_boost_load<Archive, typename monomial<T, S>::container_type>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::monomial.
 /**
@@ -1310,7 +1298,7 @@ template <typename Archive, typename T, typename S>
 struct boost_load_impl<Archive, boost_s11n_key_wrapper<monomial<T, S>>, monomial_boost_load_enabler<Archive, T, S>>
     : boost_load_via_boost_api<Archive, boost_s11n_key_wrapper<monomial<T, S>>> {
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -1324,6 +1312,6 @@ namespace std
 template <typename T, typename S>
 struct hash<piranha::monomial<T, S>> : public hash<piranha::array_key<T, piranha::monomial<T, S>, S>> {
 };
-}
+} // namespace std
 
 #endif

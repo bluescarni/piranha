@@ -3,6 +3,10 @@
 Cosine
 ======
 
+.. todo::
+
+   Document series specialisations.
+
 *#include <piranha/math/cos.hpp>*
 
 .. cpp:function:: template <piranha::CosineType T> auto piranha::cos(T &&x)

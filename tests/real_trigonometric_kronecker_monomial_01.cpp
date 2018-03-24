@@ -52,8 +52,10 @@ see https://www.gnu.org/licenses/. */
 #endif
 
 #include <piranha/integer.hpp>
+#include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
+#include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
 #include <piranha/kronecker_array.hpp>
@@ -1570,8 +1572,8 @@ BOOST_AUTO_TEST_CASE(rtkm_key_has_t_subs_test)
     BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, char, void>::value));
     BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, void, char>::value));
     BOOST_CHECK((!key_has_t_subs<const real_trigonometric_kronecker_monomial<short> &, void, void>::value));
-    BOOST_CHECK(!key_has_degree<real_trigonometric_kronecker_monomial<int>>::value);
-    BOOST_CHECK(!key_has_ldegree<real_trigonometric_kronecker_monomial<int>>::value);
+    BOOST_CHECK(!is_key_degree_type<real_trigonometric_kronecker_monomial<int>>::value);
+    BOOST_CHECK(!is_key_ldegree_type<real_trigonometric_kronecker_monomial<int>>::value);
     BOOST_CHECK(key_has_t_degree<real_trigonometric_kronecker_monomial<int>>::value);
     BOOST_CHECK(key_has_t_ldegree<real_trigonometric_kronecker_monomial<int>>::value);
     BOOST_CHECK(key_has_t_order<real_trigonometric_kronecker_monomial<int>>::value);

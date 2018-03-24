@@ -3,6 +3,10 @@
 Exponentiation
 ==============
 
+.. todo::
+
+   Document series specialisations.
+
 *#include <piranha/math/pow.hpp>*
 
 .. cpp:function:: template <typename T> auto piranha::pow(piranha::Exponentiable<T> &&x, T &&y)
