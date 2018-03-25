@@ -149,8 +149,8 @@ Arithmetic and logical operators
 
    are valid expressions whose types are :cpp:concept:`convertible <piranha::Convertible>` to ``bool``.
 
-Iterators
----------
+Iterators and ranges
+--------------------
 
 .. cpp:concept:: template <typename T> piranha::Iterator
 

@@ -192,7 +192,7 @@ inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
 {
     return kronecker_array_statics<T>::s_limits;
 }
-}
+} // namespace impl
 
 // Signed C++ integral, without cv qualifications.
 template <typename T>
@@ -293,7 +293,7 @@ inline T k_encode_impl(It begin, It end)
     }
     return static_cast<T>(retval + std::get<1>(limit));
 }
-}
+} // namespace impl
 
 // Encode from iterators.
 #if defined(PIRANHA_HAVE_CONCEPTS)
@@ -341,10 +341,11 @@ public:
     using iterator_category = std::input_iterator_tag;
     // NOTE: these constructors will not be documented, they are implementation details
     // kept public for ease of testing.
-    // end iterator for decoding into a range of a given size. For the end iterator, we don't
-    // care about the code, mod_arg, etc.
+    //
+    // This constructor builds an end iterator for decoding into a range of a given size.
+    // For an end iterator, we don't care about the code, mod_arg, etc.
     k_decode_iterator(std::size_t size) : m_cur_idx(size), m_size(size), m_code(0), m_mod_arg(0), m_value(0) {}
-    // begin iterator for decoding the value n into a range of a given size.
+    // This constructor builds a begin iterator for decoding the value n into a range of a given size.
     k_decode_iterator(T n, std::size_t size) : m_cur_idx(0), m_size(size), m_code(0), m_mod_arg(0), m_value(0)
     {
         const auto &limits = k_limits<T>();
@@ -476,7 +477,7 @@ inline void k_decode_impl(T n, It begin, It end)
         *begin = piranha::safe_cast<v_type>(*bk);
     }
 }
-}
+} // namespace impl
 
 // Decodification into an iterator pair.
 #if defined(PIRANHA_HAVE_CONCEPTS)
@@ -540,7 +541,7 @@ inline namespace impl
 // Type requirement for Kronecker array.
 template <typename T>
 using ka_type_reqs = conjunction<std::is_integral<T>, std::is_signed<T>>;
-}
+} // namespace impl
 
 /// Kronecker array.
 /**
@@ -850,6 +851,6 @@ public:
 template <typename SignedInteger>
 const typename kronecker_array<SignedInteger>::limits_type kronecker_array<SignedInteger>::m_limits
     = kronecker_array<SignedInteger>::determine_limits();
-}
+} // namespace piranha
 
 #endif
