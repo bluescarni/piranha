@@ -524,19 +524,22 @@ public:
      * @throws std::overflow_error if ``U`` is an integral type and the exponentiation
      * causes overflow.
      * @throws unspecified any exception thrown by:
-     * - unpack(),
+     * - memory errors in standard containers,
      * - the multiplication of the monomial's exponents by ``x``,
      * - piranha::safe_cast(),
-     * - piranha::kronecker_array::encode().
+     * - piranha::k_decode() and piranha::k_encode().
      */
     template <typename U, pow_enabler<U> = 0>
     kronecker_monomial pow(const U &x, const symbol_fset &args) const
     {
-        auto v = unpack(args);
-        for (auto &n : v) {
-            monomial_pow_mult_exp(n, n, x, monomial_pow_dispatcher<T, U>{});
+        PIRANHA_MAYBE_TLS std::vector<T> tmp;
+        tmp.resize(piranha::safe_cast<decltype(tmp.size())>(args.size()));
+        auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
+        for (auto it = tmp.begin(); it != tmp.end(); ++r.first, ++it) {
+            monomial_pow_mult_exp(*it, *r.first, x, monomial_pow_dispatcher<T, U>{});
         }
-        return kronecker_monomial(ka::encode(v));
+        check_distance_size(tmp);
+        return kronecker_monomial(piranha::k_encode<T>(tmp));
     }
     /// Unpack internal integer instance.
     /**
@@ -562,27 +565,30 @@ public:
      * @param os the target stream.
      * @param args the reference piranha::symbol_fset.
      *
-     * @throws unspecified any exception thrown by unpack() or by streaming instances of \p T.
+     * @throws unspecified any exception thrown by:
+     * - piranha::k_decode(),
+     * - piranha::safe_cast(),
+     * - the public interface of ``std::ostream``.
      */
     void print(std::ostream &os, const symbol_fset &args) const
     {
-        const auto tmp = unpack(args);
-        piranha_assert(tmp.size() == args.size());
         bool empty_output = true;
         auto it_args = args.begin();
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
-            if (tmp[i] != T(0)) {
+        for (auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size())); r.first != r.second;
+             ++r.first, ++it_args) {
+            if (*r.first != T(0)) {
                 if (!empty_output) {
                     os << '*';
                 }
                 os << *it_args;
                 empty_output = false;
-                if (tmp[i] != T(1)) {
-                    os << "**" << detail::prepare_for_print(tmp[i]);
+                if (*r.first != T(1)) {
+                    os << "**" << detail::prepare_for_print(*r.first);
                 }
             }
         }
-    }
+        piranha_assert(it_args == args.end());
+    };
     /// Print in TeX mode.
     /**
      * This method will print to stream a TeX representation of the monomial.
@@ -590,16 +596,19 @@ public:
      * @param os the target stream.
      * @param args the reference piranha::symbol_fset.
      *
-     * @throws unspecified any exception thrown by unpack() or by streaming instances of \p T.
+     * @throws unspecified any exception thrown by:
+     * - piranha::k_decode(),
+     * - piranha::safe_cast(),
+     * - the public interface of ``std::ostream`` and ``std::ostringstream``.
      */
     void print_tex(std::ostream &os, const symbol_fset &args) const
     {
-        const auto tmp = unpack(args);
         std::ostringstream oss_num, oss_den, *cur_oss;
         T cur_value;
         auto it_args = args.begin();
-        for (decltype(tmp.size()) i = 0u; i < tmp.size(); ++i, ++it_args) {
-            cur_value = tmp[i];
+        for (auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size())); r.first != r.second;
+             ++r.first, ++it_args) {
+            cur_value = *r.first;
             if (cur_value != T(0)) {
                 // NOTE: here negate() is safe because of the symmetry in kronecker_array.
                 cur_oss = (cur_value > T(0)) ? &oss_num : (math::negate(cur_value), &oss_den);
@@ -1088,11 +1097,8 @@ class key_degree_impl<kronecker_monomial<T>>
 public:
     degree_type operator()(const kronecker_monomial<T> &k, const symbol_fset &s) const
     {
-        const auto tmp = k.unpack(s);
-        // NOTE: this should be guaranteed by the unpack function.
-        piranha_assert(tmp.size() == s.size());
         degree_type retval(0);
-        for (const auto &x : tmp) {
+        for (const auto x : piranha::k_decode(k.get_int(), piranha::safe_cast<std::size_t>(s.size()))) {
             // NOTE: here it might be possible to demonstrate that overflow can
             // never occur, and that we can use a normal integral addition.
             retval = safe_int_add(retval, static_cast<degree_type>(x));
@@ -1101,18 +1107,28 @@ public:
     }
     degree_type operator()(const kronecker_monomial<T> &k, const symbol_idx_fset &p, const symbol_fset &s) const
     {
-        const auto tmp = k.unpack(s);
-        piranha_assert(tmp.size() == s.size());
-        if (unlikely(p.size() && *p.rbegin() >= tmp.size())) {
+        if (unlikely(p.size() && *p.rbegin() >= s.size())) {
             piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
                                                  "partial degree of a Kronecker monomial is "
                                                      + std::to_string(*p.rbegin())
                                                      + ", but the monomial has a size of only "
-                                                     + std::to_string(tmp.size()));
+                                                     + std::to_string(s.size()));
         }
         degree_type retval(0);
-        for (auto idx : p) {
-            retval = safe_int_add(retval, static_cast<degree_type>(tmp[static_cast<decltype(tmp.size())>(idx)]));
+        // NOTE: we will have to iterate over p, and keep track of the current index i in (unpacked) k.
+        auto it = p.begin();
+        decltype(s.size()) i = 0;
+        for (auto r = piranha::k_decode(k.get_int(), piranha::safe_cast<std::size_t>(s.size()));
+             // NOTE: we keep on going until we have decoded the whole monomial, or we have
+             // run out of elements in p.
+             r.first != r.second && it != p.end(); ++r.first, ++i) {
+            if (*it == i) {
+                // If the current value of *it matches the index of the element being currently
+                // decoded, then we perform the addition.
+                retval = safe_int_add(retval, static_cast<degree_type>(*r.first));
+                // Move to the next element of p.
+                ++it;
+            }
         }
         return retval;
     }

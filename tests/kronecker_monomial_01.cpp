@@ -621,7 +621,8 @@ struct pow_tester {
         k_type k1;
         k1.set_int(1);
         BOOST_CHECK_EXCEPTION(k1.pow(42, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-            return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
+            return boost::contains(e.what(),
+                                   "only zero can be Kronecker-decoded into an empty output range, but a value of 1");
         });
         BOOST_CHECK_EXCEPTION(k1.pow(42.5, symbol_fset{"x"}), safe_cast_failure, [](const safe_cast_failure &e) {
             return boost::contains(e.what(), "the safe conversion of a value of type");
@@ -637,7 +638,8 @@ struct pow_tester {
             BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
                                   [](const std::invalid_argument &e) {
                                       return boost::contains(
-                                          e.what(), "a component of the vector to be encoded is out of bounds");
+                                          e.what(), "one of the elements of a range to be Kronecker-encoded is out of "
+                                                    "bounds: the value of the element is");
                                   });
         }
         BOOST_CHECK((is_detected<k_pow_t, k_type, int>::value));
@@ -856,10 +858,11 @@ struct print_tex_tester {
         k1.print_tex(oss, symbol_fset{});
         BOOST_CHECK(oss.str().empty());
         k1 = k_type({T(1)});
-        BOOST_CHECK_EXCEPTION(k1.print_tex(oss, symbol_fset{}), std::invalid_argument,
-                              [](const std::invalid_argument &e) {
-                                  return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
-                              });
+        BOOST_CHECK_EXCEPTION(
+            k1.print_tex(oss, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
+                return boost::contains(e.what(),
+                                       "only zero can be Kronecker-decoded into an empty output range, but a value of");
+            });
         k1 = k_type({T(0)});
         k1.print_tex(oss, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(oss.str(), "");

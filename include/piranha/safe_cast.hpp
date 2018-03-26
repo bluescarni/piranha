@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SAFE_CAST_HPP
 #define PIRANHA_SAFE_CAST_HPP
 
+#include <iterator>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -76,6 +77,22 @@ inline To safe_cast(From &&x)
     piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + demangle<decltype(x)>()
                                          + "' to the type '" + demangle<To>() + "' failed");
 }
+
+inline namespace impl
+{
+
+// This is a small helper to verify that the size() of a container
+// can be safely converted to the difference type of its iterator type.
+// In a few places we use std::distance to determine the size of a range,
+// and that could overflow if the range is a container with an (unsigned)
+// size which is too large.
+template <typename Container>
+inline void check_distance_size(Container &c)
+{
+    (void)piranha::safe_cast<typename std::iterator_traits<decltype(c.begin())>::difference_type>(c.size());
 }
+
+} // namespace impl
+} // namespace piranha
 
 #endif
