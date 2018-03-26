@@ -147,12 +147,12 @@ private:
     template <class Archive>
     void save(Archive &ar, unsigned) const
     {
-        boost_save_vector(ar, *this);
+        boost_save_sized_range(ar, *this);
     }
     template <class Archive>
     void load(Archive &ar, unsigned)
     {
-        boost_load_vector(ar, *this);
+        boost_load_sized_range(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
@@ -703,7 +703,7 @@ const typename static_vector<T, MaxSize>::size_type static_vector<T, MaxSize>::m
  * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T, std::size_t S>
-struct boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<Archive, static_vector<T, S>>>
+struct boost_save_impl<Archive, static_vector<T, S>, boost_save_sized_range_enabler<Archive, static_vector<T, S>>>
     : boost_save_via_boost_api<Archive, static_vector<T, S>> {
 };
 
@@ -720,7 +720,7 @@ struct boost_save_impl<Archive, static_vector<T, S>, boost_save_vector_enabler<A
  * - piranha::static_vector::resize().
  */
 template <typename Archive, typename T, std::size_t S>
-struct boost_load_impl<Archive, static_vector<T, S>, boost_load_vector_enabler<Archive, static_vector<T, S>>>
+struct boost_load_impl<Archive, static_vector<T, S>, boost_load_sized_range_enabler<Archive, static_vector<T, S>>>
     : boost_load_via_boost_api<Archive, static_vector<T, S>> {
 };
 

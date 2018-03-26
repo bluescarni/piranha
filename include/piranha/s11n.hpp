@@ -302,6 +302,27 @@ struct boost_save_impl<Archive, std::string, boost_save_string_enabler<Archive>>
 inline namespace impl
 {
 
+// Enabler for boost_save() for vectors.
+template <typename Archive, typename T>
+using boost_save_vector_enabler = enable_if_t<
+    conjunction<is_boost_saving_archive<Archive, std::vector<T>>,
+                // NOTE: the intent here is to try to detect if boost_save for T is implemented
+                // via the boost API wrapper. If that is the case, then we know it is possible
+                // to save T to Archive using the boost API, and, by extension, std::vector<T>
+                // can also be archived via the boost API. The check however is not perfect, as
+                // in principle an evil implementation of boost_save_impl could, e.g., re-define the
+                // call operator in a way in which the boost API is not actually used.
+                std::is_convertible<boost_save_impl<Archive, T> *, boost_save_via_boost_api<Archive, T> *>>::value>;
+}
+
+template <typename Archive, typename T>
+struct boost_save_impl<Archive, std::vector<T>, boost_save_vector_enabler<Archive, T>>
+    : boost_save_via_boost_api<Archive, std::vector<T>> {
+};
+
+inline namespace impl
+{
+
 template <typename Archive, typename T>
 using boost_save_impl_t = decltype(boost_save_impl<Archive, T>{}(std::declval<Archive &>(), std::declval<const T &>()));
 
@@ -1732,7 +1753,7 @@ inline void boost_save_range(Archive &ar, It begin, It end)
 }
 
 template <typename Archive, typename V>
-inline void boost_save_vector(Archive &ar, const V &v)
+inline void boost_save_sized_range(Archive &ar, const V &v)
 {
     boost_save(ar, v.size());
     boost_save_range(ar, v.begin(), v.end());
@@ -1747,7 +1768,7 @@ inline void boost_load_range(Archive &ar, It begin, It end)
 }
 
 template <typename Archive, typename V>
-inline void boost_load_vector(Archive &ar, V &v)
+inline void boost_load_sized_range(Archive &ar, V &v)
 {
     typename V::size_type size;
     boost_load(ar, size);
@@ -1755,14 +1776,14 @@ inline void boost_load_vector(Archive &ar, V &v)
     boost_load_range(ar, v.begin(), v.end());
 }
 
-// Introduce also enablers to detect when we can use the vector save/load functions.
+// Introduce also enablers to detect when we can use the sized range save/load functions.
 template <typename Archive, typename V, typename T = void>
-using boost_save_vector_enabler = enable_if_t<
+using boost_save_sized_range_enabler = enable_if_t<
     conjunction<has_boost_save<Archive, typename V::value_type>, has_boost_save<Archive, typename V::size_type>>::value,
     T>;
 
 template <typename Archive, typename V, typename T = void>
-using boost_load_vector_enabler = enable_if_t<
+using boost_load_sized_range_enabler = enable_if_t<
     conjunction<has_boost_load<Archive, typename V::value_type>, has_boost_load<Archive, typename V::size_type>>::value,
     T>;
 
