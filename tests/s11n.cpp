@@ -428,7 +428,7 @@ class key_is_one_impl<keyb>
 public:
     bool operator()(const keyb &, const symbol_fset &) const;
 };
-}
+} // namespace piranha
 
 namespace std
 {
@@ -442,7 +442,7 @@ template <>
 struct hash<keyb> {
     std::size_t operator()(const keyb &) const;
 };
-}
+} // namespace std
 
 BOOST_AUTO_TEST_CASE(s11n_test_boost_tt)
 {
@@ -744,7 +744,7 @@ template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
 };
-}
+} // namespace std
 
 namespace piranha
 {
@@ -762,7 +762,7 @@ class key_is_one_impl<key02>
 public:
     bool operator()(const key02 &, const symbol_fset &) const;
 };
-}
+} // namespace piranha
 
 // Helper function to roundtrip the conversion to/from msgpack for type T.
 template <typename T>
@@ -1151,7 +1151,7 @@ class boost_load_impl<Archive, only_boost>
 public:
     void operator()(Archive &, only_boost &) const {}
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -1325,6 +1325,25 @@ BOOST_AUTO_TEST_CASE(s11n_boost_s11n_key_wrapper_test)
         return boost::contains(re.what(), "trying to access the mutable key instance of a boost_s11n_key_wrapper "
                                           "that was constructed with a const key");
     });
+}
+
+struct baz_01 {
+};
+
+BOOST_AUTO_TEST_CASE(s11n_boost_s11n_vector_test)
+{
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, std::vector<int>>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, std::vector<int>>::value));
+    BOOST_CHECK((has_boost_save<boost::archive::text_oarchive, std::vector<std::string>>::value));
+    BOOST_CHECK((has_boost_load<boost::archive::text_iarchive, std::vector<std::string>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::text_iarchive, std::vector<int>>::value));
+    BOOST_CHECK((!has_boost_load<boost::archive::text_oarchive, std::vector<int>>::value));
+    BOOST_CHECK((!has_boost_save<const boost::archive::text_oarchive, std::vector<int>>::value));
+    BOOST_CHECK((!has_boost_save<boost::archive::text_oarchive, std::vector<baz_01>>::value));
+    std::vector<int> vint{1, 2, 3, 4, 5};
+    BOOST_CHECK(boost_roundtrip(vint) == vint);
+    std::vector<std::string> vstr{"a", "b", "c"};
+    BOOST_CHECK(boost_roundtrip(vstr) == vstr);
 }
 
 #endif
