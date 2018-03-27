@@ -1347,3 +1347,26 @@ BOOST_AUTO_TEST_CASE(s11n_boost_s11n_vector_test)
 }
 
 #endif
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+struct baf_01 {
+};
+
+BOOST_AUTO_TEST_CASE(s11n_msgpack_vector_test)
+{
+    BOOST_CHECK((has_msgpack_pack<sbuffer, std::vector<int>>::value));
+    BOOST_CHECK((has_msgpack_pack<sbuffer, std::vector<std::string>>::value));
+    BOOST_CHECK((!has_msgpack_pack<sbuffer &, std::vector<int>>::value));
+    BOOST_CHECK((!has_msgpack_pack<const sbuffer, std::vector<std::string>>::value));
+    BOOST_CHECK((!has_msgpack_pack<sbuffer, std::vector<baf_01>>::value));
+    for (auto f : {0, 1}) {
+        const std::vector<std::string> tmp{"a", "b", "c"};
+        auto cmp = msgpack_roundtrip(tmp, static_cast<msgpack_format>(f));
+        BOOST_CHECK(cmp == tmp);
+        cmp = msgpack_roundtrip_sstream(tmp, static_cast<msgpack_format>(f));
+        BOOST_CHECK(cmp == tmp);
+    }
+}
+
+#endif

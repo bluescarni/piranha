@@ -315,6 +315,8 @@ using boost_save_vector_enabler = enable_if_t<
                 std::is_convertible<boost_save_impl<Archive, T> *, boost_save_via_boost_api<Archive, T> *>>::value>;
 } // namespace impl
 
+// Implementation of piranha::boost_save() for std::vector<T>. Enabled if boost_save()
+// for T is implemented via the boost API.
 template <typename Archive, typename T>
 struct boost_save_impl<Archive, std::vector<T>, boost_save_vector_enabler<Archive, T>>
     : boost_save_via_boost_api<Archive, std::vector<T>> {
@@ -471,6 +473,8 @@ using boost_load_vector_enabler = enable_if_t<
                 std::is_convertible<boost_load_impl<Archive, T> *, boost_load_via_boost_api<Archive, T> *>>::value>;
 } // namespace impl
 
+// Implementation of piranha::boost_load() for std::vector<T>. Enabled if boost_load()
+// for T is implemented via the boost API.
 template <typename Archive, typename T>
 struct boost_load_impl<Archive, std::vector<T>, boost_load_vector_enabler<Archive, T>>
     : boost_load_via_boost_api<Archive, std::vector<T>> {
@@ -1828,21 +1832,52 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
     // First extract a vector of objects from o.
     PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
     o.convert(tmp_obj);
+    // NOTE: this may result in def-construction and destruction of
+    // elements of the vector v, thus the value type of V need to support
+    // these operations.
     v.resize(piranha::safe_cast<decltype(v.size())>(tmp_obj.size()));
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
 }
 
-template <typename Stream, typename V, typename T = void>
+template <typename Stream, typename V>
 using msgpack_pack_vector_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>>::value, T>;
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>,
+                              is_safely_castable<typename V::size_type, std::uint32_t>>::value>;
 
-template <typename V, typename T = void>
-using msgpack_convert_array_enabler = enable_if_t<has_msgpack_convert<typename V::value_type>::value, T>;
+template <typename V>
+using msgpack_convert_array_enabler = enable_if_t<
+    conjunction<has_msgpack_convert<typename V::value_type>, std::is_default_constructible<typename V::value_type>,
+                std::is_destructible<typename V::value_type>>::value>;
 
 #endif
 } // namespace impl
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+// Implementation of piranha::msgpack_pack() for std::vector<T>. Enabled if T supports msgpack_pack(),
+// and a couple more constraints (see the enabler).
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, std::vector<T>, msgpack_pack_vector_enabler<Stream, std::vector<T>>> {
+    void operator()(msgpack::packer<Stream> &packer, const std::vector<T> &v, msgpack_format f) const
+    {
+        msgpack_pack_vector(packer, v, f);
+    }
+};
+
+// Implementation of piranha::msgpack_convert() for std::vector<T>. Enabled if T supports msgpack_convert(),
+// and a couple more constraints (see the enabler).
+template <typename T>
+struct msgpack_convert_impl<std::vector<T>, msgpack_convert_array_enabler<std::vector<T>>> {
+    void operator()(std::vector<T> &v, const msgpack::object &o, msgpack_format f) const
+    {
+        msgpack_convert_array(o, v, f);
+    }
+};
+
+#endif
+
 } // namespace piranha
 
 #undef PIRANHA_ZLIB_CONDITIONAL
