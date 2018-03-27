@@ -1833,7 +1833,7 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
     PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
     o.convert(tmp_obj);
     // NOTE: this may result in def-construction and destruction of
-    // elements of the vector v, thus the value type of V need to support
+    // elements of the vector v, thus the value type of V needs to support
     // these operations.
     v.resize(piranha::safe_cast<decltype(v.size())>(tmp_obj.size()));
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {

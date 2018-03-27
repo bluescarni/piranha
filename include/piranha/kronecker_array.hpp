@@ -277,19 +277,19 @@ inline T k_encode_impl(It begin, It end)
     };
     // Start of the iteration.
     auto retval = piranha::safe_cast<T>(*begin);
-    range_checker(retval, minmax_vec[0]);
-    retval = static_cast<T>(retval + minmax_vec[0]);
-    auto cur_c = static_cast<T>(2 * minmax_vec[0] + 1);
+    auto minmax_it = minmax_vec.begin();
+    range_checker(retval, *minmax_it);
+    retval = static_cast<T>(retval + *minmax_it);
+    auto cur_c = static_cast<T>(2 * *minmax_it + 1);
     piranha_assert(retval >= T(0));
     // Do the rest.
-    ++begin;
-    for (decltype(minmax_vec.size()) i = 1; begin != end; ++i, ++begin) {
-        piranha_assert(i < minmax_vec.size());
+    for (++begin, ++minmax_it; begin != end; ++begin, ++minmax_it) {
+        piranha_assert(minmax_it != minmax_vec.end());
         const auto tmp = piranha::safe_cast<T>(*begin);
-        range_checker(tmp, minmax_vec[i]);
-        retval = static_cast<T>(retval + (tmp + minmax_vec[i]) * cur_c);
-        piranha_assert(minmax_vec[i] > 0);
-        cur_c = static_cast<T>(cur_c * (2 * minmax_vec[i] + 1));
+        range_checker(tmp, *minmax_it);
+        retval = static_cast<T>(retval + (tmp + *minmax_it) * cur_c);
+        piranha_assert(*minmax_it > 0);
+        cur_c = static_cast<T>(cur_c * (2 * *minmax_it + 1));
     }
     return static_cast<T>(retval + std::get<1>(limit));
 }
