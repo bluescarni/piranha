@@ -628,12 +628,12 @@ private:
     template <class Archive>
     void save(Archive &ar, unsigned) const
     {
-        boost_save_vector(ar, *this);
+        boost_save_sized_range(ar, *this);
     }
     template <class Archive>
     void load(Archive &ar, unsigned)
     {
-        boost_load_vector(ar, *this);
+        boost_load_sized_range(ar, *this);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 #endif
@@ -1118,8 +1118,9 @@ const typename small_vector<T, S>::size_type small_vector<T, S>::max_size;
  * @throws unspecified any exception thrown by piranha::boost_save().
  */
 template <typename Archive, typename T, std::size_t Size>
-struct boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                       boost_save_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+struct boost_save_impl<
+    Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+    boost_save_sized_range_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
     : boost_save_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
 };
 
@@ -1136,8 +1137,9 @@ struct boost_save_impl<Archive, small_vector<T, std::integral_constant<std::size
  * - piranha::small_vector::resize().
  */
 template <typename Archive, typename T, std::size_t Size>
-struct boost_load_impl<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
-                       boost_load_vector_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
+struct boost_load_impl<
+    Archive, small_vector<T, std::integral_constant<std::size_t, Size>>,
+    boost_load_sized_range_enabler<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>>>
     : boost_load_via_boost_api<Archive, small_vector<T, std::integral_constant<std::size_t, Size>>> {
 };
 

@@ -56,8 +56,8 @@ using is_serialization_scalar
                   std::is_same<unsigned, T>, std::is_same<long, T>, std::is_same<unsigned long, T>,
                   std::is_same<long long, T>, std::is_same<unsigned long long, T>, std::is_same<float, T>,
                   std::is_same<double, T>, std::is_same<bool, T>>;
-}
-}
+} // namespace impl
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -137,8 +137,8 @@ using impl
                   // return type is a real unsigned int.
                   std::is_convertible<detected_t<get_library_version_t, Archive>, unsigned long long>,
                   is_detected<get_helper_t_1, Archive>, is_detected<get_helper_t_2, Archive>>;
-}
-}
+} // namespace ibsa_impl
+} // namespace impl
 
 /// Detect Boost saving archives.
 /**
@@ -192,8 +192,8 @@ using impl = conjunction<
     std::is_convertible<detected_t<ibsa_impl::get_library_version_t, Archive>, unsigned long long>,
     is_detected<reset_object_address_t, Archive, unref_t<T>>, is_detected<delete_created_pointers_t, Archive>,
     is_detected<ibsa_impl::get_helper_t_1, Archive>, is_detected<ibsa_impl::get_helper_t_2, Archive>>;
-}
-}
+} // namespace ibla_impl
+} // namespace impl
 
 /// Detect Boost loading archives.
 /**
@@ -263,7 +263,7 @@ using boost_save_arithmetic_enabler =
     // types (for which serialization is always available in Boost archives), it should not matter.
     enable_if_t<conjunction<is_boost_saving_archive<Archive, T>,
                             disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for arithmetic types.
 /**
@@ -286,7 +286,7 @@ inline namespace impl
 // Enabler for boost_save() for strings.
 template <typename Archive>
 using boost_save_string_enabler = enable_if_t<is_boost_saving_archive<Archive, std::string>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for \p std::string.
 /**
@@ -302,6 +302,29 @@ struct boost_save_impl<Archive, std::string, boost_save_string_enabler<Archive>>
 inline namespace impl
 {
 
+// Enabler for boost_save() for vectors.
+template <typename Archive, typename T>
+using boost_save_vector_enabler = enable_if_t<
+    conjunction<is_boost_saving_archive<Archive, std::vector<T>>,
+                // NOTE: the intent here is to try to detect if boost_save for T is implemented
+                // via the boost API wrapper. If that is the case, then we know it is possible
+                // to save T to Archive using the boost API, and, by extension, std::vector<T>
+                // can also be archived via the boost API. The check however is not perfect, as
+                // in principle an evil implementation of boost_save_impl could, e.g., re-define the
+                // call operator in a way in which the boost API is not actually used.
+                std::is_convertible<boost_save_impl<Archive, T> *, boost_save_via_boost_api<Archive, T> *>>::value>;
+} // namespace impl
+
+// Implementation of piranha::boost_save() for std::vector<T>. Enabled if boost_save()
+// for T is implemented via the boost API.
+template <typename Archive, typename T>
+struct boost_save_impl<Archive, std::vector<T>, boost_save_vector_enabler<Archive, T>>
+    : boost_save_via_boost_api<Archive, std::vector<T>> {
+};
+
+inline namespace impl
+{
+
 template <typename Archive, typename T>
 using boost_save_impl_t = decltype(boost_save_impl<Archive, T>{}(std::declval<Archive &>(), std::declval<const T &>()));
 
@@ -310,7 +333,7 @@ template <typename Archive, typename T>
 using boost_save_enabler
     = enable_if_t<conjunction<is_boost_saving_archive<Archive, T>, is_detected<boost_save_impl_t, Archive, T>>::value,
                   int>;
-}
+} // namespace impl
 
 /// Save to Boost archive.
 /**
@@ -404,7 +427,7 @@ template <typename Archive, typename T>
 using boost_load_arithmetic_enabler
     = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>,
                               disjunction<is_serialization_scalar<T>, std::is_same<T, long double>>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_load() for arithmetic types.
 /**
@@ -427,7 +450,7 @@ inline namespace impl
 // Enabler for boost_load for strings.
 template <typename Archive>
 using boost_load_string_enabler = enable_if_t<is_boost_loading_archive<Archive, std::string>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_load() for \p std::string.
 /**
@@ -443,6 +466,23 @@ struct boost_load_impl<Archive, std::string, boost_load_string_enabler<Archive>>
 inline namespace impl
 {
 
+// Enabler for boost_load() for vectors.
+template <typename Archive, typename T>
+using boost_load_vector_enabler = enable_if_t<
+    conjunction<is_boost_loading_archive<Archive, std::vector<T>>,
+                std::is_convertible<boost_load_impl<Archive, T> *, boost_load_via_boost_api<Archive, T> *>>::value>;
+} // namespace impl
+
+// Implementation of piranha::boost_load() for std::vector<T>. Enabled if boost_load()
+// for T is implemented via the boost API.
+template <typename Archive, typename T>
+struct boost_load_impl<Archive, std::vector<T>, boost_load_vector_enabler<Archive, T>>
+    : boost_load_via_boost_api<Archive, std::vector<T>> {
+};
+
+inline namespace impl
+{
+
 template <typename Archive, typename T>
 using boost_load_impl_t = decltype(boost_load_impl<Archive, T>{}(std::declval<Archive &>(), std::declval<T &>()));
 
@@ -451,7 +491,7 @@ template <typename Archive, typename T>
 using boost_load_enabler
     = enable_if_t<conjunction<is_boost_loading_archive<Archive, T>, is_detected<boost_load_impl_t, Archive, T>>::value,
                   int>;
-}
+} // namespace impl
 
 /// Load from Boost archive.
 /**
@@ -578,7 +618,7 @@ private:
     const Key *m_key_c;
     const symbol_fset &m_ss;
 };
-}
+} // namespace piranha
 
 #endif
 
@@ -640,7 +680,7 @@ struct msgpack_stream_wrapper : Stream {
 template <typename T>
 using msgpack_stream_write_t
     = decltype(std::declval<T &>().write(std::declval<const char *>(), std::declval<std::size_t>()));
-}
+} // namespace impl
 
 /// Detect msgpack stream.
 /**
@@ -844,7 +884,7 @@ using msgpack_pack_impl_t = decltype(msgpack_pack_impl<Stream, T>{}(
 template <typename Stream, typename T>
 using msgpack_pack_enabler
     = enable_if_t<conjunction<is_msgpack_stream<Stream>, is_detected<msgpack_pack_impl_t, Stream, T>>::value, int>;
-}
+} // namespace impl
 
 /// Pack generic object in a msgpack stream.
 /**
@@ -945,7 +985,7 @@ using msgpack_convert_impl_t = decltype(msgpack_convert_impl<T>{}(
 template <typename T>
 using msgpack_convert_enabler
     = enable_if_t<conjunction<negation<std::is_const<T>>, is_detected<msgpack_convert_impl_t, T>>::value, int>;
-}
+} // namespace impl
 
 /// Convert msgpack object.
 /**
@@ -1171,7 +1211,7 @@ public:
 
 template <typename Key>
 const bool key_has_msgpack_convert<Key>::value;
-}
+} // namespace piranha
 
 #endif
 
@@ -1571,7 +1611,7 @@ inline std::pair<compression, data_format> get_cdf_from_filename(std::string fil
     }
     return std::make_pair(c, f);
 }
-}
+} // namespace impl
 
 /// Save to file.
 /**
@@ -1732,7 +1772,7 @@ inline void boost_save_range(Archive &ar, It begin, It end)
 }
 
 template <typename Archive, typename V>
-inline void boost_save_vector(Archive &ar, const V &v)
+inline void boost_save_sized_range(Archive &ar, const V &v)
 {
     boost_save(ar, v.size());
     boost_save_range(ar, v.begin(), v.end());
@@ -1747,7 +1787,7 @@ inline void boost_load_range(Archive &ar, It begin, It end)
 }
 
 template <typename Archive, typename V>
-inline void boost_load_vector(Archive &ar, V &v)
+inline void boost_load_sized_range(Archive &ar, V &v)
 {
     typename V::size_type size;
     boost_load(ar, size);
@@ -1755,14 +1795,14 @@ inline void boost_load_vector(Archive &ar, V &v)
     boost_load_range(ar, v.begin(), v.end());
 }
 
-// Introduce also enablers to detect when we can use the vector save/load functions.
+// Introduce also enablers to detect when we can use the sized range save/load functions.
 template <typename Archive, typename V, typename T = void>
-using boost_save_vector_enabler = enable_if_t<
+using boost_save_sized_range_enabler = enable_if_t<
     conjunction<has_boost_save<Archive, typename V::value_type>, has_boost_save<Archive, typename V::size_type>>::value,
     T>;
 
 template <typename Archive, typename V, typename T = void>
-using boost_load_vector_enabler = enable_if_t<
+using boost_load_sized_range_enabler = enable_if_t<
     conjunction<has_boost_load<Archive, typename V::value_type>, has_boost_load<Archive, typename V::size_type>>::value,
     T>;
 
@@ -1792,22 +1832,53 @@ inline void msgpack_convert_array(const msgpack::object &o, V &v, msgpack_format
     // First extract a vector of objects from o.
     PIRANHA_MAYBE_TLS std::vector<msgpack::object> tmp_obj;
     o.convert(tmp_obj);
+    // NOTE: this may result in def-construction and destruction of
+    // elements of the vector v, thus the value type of V need to support
+    // these operations.
     v.resize(piranha::safe_cast<decltype(v.size())>(tmp_obj.size()));
     for (decltype(v.size()) i = 0; i < v.size(); ++i) {
         piranha::msgpack_convert(v[i], tmp_obj[static_cast<decltype(v.size())>(i)], f);
     }
 }
 
-template <typename Stream, typename V, typename T = void>
+template <typename Stream, typename V>
 using msgpack_pack_vector_enabler
-    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>>::value, T>;
+    = enable_if_t<conjunction<is_msgpack_stream<Stream>, has_msgpack_pack<Stream, typename V::value_type>,
+                              is_safely_castable<typename V::size_type, std::uint32_t>>::value>;
 
-template <typename V, typename T = void>
-using msgpack_convert_array_enabler = enable_if_t<has_msgpack_convert<typename V::value_type>::value, T>;
+template <typename V>
+using msgpack_convert_array_enabler = enable_if_t<
+    conjunction<has_msgpack_convert<typename V::value_type>, std::is_default_constructible<typename V::value_type>,
+                std::is_destructible<typename V::value_type>>::value>;
 
 #endif
-}
-}
+} // namespace impl
+
+#if defined(PIRANHA_WITH_MSGPACK)
+
+// Implementation of piranha::msgpack_pack() for std::vector<T>. Enabled if T supports msgpack_pack(),
+// and a couple more constraints (see the enabler).
+template <typename Stream, typename T>
+struct msgpack_pack_impl<Stream, std::vector<T>, msgpack_pack_vector_enabler<Stream, std::vector<T>>> {
+    void operator()(msgpack::packer<Stream> &packer, const std::vector<T> &v, msgpack_format f) const
+    {
+        msgpack_pack_vector(packer, v, f);
+    }
+};
+
+// Implementation of piranha::msgpack_convert() for std::vector<T>. Enabled if T supports msgpack_convert(),
+// and a couple more constraints (see the enabler).
+template <typename T>
+struct msgpack_convert_impl<std::vector<T>, msgpack_convert_array_enabler<std::vector<T>>> {
+    void operator()(std::vector<T> &v, const msgpack::object &o, msgpack_format f) const
+    {
+        msgpack_convert_array(o, v, f);
+    }
+};
+
+#endif
+
+} // namespace piranha
 
 #undef PIRANHA_ZLIB_CONDITIONAL
 
