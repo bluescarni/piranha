@@ -641,28 +641,38 @@ public:
      *
      * @throws std::overflow_error if the computation of the derivative causes a negative overflow.
      * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::kronecker_array::encode().
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::k_decode() and piranha::k_encode().
      */
     std::pair<T, kronecker_monomial> partial(const symbol_idx &p, const symbol_fset &args) const
     {
-        auto v = unpack(args);
-        if (p >= args.size() || v[static_cast<decltype(v.size())>(p)] == T(0)) {
-            // Derivative wrt a variable not in the monomial: the position is outside the bounds, or it refers to a
-            // variable with zero exponent.
+        if (p >= args.size()) {
+            // Derivative wrt a variable not in the monomial (the position is outside the bounds).
             return std::make_pair(T(0), kronecker_monomial{args});
         }
-        auto v_b = v.begin();
-        // The original exponent.
-        const T n(v_b[p]);
-        // Decrement the exponent in the monomial.
-        // NOTE: maybe replace with the safe integral subber, eventually.
-        if (unlikely(n == std::numeric_limits<T>::min())) {
-            piranha_throw(std::overflow_error, "negative overflow error in the calculation of the "
-                                               "partial derivative of a Kronecker monomial");
+        // Prepare a local vector into which we will decode m_value, and from
+        // which we will encode the retval.
+        PIRANHA_MAYBE_TLS std::vector<T> tmp;
+        tmp.resize(piranha::safe_cast<decltype(tmp.size())>(args.size()));
+        auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
+        for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i, ++r.first) {
+            // Copy the current exponent into tmp.
+            tmp[i] = *r.first;
+            if (i == p) {
+                // i == p --> this is the exponent wrt which the derivative is being taken.
+                if (tmp[i] == T(0)) {
+                    // Derivative wrt a variable not in the monomial (the exponent is zero).
+                    return std::make_pair(T(0), kronecker_monomial{args});
+                }
+                // Decrease the exponent.
+                tmp[i] = safe_int_sub(tmp[i], T(1));
+            }
         }
-        v_b[p] = static_cast<T>(n - T(1));
-        return std::make_pair(n, kronecker_monomial(ka::encode(v)));
+        // The usual check before encoding.
+        check_distance_size(tmp);
+        return std::make_pair(static_cast<T>(tmp[static_cast<decltype(tmp.size())>(p)] + 1),
+                              kronecker_monomial(piranha::k_encode<T>(tmp)));
     }
     /// Integration.
     /**
@@ -686,45 +696,52 @@ public:
      */
     std::pair<T, kronecker_monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
-        const v_type v = unpack(args);
-        v_type retval;
+        PIRANHA_MAYBE_TLS std::vector<T> tmp;
+        // Reset the static vector.
+        tmp.resize(0);
+        // NOTE: expo is the exponent value that will be returned. It can never be zero,
+        // since that would mean that we are integrating x**-1 (which we cannot do). Thus,
+        // the zero value is also used as a special flag to signal that we have not located
+        // s in the symbol set.
         T expo(0);
         auto it_args = args.begin();
-        for (decltype(v.size()) i = 0; i < v.size(); ++i, ++it_args) {
+        for (auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size())); r.first != r.second;
+             ++r.first, ++it_args) {
             const auto &cur_sym = *it_args;
             if (expo == T(0) && s < cur_sym) {
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
-                retval.push_back(T(1));
+                tmp.push_back(T(1));
                 expo = T(1);
             }
-            retval.push_back(v[i]);
+            tmp.push_back(*r.first);
             if (cur_sym == s) {
-                // NOTE: here using i is safe: if retval gained an extra exponent in the condition above,
-                // we are never going to land here as cur_sym is at this point never going to be s.
-                if (unlikely(retval[i] == std::numeric_limits<T>::max())) {
-                    piranha_throw(
-                        std::overflow_error,
-                        "positive overflow error in the calculation of the antiderivative of a Kronecker monomial");
-                }
-                // Do the addition and check for zero later, to detect -1 expo.
-                retval[i] = static_cast<T>(retval[i] + T(1));
-                if (unlikely(piranha::is_zero(retval[i]))) {
+                // NOTE: this branch and the branch above can never be executed
+                // in the same invocation of integrate(): either s is in args or it is not.
+                // Increase the current exponent by one.
+                tmp.back() = safe_int_add(tmp.back(), T(1));
+                // Check if the addition results in zero: this means that the original
+                // exponent was -1, and thus the integration cannot succeed (it would require
+                // logarithms).
+                if (unlikely(tmp.back() == T(0))) {
                     piranha_throw(std::invalid_argument,
                                   "unable to perform Kronecker monomial integration: a negative "
                                   "unitary exponent was encountered in correspondence of the variable '"
                                       + cur_sym + "'");
                 }
-                expo = retval[i];
+                expo = tmp.back();
             }
         }
+        piranha_assert(it_args == args.end());
         // If expo is still zero, it means we need to add a new exponent at the end.
         if (expo == T(0)) {
-            retval.push_back(T(1));
+            tmp.push_back(T(1));
             expo = T(1);
         }
-        return std::make_pair(expo, kronecker_monomial(ka::encode(retval)));
+        // The usual check before encoding.
+        check_distance_size(tmp);
+        return std::make_pair(expo, kronecker_monomial(piranha::k_encode<T>(tmp)));
     }
 
 private:

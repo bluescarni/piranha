@@ -660,12 +660,11 @@ struct partial_tester {
         BOOST_CHECK(key_is_differentiable<k_type>::value);
         k_type k1;
         k1.set_int(T(1));
-        // An empty symbol set must always be related to a zero encoded value.
-        BOOST_CHECK_EXCEPTION(k1.partial(5, symbol_fset{}), std::invalid_argument, [](const std::invalid_argument &e) {
-            return boost::contains(e.what(), "a vector of size 0 must always be encoded as 0");
-        });
+        auto ret = k1.partial(5, symbol_fset{});
+        BOOST_CHECK_EQUAL(ret.first, 0);
+        BOOST_CHECK(ret.second == k_type{});
         k1 = k_type({T(2)});
-        auto ret = k1.partial(0, symbol_fset{"x"});
+        ret = k1.partial(0, symbol_fset{"x"});
         BOOST_CHECK_EQUAL(ret.first, 2);
         BOOST_CHECK(ret.second == k_type({T(1)}));
         // y is not in the monomial.
@@ -691,7 +690,8 @@ struct partial_tester {
         k1 = k_type{-std::get<0u>(limits[2u])[0u], -std::get<0u>(limits[2u])[0u]};
         BOOST_CHECK_EXCEPTION(
             ret = k1.partial(0, symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "a component of the vector to be encoded is out of bounds");
+                return boost::contains(e.what(), "one of the elements of a range to be Kronecker-encoded is out of "
+                                                 "bounds: the value of the element is ");
             });
     }
 };

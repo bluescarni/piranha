@@ -405,10 +405,10 @@ public:
     {
         // Make sure we are not at the end already.
         piranha_assert(m_cur_idx < m_size);
-        // Increas the current position into the range.
+        // Increase the current position into the range.
         ++m_cur_idx;
-        // Don't do anything if we moved to the end.
         if (m_cur_idx < m_size) {
+            // Do something only if we did not move to the end.
             const auto &limits = k_limits<T>();
             const auto &minmax_vec = std::get<0>(limits[static_cast<decltype(limits.size())>(m_size)]);
             const auto minmax_v = minmax_vec[static_cast<decltype(minmax_vec.size())>(m_cur_idx)];
