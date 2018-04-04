@@ -165,7 +165,7 @@ Iterators and ranges
 .. cpp:concept:: template <typename T, typename U> piranha::OutputIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for output iterator types to which lvalues of type ``U`` can be assigned.
+   for output iterator types to which instances of ``U`` can be assigned.
 
 .. cpp:concept:: template <typename T> piranha::ForwardIterator
 
