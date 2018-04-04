@@ -713,7 +713,7 @@ struct evaluate_tester {
                               [](const std::invalid_argument &e) {
                                   return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
                                                                    "evaluation: the size of the vector of values (0) "
-                                                                   "differs from the size of the reference set of "
+                                                                   "differs from the size of the associated set of "
                                                                    "symbols (1)");
                               });
         k1 = k_type({T(1)});
@@ -721,7 +721,7 @@ struct evaluate_tester {
                               [](const std::invalid_argument &e) {
                                   return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
                                                                    "evaluation: the size of the vector of values (0) "
-                                                                   "differs from the size of the reference set of "
+                                                                   "differs from the size of the associated set of "
                                                                    "symbols (1)");
                               });
         BOOST_CHECK_EQUAL(k1.template evaluate<integer>({1_z}, symbol_fset{"x"}), 1);
@@ -729,7 +729,7 @@ struct evaluate_tester {
                               [](const std::invalid_argument &e) {
                                   return boost::contains(e.what(), "invalid vector of values for Kronecker monomial "
                                                                    "evaluation: the size of the vector of values (2) "
-                                                                   "differs from the size of the reference set of "
+                                                                   "differs from the size of the associated set of "
                                                                    "symbols (1)");
                               });
         k1 = k_type({T(2)});

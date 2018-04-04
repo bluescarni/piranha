@@ -78,7 +78,7 @@ inline namespace impl
 {
 
 // Check the size of a k_monomial after deserialization (s1) against the
-// size of the reference symbol set (s2).
+// size of the associated symbol set (s2).
 template <typename T, typename U>
 inline void k_monomial_load_check_sizes(T s1, U s2)
 {
@@ -89,7 +89,7 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
         piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
                                              "monomial: the deserialized size ("
                                                  + std::to_string(s1)
-                                                 + ") differs from the size of the reference symbol set ("
+                                                 + ") differs from the size of the associated symbol set ("
                                                  + std::to_string(s2) + ")");
     }
 }
@@ -256,7 +256,7 @@ public:
      *
      * @param begin the beginning of the range.
      * @param end the end of the range.
-     * @param s the reference piranha::symbol_fset.
+     * @param s the associated piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the distance between \p begin and \p end is different from
      * the size of \p s.
@@ -344,7 +344,7 @@ public:
      *
      * Otherwise, the monomial is considered to be incompatible.
      *
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the compatibility flag for the monomial.
      */
@@ -381,7 +381,7 @@ public:
      * with a value of zero at the specified positions.
      *
      * @param ins_map the insertion map.
-     * @param args the reference symbol set for \p this.
+     * @param args the associated symbol set.
      *
      * @return a piranha::kronecker_monomial resulting from inserting into \p this zeroes at the positions
      * specified by \p ins_map.
@@ -470,7 +470,7 @@ public:
      * in ``args``, of the linear variable. Otherwise, the returned value will be a pair formed by the
      * ``false`` value and an unspecified position value.
      *
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return a pair indicating if the monomial is linear.
      *
@@ -481,7 +481,7 @@ public:
     {
         auto p = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
         decltype(args.size()) n_linear = 0, candidate = 0;
-        for (decltype(args.size()) i = 0; i < args.size(); ++i, ++p.first) {
+        for (decltype(args.size()) i = 0; i < args.size(); ++p.first, ++i) {
             if (!*p.first) {
                 continue;
             }
@@ -517,7 +517,7 @@ public:
      * not available, or ``T2`` does not support piranha::safe_cast()), then the method will be disabled.
      *
      * @param x the exponent.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return \p this to the power of \p x.
      *
@@ -546,7 +546,7 @@ public:
      * This method will decode the internal integral instance into a piranha::static_vector of size equal to the size of
      * \p args.
      *
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return piranha::static_vector containing the result of decoding the internal integral instance via
      * piranha::kronecker_array.
@@ -563,7 +563,7 @@ public:
      * This method will print to stream a human-readable representation of the monomial.
      *
      * @param os the target stream.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::k_decode(),
@@ -594,7 +594,7 @@ public:
      * This method will print to stream a TeX representation of the monomial.
      *
      * @param os the target stream.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by:
      * - piranha::k_decode(),
@@ -635,7 +635,7 @@ public:
      * zero, the returned pair will be <tt>(0,kronecker_monomial{args})</tt>.
      *
      * @param p the position of the symbol with respect to which the differentiation will be calculated.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the result of the differentiation.
      *
@@ -656,7 +656,7 @@ public:
         PIRANHA_MAYBE_TLS std::vector<T> tmp;
         tmp.resize(piranha::safe_cast<decltype(tmp.size())>(args.size()));
         auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
-        for (decltype(tmp.size()) i = 0; i < tmp.size(); ++i, ++r.first) {
+        for (decltype(tmp.size()) i = 0; i < tmp.size(); ++r.first, ++i) {
             // Copy the current exponent into tmp.
             tmp[i] = *r.first;
             if (i == p) {
@@ -683,16 +683,16 @@ public:
      * If the exponent corresponding to \p s is -1, an error will be produced.
      *
      * @param s the symbol with respect to which the integration will be calculated.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the result of the integration.
      *
      * @throws std::invalid_argument if the exponent associated to \p s is -1.
      * @throws std::overflow_error if the integration leads to integer overflow.
      * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - piranha::static_vector::push_back(),
-     * - piranha::kronecker_array::encode().
+     * - memory errors in standard containers,
+     * - piranha::safe_cast(),
+     * - piranha::k_decode() and piranha::k_encode().
      */
     std::pair<T, kronecker_monomial> integrate(const std::string &s, const symbol_fset &args) const
     {
@@ -712,7 +712,7 @@ public:
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
-                tmp.push_back(T(1));
+                tmp.emplace_back(1);
                 expo = T(1);
             }
             tmp.push_back(*r.first);
@@ -746,8 +746,9 @@ public:
 
 private:
     // Determination of the eval type.
+    // NOTE: const lvalue ref for U, pure rvalue for T.
     template <typename U>
-    using e_type = decltype(piranha::pow(std::declval<const U &>(), std::declval<const T &>()));
+    using e_type = pow_t<addlref_t<const U>, T>;
     template <typename U>
     using eval_type = enable_if_t<conjunction<is_multipliable_in_place<e_type<U>>,
                                               std::is_constructible<e_type<U>, int>, is_returnable<e_type<U>>>::value,
@@ -768,15 +769,16 @@ public:
      * returned.
      *
      * @param values the values will be used for the evaluation.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the result of evaluating \p this with the values provided in \p values.
      *
      * @throws std::invalid_argument if the sizes of \p values and \p args differ.
      * @throws unspecified any exception thrown by:
-     * - unpack(),
      * - the construction of the return type,
-     * - piranha::pow() or the in-place multiplication operator of the return type.
+     * - piranha::pow() or the in-place multiplication operator of the return type,
+     * - piranha::k_decode(),
+     * - piranha::safe_cast().
      */
     template <typename U>
     eval_type<U> evaluate(const std::vector<U> &values, const symbol_fset &args) const
@@ -786,18 +788,22 @@ public:
             piranha_throw(
                 std::invalid_argument,
                 "invalid vector of values for Kronecker monomial evaluation: the size of the vector of values ("
-                    + std::to_string(values.size()) + ") differs from the size of the reference set of symbols ("
+                    + std::to_string(values.size()) + ") differs from the size of the associated set of symbols ("
                     + std::to_string(args.size()) + ")");
         }
         if (args.size()) {
-            const auto v = unpack(args);
-            eval_type<U> retval(piranha::pow(values[0], v[0]));
-            for (decltype(v.size()) i = 1; i < v.size(); ++i) {
+            // Init the return value with the power of the first element in values.
+            auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
+            auto it = values.begin();
+            eval_type<U> retval(piranha::pow(*it, *r.first));
+            // Do the rest.
+            for (++r.first, ++it; r.first != r.second; ++r.first, ++it) {
                 // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
                 // NOTE: piranha::pow() for C++ integrals produces an integer result, no need
                 // to worry about overflows.
-                retval *= piranha::pow(values[static_cast<decltype(values.size())>(i)], v[i]);
+                retval *= piranha::pow(*it, *r.first);
             }
+            piranha_assert(it == values.end());
             return retval;
         }
         return eval_type<U>(1);
@@ -825,13 +831,13 @@ public:
      * at the positions specified by the keys of ``smap`` set to zero). If ``smap`` is empty,
      * the return value will be <tt>(1,this)</tt> (i.e., the monomial is unchanged and the substitution yields 1).
      *
-     * For instance, given the monomial ``[2,3,4]``, the reference piranha::symbol_fset ``["x","y","z"]``
+     * For instance, given the monomial ``[2,3,4]``, the associated piranha::symbol_fset ``["x","y","z"]``
      * and the substitution map ``[(0,1),(2,-3)]``, then the return value will be a vector containing
      * the single pair ``(81,[0,3,0])``.
      *
      * @param smap the map relating the positions of the symbols to be substituted to the values
      * they will be substituted with.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the result of the substitution.
      *
@@ -911,7 +917,7 @@ public:
      * @param p the position of the symbol that will be substituted.
      * @param n the integral power that will be substituted.
      * @param x the quantity that will be substituted.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return the result of substituting \p x for the <tt>n</tt>-th power of the symbol at the position \p p.
      *
@@ -970,7 +976,7 @@ public:
      * in \p this has a value of 5 and thus must not be trimmed).
      *
      * @param trim_mask a mask signalling candidate elements for trimming.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the size of \p trim_mask differs from the size of \p args.
      * @throws unspecified any exception thrown by unpack().
@@ -992,7 +998,7 @@ public:
      * by a \p true value in <tt>trim_mask</tt>'s fourth element).
      *
      * @param trim_mask a mask indicating which element will be removed.
-     * @param args the reference piranha::symbol_fset.
+     * @param args the associated piranha::symbol_fset.
      *
      * @return a trimmed copy of \p this.
      *
@@ -1038,7 +1044,7 @@ public:
      *
      * @param packer the target packer.
      * @param f the serialization format.
-     * @param s reference piranha::symbol_fset.
+     * @param s associated piranha::symbol_fset.
      *
      * @throws unspecified any exception thrown by unpack() or piranha::msgpack_pack().
      */
@@ -1064,7 +1070,7 @@ public:
      *
      * @param o msgpack object that will be deserialized.
      * @param f serialization format.
-     * @param s reference piranha::symbol_fset.
+     * @param s associated piranha::symbol_fset.
      *
      * @throws std::invalid_argument if the size of the deserialized array differs from the size of \p s.
      * @throws unspecified any exception thrown by:
