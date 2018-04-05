@@ -712,7 +712,7 @@ public:
                 // If we went past the position of s in args and still we
                 // have not performed the integration, it means that we need to add
                 // a new exponent.
-                tmp.emplace_back(1);
+                tmp.emplace_back(T(1));
                 expo = T(1);
             }
             tmp.push_back(*r.first);
@@ -866,7 +866,7 @@ public:
         std::vector<std::pair<subs_type<U>, kronecker_monomial>> retval;
         if (smap.empty()) {
             // For an empty substitution map, the substitution yields 1 and the monomial is the original one.
-            retval.emplace_back(1, *this);
+            retval.emplace_back(subs_type<U>(1), *this);
         } else {
             // The substitution map contains something, proceed to the substitution.
             PIRANHA_MAYBE_TLS std::vector<T> tmp;
