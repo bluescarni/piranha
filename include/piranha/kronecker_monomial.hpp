@@ -791,22 +791,23 @@ public:
                     + std::to_string(values.size()) + ") differs from the size of the associated set of symbols ("
                     + std::to_string(args.size()) + ")");
         }
-        if (args.size()) {
-            // Init the return value with the power of the first element in values.
-            auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
-            auto it = values.begin();
-            eval_type<U> retval(piranha::pow(*it, *r.first));
-            // Do the rest.
-            for (++r.first, ++it; r.first != r.second; ++r.first, ++it) {
-                // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
-                // NOTE: piranha::pow() for C++ integrals produces an integer result, no need
-                // to worry about overflows.
-                retval *= piranha::pow(*it, *r.first);
-            }
-            piranha_assert(it == values.end());
-            return retval;
+        if (args.empty()) {
+            // The evaluation of an empty monomial always yields 1.
+            return eval_type<U>(1);
         }
-        return eval_type<U>(1);
+        // Init the return value with the power of the first element in values.
+        auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
+        auto it = values.begin();
+        auto retval(piranha::pow(*it, *r.first));
+        // Do the rest.
+        for (++r.first, ++it; r.first != r.second; ++r.first, ++it) {
+            // NOTE: here maybe we could use mul3() and pow3() (to be implemented?).
+            // NOTE: piranha::pow() for C++ integrals produces an integer result, no need
+            // to worry about overflows.
+            retval *= piranha::pow(*it, *r.first);
+        }
+        piranha_assert(it == values.end());
+        return retval;
     }
 
 private:
@@ -844,16 +845,16 @@ public:
      * @throws std::invalid_argument if the last element of the substitution map is not smaller
      * than the size of ``args``.
      * @throws unspecified any exception thrown by:
-     * - unpack(),
-     * - the construction of the return value,
+     * - the construction of the return type,
      * - piranha::pow() or the in-place multiplication operator of the return type,
-     * - piranha::kronecker_array::encode().
+     * - piranha::k_decode(),
+     * - piranha::safe_cast().
      */
     template <typename U>
     std::vector<std::pair<subs_type<U>, kronecker_monomial>> subs(const symbol_idx_fmap<U> &smap,
                                                                   const symbol_fset &args) const
     {
-        if (unlikely(smap.size() && smap.rbegin()->first >= args.size())) {
+        if (unlikely(!smap.empty() && smap.rbegin()->first >= args.size())) {
             // The last element of the substitution map must be a valid index into args.
             piranha_throw(
                 std::invalid_argument,
@@ -861,26 +862,49 @@ public:
                     + std::to_string(smap.rbegin()->first) + ") must be smaller than the monomial's size ("
                     + std::to_string(args.size()) + ")");
         }
+        // Init the return value.
         std::vector<std::pair<subs_type<U>, kronecker_monomial>> retval;
-        if (smap.size()) {
+        if (smap.empty()) {
+            // For an empty substitution map, the substitution yields 1 and the monomial is the original one.
+            retval.emplace_back(1, *this);
+        } else {
             // The substitution map contains something, proceed to the substitution.
-            auto v = unpack(args);
-            // Init the return value from the exponentiation of the first value in the map.
+            PIRANHA_MAYBE_TLS std::vector<T> tmp;
+            // Reset the static vector with the right size.
+            tmp.resize(piranha::safe_cast<decltype(tmp.size())>(args.size()));
+            // Init a few iteration variables.
+            auto r = piranha::k_decode(m_value, piranha::safe_cast<std::size_t>(args.size()));
             auto it = smap.begin();
-            auto ret(piranha::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]));
-            // Zero out the corresponding exponent.
-            v[static_cast<decltype(v.size())>(it->first)] = T(0);
-            // NOTE: move to the next element in the init statement of the for loop.
-            for (++it; it != smap.end(); ++it) {
-                ret *= piranha::pow(it->second, v[static_cast<decltype(v.size())>(it->first)]);
-                v[static_cast<decltype(v.size())>(it->first)] = T(0);
+            decltype(tmp.size()) i = 0;
+            // Copy the first few exponents of the monomial into tmp, until we run
+            // into the first variable to be substituted.
+            for (; i < it->first; ++r.first, ++i) {
+                tmp[i] = *r.first;
             }
+            // Now init the subs return value from the exponentiation of the first value in the map.
+            auto ret(piranha::pow(it->second, *r.first));
+            // Set the corresponding exponent in tmp to zero.
+            tmp[i] = T(0);
+            // Do the rest.
+            for (++r.first, ++i, ++it; i < tmp.size(); ++r.first, ++i) {
+                if (it != smap.end() && it->first == i) {
+                    // Next variable to be substituted: update ret and set
+                    // the corresponding exponent in tmp to zero.
+                    ret *= piranha::pow((it++)->second, *r.first);
+                    tmp[i] = T(0);
+                } else {
+                    // The current variable is not subject to substitution,
+                    // just copy the exponent to tmp.
+                    tmp[i] = *r.first;
+                }
+            }
+            piranha_assert(it == smap.end());
+            piranha_assert(r.first == r.second);
+            // The usual check before encoding.
+            check_distance_size(tmp);
             // NOTE: the is_returnable requirement ensures we can emplace back a pair
             // containing the subs type.
-            retval.emplace_back(std::move(ret), kronecker_monomial(ka::encode(v)));
-        } else {
-            // Otherwise, the substitution yields 1 and the monomial is the original one.
-            retval.emplace_back(subs_type<U>(1), *this);
+            retval.emplace_back(std::move(ret), kronecker_monomial(piranha::k_encode<T>(tmp)));
         }
         return retval;
     }
@@ -1130,7 +1154,7 @@ public:
     }
     degree_type operator()(const kronecker_monomial<T> &k, const symbol_idx_fset &p, const symbol_fset &s) const
     {
-        if (unlikely(p.size() && *p.rbegin() >= s.size())) {
+        if (unlikely(!p.empty() && *p.rbegin() >= s.size())) {
             piranha_throw(std::invalid_argument, "the largest value in the positions set for the computation of the "
                                                  "partial degree of a Kronecker monomial is "
                                                      + std::to_string(*p.rbegin())
