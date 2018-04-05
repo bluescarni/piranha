@@ -176,8 +176,8 @@ struct boost_s11n_tester {
                 BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
                     return boost::contains(
                         iae.what(),
-                        "invalid size detected in the deserialization of a Kronercker "
-                        "monomial: the deserialized size (0) differs from the size of the reference symbol set (1)");
+                        "invalid size detected in the deserialization of a Kronecker "
+                        "monomial: the deserialized size (0) differs from the size of the associated symbol set (1)");
                 });
             }
             BOOST_CHECK((retval == k_type{T(1), T(2)}));
@@ -264,8 +264,8 @@ struct msgpack_s11n_tester {
                 [](const std::invalid_argument &ia) {
                     return boost::contains(
                         ia.what(),
-                        "invalid size detected in the deserialization of a Kronercker "
-                        "monomial: the deserialized size (1) differs from the size of the reference symbol set (0)");
+                        "invalid size detected in the deserialization of a Kronecker "
+                        "monomial: the deserialized size (1) differs from the size of the associated symbol set (0)");
                 });
             BOOST_CHECK((retval == k_type{T(2)}));
         }

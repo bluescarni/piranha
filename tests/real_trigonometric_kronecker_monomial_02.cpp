@@ -177,7 +177,7 @@ struct boost_s11n_tester {
                 BOOST_CHECK_EXCEPTION(boost_load(ia, w), std::invalid_argument, [](const std::invalid_argument &iae) {
                     return boost::contains(
                         iae.what(),
-                        "invalid size detected in the deserialization of a real Kronercker "
+                        "invalid size detected in the deserialization of a real Kronecker "
                         "trigonometric monomial: the deserialized size is 0 but the reference symbol set has a "
                         "size of 1");
                 });

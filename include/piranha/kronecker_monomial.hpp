@@ -86,7 +86,7 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
         conjunction<std::is_integral<T>, std::is_unsigned<T>, std::is_integral<U>, std::is_unsigned<U>>::value,
         "Type error: this function requires unsigned integral types as input.");
     if (unlikely(s1 != s2)) {
-        piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronercker "
+        piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a Kronecker "
                                              "monomial: the deserialized size ("
                                                  + std::to_string(s1)
                                                  + ") differs from the size of the associated symbol set ("

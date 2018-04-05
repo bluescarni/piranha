@@ -1477,7 +1477,7 @@ inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::real_trig
         typename piranha::real_trigonometric_kronecker_monomial<T>::v_type tmp;
         piranha::boost_load(ar, tmp);
         if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronecker "
                                                  "trigonometric monomial: the deserialized size is "
                                                      + std::to_string(tmp.size())
                                                      + " but the reference symbol set has a size of "
