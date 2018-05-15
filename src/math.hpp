@@ -97,17 +97,16 @@ public:
         return x == U(0);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
 
 // Enabler for math::is_zero().
 template <typename T>
-using math_is_zero_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
-}
+using math_is_zero_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_zero_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
+} // namespace detail
 
 namespace math
 {
@@ -136,7 +135,7 @@ inline bool is_zero(const T &x)
 {
     return is_zero_impl<T>{}(x);
 }
-}
+} // namespace math
 
 namespace detail
 {
@@ -146,7 +145,7 @@ template <typename T>
 using math_is_zero_std_complex_enabler =
     typename std::enable_if<std::is_same<T, std::complex<float>>::value || std::is_same<T, std::complex<double>>::value
                             || std::is_same<T, std::complex<long double>>::value>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -206,17 +205,16 @@ public:
         return x == U(1);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
 
 // Enabler for piranha::math::is_unitary().
 template <typename T>
-using math_is_unitary_enabler = typename std::
-    enable_if<std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value,
-              int>::type;
-}
+using math_is_unitary_enabler = typename std::enable_if<
+    std::is_convertible<decltype(math::is_unitary_impl<T>{}(std::declval<const T &>())), bool>::value, int>::type;
+} // namespace detail
 
 namespace math
 {
@@ -255,61 +253,51 @@ inline bool is_unitary(const T &x)
 template <typename T, typename = void>
 struct negate_impl {
 private:
-    // NOTE: inside this type trait, U is always a non-const non-reference type.
     template <typename U>
-    using generic_enabler =
-        typename std::enable_if<!std::is_integral<U>::value
-                                    && detail::true_tt<decltype(std::declval<U &>() = -std::declval<U &>())>::value,
-                                int>::type;
+    using negate_t = decltype(std::declval<U &>() = -std::declval<U &>());
     template <typename U>
-    using integral_enabler = typename std::enable_if<std::is_integral<U>::value, int>::type;
+    static void negate_imple(U &x, const std::true_type &)
+    {
+        x = static_cast<U>(-x);
+    }
+    template <typename U>
+    static void negate_imple(U &x, const std::false_type &)
+    {
+        x = -x;
+    }
 
 public:
     /// Generic call operator.
     /**
      * \note
-     * This operator is enabled only if the expression <tt>x = -x</tt> is well-formed and
-     * \p U is not a C++ integral type.
+     * This operator is enabled only if the expression <tt>x = -x</tt> is well-formed.
      *
      * The body of the operator is equivalent to:
      * @code
      * x = -x;
      * @endcode
-     * The other overload of this operator is specialised for C++ integral types, and it behaves identically.
      *
      * @param x value to be negated.
      *
      * @throws unspecified any exception resulting from the in-place negation or assignment of \p x.
      */
-    template <typename U, generic_enabler<U> = 0>
+    template <typename U, enable_if_t<is_detected<negate_t, U>::value, int> = 0>
     void operator()(U &x) const
     {
-        x = -x;
-    }
-    /// Call operator specialised for integral types.
-    /**
-     * @param x the integral value that will be negated.
-     */
-    template <typename U, integral_enabler<U> = 0>
-    void operator()(U &x) const
-    {
-        // NOTE: here we use the explicit static_cast to cope with integral promotions
-        // (e.g., in case of char).
-        x = static_cast<U>(-x);
+        negate_imple(x, std::is_integral<U>{});
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
 
 // Enabler for math::negate().
 template <typename T>
-using math_negate_enabler =
-    typename std::enable_if<!std::is_const<T>::value
-                                && true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>::value,
-                            int>::type;
-}
+using math_negate_enabler = typename std::enable_if<
+    conjunction<negation<std::is_const<T>>, true_tt<decltype(math::negate_impl<T>{}(std::declval<T &>()))>>::value,
+    int>::type;
+} // namespace detail
 
 namespace math
 {
@@ -382,7 +370,7 @@ inline namespace impl
 // Enabler for the fast floating-point implementation of multiply_accumulate().
 template <typename T>
 using math_multiply_accumulate_float_enabler = enable_if_t<std::is_floating_point<T>::value>;
-}
+} // namespace impl
 
 /// Specialisation of the implementation of piranha::math::multiply_accumulate() for floating-point types.
 /**
@@ -405,7 +393,7 @@ struct multiply_accumulate_impl<T, math_multiply_accumulate_float_enabler<T>> {
 };
 
 #endif
-}
+} // namespace math
 
 inline namespace impl
 {
@@ -417,7 +405,7 @@ using math_multiply_accumulate_t = decltype(
 
 template <typename T>
 using math_multiply_accumulate_enabler = enable_if_t<is_detected<math_multiply_accumulate_t, T>::value, int>;
-}
+} // namespace impl
 
 namespace math
 {
@@ -497,7 +485,7 @@ struct cos_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
         piranha_throw(std::invalid_argument, "cannot compute the cosine of a non-zero integral");
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -508,7 +496,7 @@ using math_cos_type_ = decltype(math::cos_impl<T>{}(std::declval<const T &>()));
 
 template <typename T>
 using math_cos_type = typename std::enable_if<is_returnable<math_cos_type_<T>>::value, math_cos_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -589,7 +577,7 @@ struct sin_impl<T, typename std::enable_if<std::is_integral<T>::value>::type> {
         piranha_throw(std::invalid_argument, "cannot compute the sine of a non-zero integral");
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -600,7 +588,7 @@ using math_sin_type_ = decltype(math::sin_impl<T>{}(std::declval<const T &>()));
 
 template <typename T>
 using math_sin_type = typename std::enable_if<is_returnable<math_sin_type_<T>>::value, math_sin_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -654,7 +642,7 @@ struct partial_impl<T, typename std::enable_if<std::is_arithmetic<T>::value>::ty
         return T(0);
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -667,7 +655,7 @@ using math_partial_type_
 template <typename T>
 using math_partial_type =
     typename std::enable_if<is_returnable<math_partial_type_<T>>::value, math_partial_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -706,7 +694,7 @@ inline detail::math_partial_type<T> partial(const T &x, const std::string &str)
 template <typename T, typename Enable = void>
 struct integrate_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -719,16 +707,16 @@ using math_integrate_type_
 template <typename T>
 using math_integrate_type =
     typename std::enable_if<is_returnable<math_integrate_type_<T>>::value, math_integrate_type_<T>>::type;
-}
+} // namespace detail
 
 namespace math
 {
 
 /// Integration.
 /**
-* \note
-* This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
-* satisfies piranha::is_returnable.
+ * \note
+ * This function is enabled only if the expression <tt>integrate_impl<T>{}(x,str)</tt> is valid, returning a type that
+ * satisfies piranha::is_returnable.
  *
  * Return the antiderivative of \p x with respect to the symbolic quantity named \p str. The actual
  * implementation of this function is in the piranha::math::integrate_impl functor. The body of this function
@@ -780,7 +768,7 @@ public:
         return x;
     }
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -793,7 +781,7 @@ using math_evaluate_type_ = decltype(
 template <typename T, typename U>
 using math_evaluate_type =
     typename std::enable_if<is_returnable<math_evaluate_type_<T, U>>::value, math_evaluate_type_<T, U>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -833,7 +821,7 @@ inline detail::math_evaluate_type<T, U> evaluate(const T &x, const std::unordere
 template <typename T, typename U, typename Enable = void>
 struct subs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -846,7 +834,7 @@ using math_subs_type_ = decltype(
 template <typename T, typename U>
 using math_subs_type =
     typename std::enable_if<is_returnable<math_subs_type_<T, U>>::value, math_subs_type_<T, U>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -886,7 +874,7 @@ inline detail::math_subs_type<T, U> subs(const T &x, const std::string &name, co
 template <typename T, typename U, typename V, typename = void>
 struct t_subs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -900,7 +888,7 @@ using math_t_subs_type_
 template <typename T, typename U, typename V>
 using math_t_subs_type =
     typename std::enable_if<is_returnable<math_t_subs_type_<T, U, V>>::value, math_t_subs_type_<T, U, V>>::type;
-}
+} // namespace detail
 
 namespace math
 {
@@ -941,7 +929,7 @@ inline detail::math_t_subs_type<T, U, V> t_subs(const T &x, const std::string &n
 template <typename T, typename Enable = void>
 struct abs_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
@@ -1015,7 +1003,7 @@ inline auto abs(const T &x) -> decltype(abs_impl<T>()(x))
 {
     return abs_impl<T>()(x);
 }
-}
+} // namespace math
 
 /// Type trait to detect the presence of the piranha::math::is_zero() function.
 /**
@@ -1075,16 +1063,15 @@ struct pbracket_type_ {
 };
 
 template <typename T>
-struct pbracket_type_<T,
-                      typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                    + std::declval<const pbracket_type_tmp<T> &>()),
-                                                           pbracket_type_tmp<T>>::value
-                                              && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
-                                                                       - std::declval<const pbracket_type_tmp<T> &>()),
-                                                              pbracket_type_tmp<T>>::value
-                                              && std::is_constructible<pbracket_type_tmp<T>, int>::value
-                                              && std::is_assignable<pbracket_type_tmp<T> &,
-                                                                    pbracket_type_tmp<T>>::value>::type> {
+struct pbracket_type_<
+    T, typename std::enable_if<std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                     + std::declval<const pbracket_type_tmp<T> &>()),
+                                            pbracket_type_tmp<T>>::value
+                               && std::is_same<decltype(std::declval<const pbracket_type_tmp<T> &>()
+                                                        - std::declval<const pbracket_type_tmp<T> &>()),
+                                               pbracket_type_tmp<T>>::value
+                               && std::is_constructible<pbracket_type_tmp<T>, int>::value
+                               && std::is_assignable<pbracket_type_tmp<T> &, pbracket_type_tmp<T>>::value>::type> {
     using type = pbracket_type_tmp<T>;
 };
 
@@ -1093,7 +1080,7 @@ template <typename T>
 using pbracket_type = typename pbracket_type_<T>::type;
 
 #endif
-}
+} // namespace detail
 
 namespace math
 {
@@ -1150,7 +1137,7 @@ inline detail::pbracket_type<T> pbracket(const T &f, const T &g, const std::vect
     }
     return retval;
 }
-}
+} // namespace math
 
 /// Detect piranha::math::pbracket().
 /**
@@ -1224,7 +1211,7 @@ inline bool is_canonical_impl(const std::vector<T const *> &new_p, const std::ve
     }
     return true;
 }
-}
+} // namespace detail
 
 namespace math
 {
@@ -1642,27 +1629,25 @@ inline auto t_lorder(const T &x, const std::vector<std::string> &names) -> declt
 template <typename T, typename U, typename = void>
 struct truncate_degree_impl {
 };
-}
+} // namespace math
 
 namespace detail
 {
 
 // Enablers for the degree truncation methods.
 template <typename T, typename U>
-using truncate_degree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(),
-                                                                                     std::declval<const U &>())),
-                                         T>::value,
-                            int>::type;
+using truncate_degree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>())),
+                 T>::value,
+    int>::type;
 
 template <typename T, typename U>
-using truncate_pdegree_enabler =
-    typename std::enable_if<std::is_same<decltype(math::truncate_degree_impl<T, U>()(
-                                             std::declval<const T &>(), std::declval<const U &>(),
-                                             std::declval<const std::vector<std::string> &>())),
-                                         T>::value,
-                            int>::type;
-}
+using truncate_pdegree_enabler = typename std::enable_if<
+    std::is_same<decltype(math::truncate_degree_impl<T, U>()(std::declval<const T &>(), std::declval<const U &>(),
+                                                             std::declval<const std::vector<std::string> &>())),
+                 T>::value,
+    int>::type;
+} // namespace detail
 
 namespace math
 {
@@ -1721,7 +1706,7 @@ inline T truncate_degree(const T &x, const U &max_degree, const std::vector<std:
 {
     return truncate_degree_impl<T, U>()(x, max_degree, names);
 }
-}
+} // namespace math
 
 /// Type trait to detect if types can be used in piranha::math::truncate_degree().
 /**
@@ -1785,7 +1770,7 @@ template <typename Key, typename PairFirst>
 struct is_differential_key_pair<Key, std::pair<PairFirst, Key>> {
     static const bool value = true;
 };
-}
+} // namespace detail
 
 /// Type trait to detect differentiable keys.
 /**
@@ -2804,9 +2789,7 @@ inline auto div3(T &a, const T &b, const T &c) -> decltype(div3_impl<T>()(a, b, 
 /// Exception to signal an inexact division.
 struct inexact_division final : std::invalid_argument {
     /// Default constructor.
-    explicit inexact_division() : std::invalid_argument("inexact division")
-    {
-    }
+    explicit inexact_division() : std::invalid_argument("inexact division") {}
 };
 
 /// Default functor for the implementation of piranha::math::divexact().
@@ -2837,7 +2820,7 @@ inline auto divexact(T &a, const T &b, const T &c) -> decltype(divexact_impl<T>(
 {
     return divexact_impl<T>()(a, b, c);
 }
-}
+} // namespace math
 
 namespace detail
 {
@@ -2861,7 +2844,7 @@ inline T gcd_euclidean(T a, T b)
         a %= b;
     }
 }
-}
+} // namespace detail
 
 namespace math
 {
@@ -2986,7 +2969,7 @@ inline auto gcd3(T &out, const T &a, const T &b) -> decltype(gcd3_impl<T>()(out,
 {
     return gcd3_impl<T>()(out, a, b);
 }
-}
+} // namespace math
 
 /// Detect piranha::math::add3().
 /**
@@ -3147,6 +3130,6 @@ public:
 
 template <typename T>
 const bool has_exact_division<T>::value;
-}
+} // namespace piranha
 
 #endif
