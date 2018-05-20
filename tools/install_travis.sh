@@ -5,7 +5,9 @@ set -e
 # Echo each command
 set -x
 
+export deps_dir=$HOME/local
 export PATH="$HOME/miniconda/bin:$PATH"
+source activate $deps_dir
 
 if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
     # Make sure we run CMake and generate the sphinx config file.

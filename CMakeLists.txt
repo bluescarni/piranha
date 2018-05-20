@@ -64,9 +64,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND YACMA_COMPILER_IS_CLANGXX)
 	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-stdlib=libc++")
 endif()
 if(YACMA_COMPILER_IS_MSVC)
-	# Disable the idiotic minmax macros on MSVC and enable the bigobj option.
-	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-DNOMINMAX" "/bigobj")
-	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-DNOMINMAX" "/bigobj")
+	# Disable the idiotic minmax macros on MSVC and enable the bigobj option (but not with clang).
+	list(APPEND PIRANHA_CXX_FLAGS_DEBUG "-DNOMINMAX")
+	list(APPEND PIRANHA_CXX_FLAGS_RELEASE "-DNOMINMAX")
 	if(YACMA_COMPILER_IS_CLANGXX)
 		# clang-cl emits various warnings from the Boost/GMP/MPFR libraries, let's just silence them.
 		# NOTE: at one point in the recent past, MSVC added an options similar to GCC's isystem:
@@ -90,6 +90,9 @@ if(YACMA_COMPILER_IS_MSVC)
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		unset(_PIRANHA_CLANG_CL_DISABLED_WARNINGS)
+	else()
+		list(APPEND PIRANHA_CXX_FLAGS_DEBUG "/bigobj")
+		list(APPEND PIRANHA_CXX_FLAGS_RELEASE "/bigobj")
 	endif()
 endif()
 if(MINGW)
