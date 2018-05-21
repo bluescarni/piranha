@@ -588,7 +588,7 @@ public:
             }
         }
         piranha_assert(it_args == args.end());
-    };
+    }
     /// Print in TeX mode.
     /**
      * This method will print to stream a TeX representation of the monomial.
