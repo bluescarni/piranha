@@ -39,7 +39,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/thread_barrier.hpp>
 #include <piranha/thread_pool.hpp>
 
-std::mutex mutex;
+static std::mutex mutex;
 
 static inline void test_function()
 {
