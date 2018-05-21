@@ -96,6 +96,12 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-gnu-anonymous-struct"
 			"-Wno-nested-anon-types"
 			"-Wno-documentation"
+			"-Wno-comma"
+			"-Wno-nonportable-system-include-path"
+			"-Wno-global-constructors"
+			"-Wno-redundant-parens"
+			"-Wno-exit-time-destructors"
+			"-Wno-missing-noreturn"
 		)
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
