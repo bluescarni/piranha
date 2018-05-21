@@ -102,6 +102,12 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-redundant-parens"
 			"-Wno-exit-time-destructors"
 			"-Wno-missing-noreturn"
+			"-Wno-switch-enum"
+			"-Wno-covered-switch-default"
+			"-Wno-float-equal"
+			"-Wno-double-promotion"
+			"-Wno-microsoft-enum-value"
+			"-Wno-missing-prototypes"
 		)
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
