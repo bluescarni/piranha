@@ -90,6 +90,12 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-reserved-id-macro"
 			"-Wno-undef"
 			"-Wno-c++98-compat-pedantic"
+			"-Wno-documentation-unknown-command"
+			"-Wno-zero-as-null-pointer-constant"
+			"-Wno-language-extension-token"
+			"-Wno-gnu-anonymous-struct"
+			"-Wno-nested-anon-types"
+			"-Wno-documentation"
 		)
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
