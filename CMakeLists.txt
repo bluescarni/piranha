@@ -108,6 +108,11 @@ if(YACMA_COMPILER_IS_MSVC)
 			"-Wno-double-promotion"
 			"-Wno-microsoft-enum-value"
 			"-Wno-missing-prototypes"
+			"-Wno-implicit-fallthrough"
+			"-Wno-format-nonliteral"
+			"-Wno-cast-qual"
+			"-Wno-disabled-macro-expansion"
+			"-Wno-unused-private-field"
 		)
 		list(APPEND PIRANHA_CXX_FLAGS_DEBUG ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
 		list(APPEND PIRANHA_CXX_FLAGS_RELEASE ${_PIRANHA_CLANG_CL_DISABLED_WARNINGS})
