@@ -65,16 +65,10 @@ using symbol_fset = boost::container::flat_set<std::string>;
 template <typename T>
 using symbol_fmap = boost::container::flat_map<std::string, T>;
 
-/// Symbol index.
-/**
- * An unsigned integral type representing a position within a \link piranha::symbol_fset symbol_fset\endlink.
- */
+// Symbol index.
 using symbol_idx = symbol_fset::size_type;
 
-/// Flat set of symbol indices.
-/**
- * This data structure represents an ordered set of indices into a \link piranha::symbol_fset symbol_fset\endlink.
- */
+// Flat set of symbol indices.
 using symbol_idx_fset = boost::container::flat_set<symbol_idx>;
 
 /// Flat map of symbol indices.
@@ -136,7 +130,7 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
         piranha_assert(map_it + 1 == map_end);
     }
 }
-}
+} // namespace impl
 
 /// Merge two \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -262,7 +256,7 @@ struct mask_ss_transform {
         return t.template get<1>();
     }
 };
-}
+} // namespace impl
 
 /// Trim a \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -392,7 +386,7 @@ using has_sm_intersect_idx
 
 template <typename T>
 using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int>;
-}
+} // namespace impl
 
 /*! \brief Find the indices of the intersection of a \link piranha::symbol_fset symbol_fset\endlink and a
  *         \link piranha::symbol_fmap symbol_fmap\endlink.
@@ -484,6 +478,6 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
     // as a sorted vector.
     return symbol_idx_fmap<T>{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
 }
-}
+} // namespace piranha
 
 #endif
