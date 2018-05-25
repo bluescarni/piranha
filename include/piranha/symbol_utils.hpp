@@ -65,16 +65,10 @@ using symbol_fset = boost::container::flat_set<std::string>;
 template <typename T>
 using symbol_fmap = boost::container::flat_map<std::string, T>;
 
-/// Symbol index.
-/**
- * An unsigned integral type representing a position within a \link piranha::symbol_fset symbol_fset\endlink.
- */
+// Symbol index.
 using symbol_idx = symbol_fset::size_type;
 
-/// Flat set of symbol indices.
-/**
- * This data structure represents an ordered set of indices into a \link piranha::symbol_fset symbol_fset\endlink.
- */
+// Flat set of symbol indices.
 using symbol_idx_fset = boost::container::flat_set<symbol_idx>;
 
 /// Flat map of symbol indices.
