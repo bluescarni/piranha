@@ -72,7 +72,7 @@ inline namespace impl
 template <typename To, typename From>
 using safe_convert_t_
     = decltype(safe_convert_impl<uncvref_t<To>, uncvref_t<From>>{}(std::declval<To>(), std::declval<From>()));
-}
+} // namespace impl
 
 template <typename From, typename To>
 using is_safely_convertible = std::is_convertible<detected_t<safe_convert_t_, To, From>, bool>;
@@ -86,15 +86,14 @@ concept bool SafelyConvertible = is_safely_convertible<From, To>::value;
 
 // Safe conversion.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename To>
-inline bool safe_convert(To &&x, SafelyConvertible<To> &&y)
+template <typename To, SafelyConvertible<To> From>
+inline bool safe_convert(To &&x, From &&y)
 #else
 template <typename To, typename From, enable_if_t<is_safely_convertible<From, To>::value, int> = 0>
 inline bool safe_convert(To &&x, From &&y)
 #endif
 {
-    return safe_convert_impl<uncvref_t<decltype(x)>, uncvref_t<decltype(y)>>{}(std::forward<decltype(x)>(x),
-                                                                               std::forward<decltype(y)>(y));
+    return safe_convert_impl<uncvref_t<To>, uncvref_t<From>>{}(std::forward<To>(x), std::forward<From>(y));
 }
 
 // Specialisation for integral to integral conversions.
@@ -179,6 +178,6 @@ public:
         return true;
     }
 };
-}
+} // namespace piranha
 
 #endif

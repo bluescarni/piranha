@@ -5,7 +5,7 @@ Safe conversion
 
 *#include <piranha/safe_convert.hpp>*
 
-.. cpp:function:: template <typename To> bool piranha::safe_convert(To &&x, piranha::SafelyConvertible<To> &&y)
+.. cpp:function:: template <typename To, piranha::SafelyConvertible<To> From> bool piranha::safe_convert(To &&x, From &&y)
 
    This function attempts to set *x* to the exact value of *y*, possibly performing a type conversion. If the value of *y*
    can be represented exactly by the type of *x*, then this function will write the value of *y* into *x* and return ``true``. Otherwise,
