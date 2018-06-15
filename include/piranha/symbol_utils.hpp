@@ -136,7 +136,7 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
         piranha_assert(map_it + 1 == map_end);
     }
 }
-}
+} // namespace impl
 
 /// Merge two \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -262,7 +262,7 @@ struct mask_ss_transform {
         return t.template get<1>();
     }
 };
-}
+} // namespace impl
 
 /// Trim a \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -392,7 +392,7 @@ using has_sm_intersect_idx
 
 template <typename T>
 using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int>;
-}
+} // namespace impl
 
 /*! \brief Find the indices of the intersection of a \link piranha::symbol_fset symbol_fset\endlink and a
  *         \link piranha::symbol_fmap symbol_fmap\endlink.
@@ -439,7 +439,7 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
                 + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
     }
     // Use a local vector cache to build the result.
-    PIRANHA_MAYBE_TLS std::vector<std::pair<symbol_idx, T>> vidx;
+    /*PIRANHA_MAYBE_TLS*/ std::vector<std::pair<symbol_idx, T>> vidx;
     // The max possible size of the intersection is the minimum size of the
     // two input objects.
     const auto max_size
@@ -484,6 +484,6 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
     // as a sorted vector.
     return symbol_idx_fmap<T>{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
 }
-}
+} // namespace piranha
 
 #endif
