@@ -93,7 +93,7 @@ template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
 };
-}
+} // namespace std
 
 namespace piranha
 {
@@ -103,7 +103,7 @@ class key_is_one_impl<key02>
 public:
     bool operator()(const key02 &, const symbol_fset &) const;
 };
-}
+} // namespace piranha
 
 template <typename Cf, typename Key>
 class g_series_type : public t_substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -239,6 +239,7 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK((!has_t_subs<p_type2, double, int>::value));
     BOOST_CHECK((key_has_t_subs<key02, int, int>::value));
     BOOST_CHECK((!has_t_subs<g_series_type<double, key02>, double, double>::value));
+    p_type1::clear_pow_cache();
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
