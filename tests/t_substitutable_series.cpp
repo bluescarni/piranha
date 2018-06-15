@@ -93,7 +93,7 @@ template <>
 struct hash<key02> {
     std::size_t operator()(const key02 &) const;
 };
-}
+} // namespace std
 
 namespace piranha
 {
@@ -103,7 +103,7 @@ class key_is_one_impl<key02>
 public:
     bool operator()(const key02 &, const symbol_fset &) const;
 };
-}
+} // namespace piranha
 
 template <typename Cf, typename Key>
 class g_series_type : public t_substitutable_series<series<Cf, Key, g_series_type<Cf, Key>>, g_series_type<Cf, Key>>
@@ -243,20 +243,20 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
-BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
-{
-    using stype = poisson_series<polynomial<rational, monomial<short>>>;
-    stype x("x"), y("y"), z = x + piranha::cos(x + y), tmp;
-    std::stringstream ss;
-    {
-        boost::archive::text_oarchive oa(ss);
-        oa << z;
-    }
-    {
-        boost::archive::text_iarchive ia(ss);
-        ia >> tmp;
-    }
-    BOOST_CHECK_EQUAL(z, tmp);
-}
+// BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
+// {
+//     using stype = poisson_series<polynomial<rational, monomial<short>>>;
+//     stype x("x"), y("y"), z = x + piranha::cos(x + y), tmp;
+//     std::stringstream ss;
+//     {
+//         boost::archive::text_oarchive oa(ss);
+//         oa << z;
+//     }
+//     {
+//         boost::archive::text_iarchive ia(ss);
+//         ia >> tmp;
+//     }
+//     BOOST_CHECK_EQUAL(z, tmp);
+// }
 
 #endif
