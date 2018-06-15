@@ -239,24 +239,25 @@ BOOST_AUTO_TEST_CASE(t_subs_series_t_subs_test)
     BOOST_CHECK((!has_t_subs<p_type2, double, int>::value));
     BOOST_CHECK((key_has_t_subs<key02, int, int>::value));
     BOOST_CHECK((!has_t_subs<g_series_type<double, key02>, double, double>::value));
+    p_type1::clear_pow_cache();
 }
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
-// BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
-// {
-//     using stype = poisson_series<polynomial<rational, monomial<short>>>;
-//     stype x("x"), y("y"), z = x + piranha::cos(x + y), tmp;
-//     std::stringstream ss;
-//     {
-//         boost::archive::text_oarchive oa(ss);
-//         oa << z;
-//     }
-//     {
-//         boost::archive::text_iarchive ia(ss);
-//         ia >> tmp;
-//     }
-//     BOOST_CHECK_EQUAL(z, tmp);
-// }
+BOOST_AUTO_TEST_CASE(t_subs_series_serialization_test)
+{
+    using stype = poisson_series<polynomial<rational, monomial<short>>>;
+    stype x("x"), y("y"), z = x + piranha::cos(x + y), tmp;
+    std::stringstream ss;
+    {
+        boost::archive::text_oarchive oa(ss);
+        oa << z;
+    }
+    {
+        boost::archive::text_iarchive ia(ss);
+        ia >> tmp;
+    }
+    BOOST_CHECK_EQUAL(z, tmp);
+}
 
 #endif
