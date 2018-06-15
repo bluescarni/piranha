@@ -5,7 +5,7 @@ Safe cast
 
 *#include <piranha/safe_cast.hpp>*
 
-.. cpp:function:: template <typename To> To piranha::safe_cast(piranha::SafelyCastable<To> &&x)
+.. cpp:function:: template <typename To, piranha::SafelyCastable<To> From> To piranha::safe_cast(From &&x)
 
    This function attempts to convert *x* to the type ``To`` via :cpp:func:`piranha::safe_convert()`.
    If the conversion succeeds (i.e., :cpp:func:`piranha::safe_convert()` returns ``true``), an instance
