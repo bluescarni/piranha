@@ -49,6 +49,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
           - g++-4.8
+          - valgrind
     - env: PIRANHA_BUILD="DebugGCC48" SPLIT_TEST_NUM="1" TEST_NSPLIT="5"
       compiler: gcc
       os: linux
