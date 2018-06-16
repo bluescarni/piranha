@@ -85,7 +85,7 @@ struct negate_impl<real> {
         r.neg();
     }
 };
-}
+} // namespace math
 
 // Specialisation of piranha::is_zero() for piranha::real.
 template <>
@@ -191,16 +191,15 @@ struct multiply_accumulate_impl<real> {
      */
     void operator()(real &x, const real &y, const real &z) const
     {
-    // So the story here is that mpfr's fma() has been reported to be slower than the two separate
-    // operations:
-    // http://www.loria.fr/~zimmerma/mpfr-mpc-2014.html
-    // Benchmarks on fateman1 indicate this is indeed the case. This may be fixed in MPFR 4, but I haven't actually
-    // checked yet. For versions earlier than 4, and if we have thread local storage, we avoid the slowdown by using two
-    // separate operations rather than the fma().
-    // NOTE: it's not clear if here we could benefit from perfect forwarding, as this
-    // operation already comes with a destination variable. We'll need to investigate.
+        // So the story here is that mpfr's fma() has been reported to be slower than the two separate
+        // operations:
+        // http://www.loria.fr/~zimmerma/mpfr-mpc-2014.html
+        // Benchmarks on fateman1 indicate this is indeed the case. This may be fixed in MPFR 4, but I haven't actually
+        // checked yet. For versions earlier than 4, and if we have thread local storage, we avoid the slowdown by using
+        // two separate operations rather than the fma(). NOTE: it's not clear if here we could benefit from perfect
+        // forwarding, as this operation already comes with a destination variable. We'll need to investigate.
 #if MPFR_VERSION_MAJOR < 4 && defined(PIRANHA_HAVE_THREAD_LOCAL)
-        static thread_local real tmp;
+        thread_local real tmp;
         mppp::mul(tmp, y, z);
         mppp::add(x, x, tmp);
 #else
@@ -268,7 +267,7 @@ struct div3_impl<real> {
         mppp::div(out, x, y);
     }
 };
-}
+} // namespace math
 
 // From real to C++ integral.
 #if defined(PIRANHA_HAVE_CONCEPTS)
@@ -333,8 +332,8 @@ inline ::mpfr_prec_t real_size_from_prec(const ::mpfr_prec_t &prec)
 #endif
     return q + (r != 0);
 }
-}
-}
+} // namespace impl
+} // namespace piranha
 
 #if defined(PIRANHA_WITH_BOOST_S11N)
 
@@ -416,8 +415,8 @@ inline void serialize(Archive &ar, piranha::real &r, const unsigned int file_ver
 {
     split_free(ar, r, file_version);
 }
-}
-}
+} // namespace serialization
+} // namespace boost
 
 #endif
 
@@ -444,7 +443,7 @@ using real_boost_load_enabler
                               has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
                               has_boost_load<Archive, decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
                               has_boost_load<Archive, ::mp_limb_t>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::boost_save() for piranha::real.
 /**
@@ -502,7 +501,7 @@ using real_msgpack_convert_enabler = enable_if_t<
                 has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_sign)>,
                 has_msgpack_convert<decltype(std::declval<const ::mpfr_t &>()->_mpfr_exp)>,
                 has_msgpack_convert<::mp_limb_t>>::value>;
-}
+} // namespace impl
 
 /// Specialisation of piranha::msgpack_pack() for piranha::real.
 /**
@@ -663,7 +662,7 @@ template <typename T>
 constexpr bool zero_is_absorbing<T, real_zero_is_absorbing_enabler<T>>::value;
 
 #endif
-}
+} // namespace piranha
 
 #else
 

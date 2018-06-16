@@ -499,7 +499,7 @@ public:
         }
         monomial retval;
         T expo(0);
-        const PIRANHA_MAYBE_TLS T one(1);
+        const T one(1);
         auto it_args = args.begin();
         for (decltype(retval.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
             const auto &cur_sym = *it_args;
@@ -614,7 +614,7 @@ public:
                                                      + std::to_string(std::get<0>(sbe)) + ")");
         }
         std::ostringstream oss_num, oss_den, *cur_oss;
-        const PIRANHA_MAYBE_TLS T zero(0);
+        const T zero(0);
         T cur_value;
         auto it_args = args.begin();
         for (decltype(args.size()) i = 0; std::get<1>(sbe) != std::get<2>(sbe); ++i, ++std::get<1>(sbe), ++it_args) {
@@ -768,8 +768,7 @@ public:
         std::vector<std::pair<subs_type<U>, monomial>> retval;
         if (smap.size()) {
             // The substitution map contains something, proceed to the substitution.
-            // Cache-init the zero constant.
-            const PIRANHA_MAYBE_TLS T zero(0);
+            const T zero(0);
             // Init the subs return value from the exponentiation of the first value in the map.
             auto it = smap.begin();
             auto ret(piranha::pow(it->second, std::get<1>(sbe)[it->first]));
