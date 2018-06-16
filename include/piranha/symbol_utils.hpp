@@ -387,7 +387,8 @@ inline namespace impl
 
 // Enabler for sm_intersect_idx.
 template <typename T>
-using has_sm_intersect_idx = conjunction<std::is_move_constructible<T>, std::is_copy_constructible<T>>;
+using has_sm_intersect_idx
+    = conjunction<std::is_move_constructible<T>, std::is_copy_constructible<T>, std::is_destructible<T>>;
 
 template <typename T>
 using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int>;
@@ -397,7 +398,7 @@ using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int
  *         \link piranha::symbol_fmap symbol_fmap\endlink.
  *
  * \note
- * This function is enabled only if ``T`` is move constructible and copy constructible.
+ * This function is enabled only if ``T`` is move-constructible, copy-constructible and destructible.
  *
  * This function first computes the intersection ``ix`` of the set ``s`` and the keys of ``m``, and then returns
  * a map in which the keys are the positional indices of ``ix`` in ``s`` and the values are the corresponding
@@ -416,7 +417,7 @@ using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int
  * - the public interfaces of \link piranha::symbol_fset symbol_fset\endlink and \link piranha::symbol_fmap
  *   symbol_fmap\endlink,
  * - \link piranha::safe_cast() safe_cast()\endlink,
- * - the default constructor, copy constructor or copy assignment operator of ``T``.
+ * - the copy constructor of ``T``.
  */
 template <typename T, sm_intersect_idx_enabler<T> = 0>
 inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fmap<T> &m)
