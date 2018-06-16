@@ -3502,11 +3502,8 @@ public:
         // Cache a reference to the symbol set.
         const auto &ss = s.get_symbol_set();
 
-        // Init the vector that will be used for key evaluation. Make it possibly
-        // thread local in order to avoid allocations each time we invoke this function.
-        PIRANHA_MAYBE_TLS std::vector<T> evec;
-        // Make sure the static cached vector is reset to empty.
-        evec.resize(0);
+        // Init the vector that will be used for key evaluation.
+        std::vector<T> evec;
 
         auto it_dict = dict.begin();
         const auto it_dict_f = dict.end();

@@ -136,7 +136,7 @@ inline void vector_key_merge_symbols(Vector &retval, const Vector &v, const symb
         piranha_assert(map_it + 1 == map_end);
     }
 }
-}
+} // namespace impl
 
 /// Merge two \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -262,7 +262,7 @@ struct mask_ss_transform {
         return t.template get<1>();
     }
 };
-}
+} // namespace impl
 
 /// Trim a \link piranha::symbol_fset symbol_fset\endlink.
 /**
@@ -387,18 +387,17 @@ inline namespace impl
 
 // Enabler for sm_intersect_idx.
 template <typename T>
-using has_sm_intersect_idx
-    = conjunction<std::is_default_constructible<T>, std::is_copy_assignable<T>, std::is_copy_constructible<T>>;
+using has_sm_intersect_idx = conjunction<std::is_move_constructible<T>, std::is_copy_constructible<T>>;
 
 template <typename T>
 using sm_intersect_idx_enabler = enable_if_t<has_sm_intersect_idx<T>::value, int>;
-}
+} // namespace impl
 
 /*! \brief Find the indices of the intersection of a \link piranha::symbol_fset symbol_fset\endlink and a
  *         \link piranha::symbol_fmap symbol_fmap\endlink.
  *
  * \note
- * This function is enabled only if ``T`` is default-constructible, copy-assignable and copy-constructible.
+ * This function is enabled only if ``T`` is move constructible and copy constructible.
  *
  * This function first computes the intersection ``ix`` of the set ``s`` and the keys of ``m``, and then returns
  * a map in which the keys are the positional indices of ``ix`` in ``s`` and the values are the corresponding
@@ -438,17 +437,14 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
                 + ") is larger than the maximum value representable by the difference type of symbol_fset's iterators ("
                 + std::to_string(std::numeric_limits<it_diff_t>::max()) + ")");
     }
-    // Use a local vector cache to build the result.
-    PIRANHA_MAYBE_TLS std::vector<std::pair<symbol_idx, T>> vidx;
+    // Init the return value.
+    symbol_idx_fmap<T> retval;
     // The max possible size of the intersection is the minimum size of the
     // two input objects.
     const auto max_size
         = std::min<typename std::common_type<decltype(s.size()), decltype(m.size())>::type>(s.size(), m.size());
-    // Enlarge vidx if needed.
-    if (vidx.size() < max_size) {
-        vidx.resize(piranha::safe_cast<decltype(vidx.size())>(max_size));
-    }
-    auto vidx_it = vidx.begin();
+    // Reserve enough space.
+    retval.reserve(piranha::safe_cast<decltype(retval.size())>(max_size));
     const auto s_it_b = s.begin(), s_it_f = s.end();
     auto s_it = s_it_b;
     for (const auto &p : m) {
@@ -470,20 +466,20 @@ inline symbol_idx_fmap<T> sm_intersect_idx(const symbol_fset &s, const symbol_fm
             // because we checked earlier. Finally, we need a safe cast in principle as symbol_idx
             // and the unsigned counterpart of it_diff_t might be different (in reality, safe_cast
             // will probably be optimised out).
-            piranha_assert(vidx_it != vidx.end());
-            // Store the index and the mapped value.
-            vidx_it->first = piranha::safe_cast<symbol_idx>(static_cast<it_udiff_t>(s_it - s_it_b));
-            vidx_it->second = p.second;
-            ++vidx_it;
+            auto ins_ret = retval.emplace_hint(
+                retval.end(), piranha::safe_cast<symbol_idx>(static_cast<it_udiff_t>(s_it - s_it_b)), p.second);
+#if defined(NDEBUG)
+            (void)ins_ret;
+#else
+            piranha_assert(ins_ret == retval.end() - 1);
+#endif
             // Bump up s_it: we want to start searching from the next
             // element in the next loop iteration.
             ++s_it;
         }
     }
-    // Build the return value. We know that, by construction, vidx has been built
-    // as a sorted vector.
-    return symbol_idx_fmap<T>{boost::container::ordered_unique_range_t{}, vidx.begin(), vidx_it};
+    return retval;
 }
-}
+} // namespace piranha
 
 #endif
