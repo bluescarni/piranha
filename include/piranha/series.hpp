@@ -3439,11 +3439,10 @@ using series_eval_type = decltype(
                                                                             std::declval<const symbol_fset &>()));
 
 template <typename Series, typename T>
-using math_series_evaluate_enabler
-    = enable_if_t<conjunction<is_series<Series>, is_addable_in_place<series_eval_type<Series, T>>,
-                              std::is_constructible<series_eval_type<Series, T>, const int &>,
-                              is_returnable<series_eval_type<Series, T>>, std::is_destructible<T>,
-                              std::is_copy_constructible<T>>::value>;
+using math_series_evaluate_enabler = enable_if_t<
+    conjunction<is_series<Series>, is_addable_in_place<series_eval_type<Series, T>>,
+                std::is_constructible<series_eval_type<Series, T>, int>, is_returnable<series_eval_type<Series, T>>,
+                std::is_destructible<T>, std::is_copy_constructible<T>, std::is_move_constructible<T>>::value>;
 } // namespace impl
 
 /// Specialisation of the implementation of piranha::math::evaluate() for series types.
@@ -3454,7 +3453,7 @@ using math_series_evaluate_enabler
  * - the types resulting from the evaluation of coefficients and keys can be multiplied,
  *   yielding a result of type \p E,
  * - \p E is addable in place, constructible from \p int and it satisfies piranha::is_returnable,
- * - \p T is destructible and copy-constructible.
+ * - \p T is destructible, copy-constructible and move-constructible.
  */
 template <typename Series, typename T>
 class evaluate_impl<Series, T, math_series_evaluate_enabler<Series, T>>
@@ -3491,7 +3490,8 @@ public:
      * - coefficient and key evaluation,
      * - memory errors in standard containers,
      * - the copy constructor of \p T,
-     * - arithmetic operations on the evaluation type.
+     * - arithmetic operations on the evaluation type,
+     * - piranha::safe_cast().
      */
     eval_type operator()(const Series &s, const symbol_fmap<T> &dict) const
     {
@@ -3502,11 +3502,9 @@ public:
         // Cache a reference to the symbol set.
         const auto &ss = s.get_symbol_set();
 
-        // Init the vector that will be used for key evaluation. Make it possibly
-        // thread local in order to avoid allocations each time we invoke this function.
-        PIRANHA_MAYBE_TLS std::vector<T> evec;
-        // Make sure the static cached vector is reset to empty.
-        evec.resize(0);
+        // Init the vector that will be used for key evaluation.
+        std::vector<T> evec;
+        evec.reserve(piranha::safe_cast<decltype(evec.size())>(ss.size()));
 
         auto it_dict = dict.begin();
         const auto it_dict_f = dict.end();
