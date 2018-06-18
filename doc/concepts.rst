@@ -23,17 +23,17 @@ Type categories
 .. cpp:concept:: template <typename T> piranha::CppArithmetic
 
    This concept is satisfied if ``T`` is a C++ arithmetic type, or a cv-qualified version thereof,
-   as established by the standard ``std::is_arithmetic`` type trait.
+   as established by the standard `std::is_arithmetic <https://en.cppreference.com/w/cpp/types/is_arithmetic>`__ type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppIntegral
 
    This concept is satisfied if ``T`` is a C++ integral type, or a cv-qualified version thereof,
-   as established by the standard ``std::is_integral`` type trait.
+   as established by the standard `std::is_integral <https://en.cppreference.com/w/cpp/types/is_integral>`__ type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppFloatingPoint
 
    This concept is satisfied if ``T`` is a C++ floating-point type, or a cv-qualified version thereof,
-   as established by the standard ``std::is_floating_point`` type trait.
+   as established by the standard `std::is_floating_point <https://en.cppreference.com/w/cpp/types/is_floating_point>`__ type trait.
 
 .. cpp:concept:: template <typename T> piranha::CppComplex
 
@@ -50,17 +50,18 @@ Type properties
 .. cpp:concept:: template <typename T, typename... Args> piranha::Constructible
 
    This concept is satisfied if an instance of type ``T`` can be constructed from a set of arguments
-   of types ``Args...``, as established by the standard ``std::is_constructible`` type trait.
+   of types ``Args...``, as established by the standard `std::is_constructible <https://en.cppreference.com/w/cpp/types/is_constructible>`__
+   type trait.
 
 .. cpp:concept:: template <typename T> piranha::DefaultConstructible
 
    This concept is satisfied if an instance of type ``T`` can be constructed from an empty set of arguments,
-   as established by the standard ``std::is_default_constructible`` type trait.
+   as established by the standard `std::is_default_constructible <https://en.cppreference.com/w/cpp/types/is_default_constructible>`__ type trait.
 
 .. cpp:concept:: template <typename From, typename To> piranha::Convertible
 
    This concept is satisfied if an instance of type ``From`` can be converted to the type ``To``,
-   as established by the standard ``std::is_convertible`` type trait.
+   as established by the standard `std::is_convertible <https://en.cppreference.com/w/cpp/types/is_convertible>`__ type trait.
 
 .. cpp:concept:: template <typename T> piranha::Returnable
 
@@ -74,7 +75,7 @@ Type properties
 
 .. cpp:concept:: template <typename T, typename U = T> piranha::Swappable
 
-   If at least C++17 is being used, this concept is equivalent to the ``std::is_swappable_with``
+   If at least C++17 is being used, this concept is equivalent to the `std::is_swappable_with <https://en.cppreference.com/w/cpp/types/is_swappable>`__
    type trait. That is, the concept is satisfied if the expressions
 
    .. code-block:: c++

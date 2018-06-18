@@ -120,6 +120,7 @@ namespace piranha
 // - need to do some reasoning on the impact of the codification in a specialised fast poisson series multiplier: how do
 //   we deal with the canonical form without going through code/decode? if we require the last multiplier to be always
 //   positive (instead of the first), can we just check/flip the sign of the coded value?
+// - need to fix iterators-related TMP, as done in kronecker_array.
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {

@@ -155,16 +155,28 @@ public:
 
 private:
     // Enabler for the ctor from container.
+    // NOTE: here we are checking that the dereference of an lvalue of the iterator type
+    // of the input range is safely castable to T.
     template <typename U>
     using container_ctor_enabler
         = enable_if_t<conjunction<is_input_range<U>, is_safely_castable<det_deref_t<range_begin_t<U>>, T>>::value, int>;
     // Implementation of the ctor from range.
+    struct range_ctor_safe_caster {
+        // NOTE: this is a small helper to perfectly forward whatever
+        // comes out from the dereferencing of an input iterator (which
+        // could be something else than a real reference) to safe_cast().
+        // This would just be a generic lambda in C++>=14.
+        template <typename U>
+        T operator()(U &&x) const
+        {
+            return piranha::safe_cast<T>(std::forward<U>(x));
+        }
+    };
     template <typename Iterator>
     typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
     {
         v_type tmp;
-        std::transform(begin, end, std::back_inserter(tmp),
-                       [](const uncvref_t<decltype(*begin)> &v) { return piranha::safe_cast<T>(v); });
+        std::transform(begin, end, std::back_inserter(tmp), range_ctor_safe_caster{});
         m_value = ka::encode(tmp);
         return tmp.size();
     }
@@ -214,11 +226,12 @@ public:
     }
 
 private:
+    // NOTE: here we are checking that the dereference of an lvalue of Iterator
+    // is safely castable to T.
     template <typename Iterator>
-    using it_ctor_enabler = enable_if_t<
-        conjunction<is_input_iterator<Iterator>,
-                    is_safely_castable<const typename std::iterator_traits<Iterator>::value_type &, T>>::value,
-        int>;
+    using it_ctor_enabler
+        = enable_if_t<conjunction<is_input_iterator<Iterator>, is_safely_castable<det_deref_t<Iterator>, T>>::value,
+                      int>;
 
 public:
     /// Constructor from range.
