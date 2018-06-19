@@ -12,10 +12,10 @@ Concepts
 .. cpp:concept:: template <typename It, typename T> piranha::KEncodableIterator
 
    This concept is satisfied if ``It`` is a :cpp:concept:`piranha::ForwardIterator` such that:
-   
+
    * given an lvalue *it* of type ``It``, the result of the expression *\*it*
      is :cpp:concept:`safely castable <piranha::SafelyCastable>` to ``T``, and
-   * an rvalue of the difference type of ``It`` is :cpp:concept:`safely castable <piranha::SafelyCastable>`
+   * the difference type of ``It`` is :cpp:concept:`safely castable <piranha::SafelyCastable>`
      to ``std::size_t``.
 
 .. cpp:concept:: template <typename R, typename T> piranha::KEncodableRange
