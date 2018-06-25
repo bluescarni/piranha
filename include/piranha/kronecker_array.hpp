@@ -206,40 +206,7 @@ concept bool UncvCppSignedIntegral = is_uncv_cpp_signed_integral<T>::value;
 
 #endif
 
-// Codification.
-
-// Iterator type pointing to values that can be Kronecker-encoded to the signed integral type T.
-// NOTE: an encodable iterator must be a forward iterator, and forward iterators
-// are guaranteed to return a true reference upon dereferencing.
-// NOTE: written like this, we are checking that an rvalue of the difference
-// type is convertible to std::size_t, which mirrors the actual usage
-// in the code below.
-template <typename It, typename T>
-using is_k_encodable_iterator = conjunction<is_forward_iterator<It>, is_uncv_cpp_signed_integral<T>,
-                                            is_safely_castable<detected_t<it_traits_reference, It>, T>,
-                                            is_safely_castable<detected_t<it_traits_difference_type, It>, std::size_t>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename It, typename T>
-concept bool KEncodableIterator = is_k_encodable_iterator<It, T>::value;
-
-#endif
-
-// Range type pointing to values that can be Kronecker-encoded.
-// NOTE: this is fine written as this, as we will have functions which accept ranges as
-// forwarding references, and R will thus resolve appropriately to rvalue/lvalue while
-// being perfectly forwarded to begin()/end().
-template <typename R, typename T>
-using is_k_encodable_range = conjunction<is_forward_range<R>, is_k_encodable_iterator<range_begin_t<R>, T>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename R, typename T>
-concept bool KEncodableRange = is_k_encodable_range<R, T>::value;
-
-#endif
-
+// The streaming Kronecker encoder.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <UncvCppSignedIntegral T>
 #else
@@ -248,8 +215,11 @@ template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 
 class k_encoder
 {
 public:
+    // Constructor from sequence size.
     explicit k_encoder(std::size_t size) : m_index(0), m_size(size), m_value(0), m_cur_c(1)
     {
+        // NOTE: here the check is >= because indices in the limits vector correspond to the
+        // sizes of the ranges to be encoded.
         if (unlikely(size >= k_limits<T>().size())) {
             piranha_throw(std::invalid_argument, "cannot Kronecker-encode a sequence of size " + std::to_string(size)
                                                      + " to the signed integral type '" + demangle<T>()
@@ -259,6 +229,7 @@ public:
                                                      + std::to_string(k_limits<T>().size() - 1u));
         }
     }
+    // Push a value to the encoder.
     k_encoder &operator<<(T n)
     {
         if (unlikely(m_index == m_size)) {
@@ -290,6 +261,7 @@ public:
         ++m_index;
         return *this;
     }
+    // Get the encoded value.
     T get() const
     {
         if (unlikely(m_index < m_size)) {
@@ -311,65 +283,81 @@ private:
     T m_cur_c;
 };
 
+// Input iterator type pointing to values that can be Kronecker-encoded to the signed integral type T.
+// NOTE: written like this, we are checking the safe-castability of rvalues for the reference type and the
+// difference type. This mirrors the usage below in the implementation functions k_encode_impl().
+template <typename It, typename T>
+using is_k_encodable_iterator = conjunction<is_input_iterator<It>, is_uncv_cpp_signed_integral<T>,
+                                            is_safely_castable<detected_t<it_traits_reference, It>, T>,
+                                            is_safely_castable<detected_t<it_traits_difference_type, It>, std::size_t>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename It, typename T>
+concept bool KEncodableIterator = is_k_encodable_iterator<It, T>::value;
+
+#endif
+
+// Input range type pointing to values that can be Kronecker-encoded.
+// NOTE: this is fine written like this, as we will have functions which accept ranges as
+// forwarding references, and R will thus resolve appropriately to rvalue/lvalue while
+// being perfectly forwarded to begin()/end().
+template <typename R, typename T>
+using is_k_encodable_range = conjunction<is_input_range<R>, is_k_encodable_iterator<range_begin_t<R>, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename R, typename T>
+concept bool KEncodableRange = is_k_encodable_range<R, T>::value;
+
+#endif
+
+// Same concepts as above, plus we check that It is a forward iterator.
+template <typename It, typename T>
+using is_k_encodable_forward_iterator = conjunction<is_forward_iterator<It>, is_k_encodable_iterator<It, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename It, typename T>
+concept bool KEncodableForwardIterator = is_k_encodable_forward_iterator<It, T>::value;
+
+#endif
+
+template <typename R, typename T>
+using is_k_encodable_forward_range
+    = conjunction<is_forward_range<R>, is_k_encodable_forward_iterator<range_begin_t<R>, T>>;
+
+#if defined(PIRANHA_HAVE_CONCEPTS)
+
+template <typename R, typename T>
+concept bool KEncodableForwardRange = is_k_encodable_forward_range<R, T>::value;
+
+#endif
+
 inline namespace impl
 {
 
-// The actual implementation of the k encoding. Make it a non-constrained
-// function, we'll do the concept checking from the outside.
+// Implementation of k encoding for a [begin, end) iterator range.
 template <typename T, typename It>
 inline T k_encode_impl(It begin, It end)
 {
     const auto size = piranha::safe_cast<std::size_t>(std::distance(begin, end));
     k_encoder<T> enc(size);
     for (; begin != end; ++begin) {
-        enc << safe_cast<T>(*begin);
+        enc << piranha::safe_cast<T>(*begin);
     }
     return enc.get();
+}
 
-    const auto &limits = k_limits<T>();
-    // NOTE: here the check is >= because indices in the limits vector correspond to the
-    // sizes of the ranges to be encoded.
-    if (unlikely(size >= limits.size())) {
-        piranha_throw(std::invalid_argument, "cannot Kronecker-encode a range of size " + std::to_string(size)
-                                                 + " to the signed integral type '" + demangle<T>()
-                                                 + "': the maximum allowed size for the range is "
-                                                 + std::to_string(limits.size() - 1u));
+// Implementation of k encoding for a range represented by a begin iterator and a size.
+template <typename T, typename It>
+inline T k_encode_impl(It begin, std::size_t size)
+{
+    k_encoder<T> enc(size);
+    for (std::size_t i = 0; i != size; ++i, ++begin) {
+        enc << piranha::safe_cast<T>(*begin);
     }
-    // Special case for zero size.
-    if (!size) {
-        return T(0);
-    }
-    // Cache quantities.
-    const auto &limit = limits[static_cast<decltype(limits.size())>(size)];
-    const auto &minmax_vec = std::get<0>(limit);
-    piranha_assert(minmax_vec[0] > T(0));
-    // Small helper to check that the value val in the input range
-    // is within the allowed bounds (from minmax_vec).
-    auto range_checker = [](T val, T minmax) {
-        if (unlikely(val < -minmax || val > minmax)) {
-            piranha_throw(std::invalid_argument, "one of the elements of a range to be Kronecker-encoded is out of "
-                                                 "bounds: the value of the element is "
-                                                     + std::to_string(val) + ", while the bounds are ["
-                                                     + std::to_string(-minmax) + ", " + std::to_string(minmax) + "]");
-        }
-    };
-    // Start of the iteration.
-    auto retval = piranha::safe_cast<T>(*begin);
-    auto minmax_it = minmax_vec.begin();
-    range_checker(retval, *minmax_it);
-    retval = static_cast<T>(retval + *minmax_it);
-    auto cur_c = static_cast<T>(2 * *minmax_it + 1);
-    piranha_assert(retval >= T(0));
-    // Do the rest.
-    for (++begin, ++minmax_it; begin != end; ++begin, ++minmax_it) {
-        piranha_assert(minmax_it != minmax_vec.end());
-        const auto tmp = piranha::safe_cast<T>(*begin);
-        range_checker(tmp, *minmax_it);
-        retval = static_cast<T>(retval + (tmp + *minmax_it) * cur_c);
-        piranha_assert(*minmax_it > 0);
-        cur_c = static_cast<T>(cur_c * (2 * *minmax_it + 1));
-    }
-    return static_cast<T>(retval + std::get<1>(limit));
+    return enc.get();
 }
 } // namespace impl
 
