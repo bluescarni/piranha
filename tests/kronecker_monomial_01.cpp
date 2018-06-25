@@ -638,8 +638,9 @@ struct pow_tester {
             BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
                                   [](const std::invalid_argument &e) {
                                       return boost::contains(
-                                          e.what(), "one of the elements of a range to be Kronecker-encoded is out of "
-                                                    "bounds: the value of the element is");
+                                          e.what(),
+                                          "one of the elements of a sequence to be Kronecker-encoded is out of "
+                                          "bounds: the value of the element is");
                                   });
         }
         BOOST_CHECK((is_detected<k_pow_t, k_type, int>::value));
@@ -690,7 +691,7 @@ struct partial_tester {
         k1 = k_type{-std::get<0u>(limits[2u])[0u], -std::get<0u>(limits[2u])[0u]};
         BOOST_CHECK_EXCEPTION(
             ret = k1.partial(0, symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
-                return boost::contains(e.what(), "one of the elements of a range to be Kronecker-encoded is out of "
+                return boost::contains(e.what(), "one of the elements of a sequence to be Kronecker-encoded is out of "
                                                  "bounds: the value of the element is ");
             });
     }
