@@ -36,12 +36,12 @@ Classes
 
       Push a value to the encoder.
 
-      :param n: the value that will be pushed to the encoder
+      :param n: the value that will be pushed to the encoder.
 
       :return: a reference to *this*.
 
       :exception std\:\:out_of_range: if *size* values have already been pushed to the encoder (where *size* is
-         the parameter used for the construction of the :cpp:class:`~piranha::k_encoder` object).
+         the parameter used for the construction of this :cpp:class:`~piranha::k_encoder` object).
       :exception std\:\:overflow_error: if *n* is outside an implementation-defined range.
 
    .. cpp:function:: T get() const
@@ -53,7 +53,69 @@ Classes
          of zero, zero will be returned by this function.
 
       :exception std\:\:out_of_range: if fewer than *size* values have been pushed to the encoder (where *size* is
-         the parameter used for the construction of the :cpp:class:`~piranha::k_encoder` object).
+         the parameter used for the construction of this :cpp:class:`~piranha::k_encoder` object).
+
+Functions
+---------
+
+.. cpp:function:: template <typename T, piranha::KEncodableIterator<T> It> T piranha::k_encode(It begin, std::size_t size)
+
+   Kronecker-encode a sequence of values of length ``size`` starting at ``begin``.
+
+   Note that this overload requires ``It`` to be only an :cpp:concept:`input iterator <piranha::InputIterator>` (whereas
+   the other overloads require a :cpp:concept:`forward iterator <piranha::ForwardIterator>` instead).
+
+   Example:
+
+   .. code-block:: c++
+
+      int v[] = {7, 8, 9};
+      auto code = k_encode<int>(v, 3);
+
+   :param begin: an iterator to the start of the sequence to be encoded.
+   :param size: the size of the sequence to be encoded.
+
+   :return: the result of the codification of the input sequence.
+
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()` or by the public interface
+      of :cpp:class:`piranha::k_encoder`.
+
+.. cpp:function:: template <typename T, piranha::KEncodableForwardIterator<T> It> T piranha::k_encode(It begin, It end)
+
+   Kronecker-encode a half-open forward iterator range.
+
+   Example:
+
+   .. code-block:: c++
+
+      int v[] = {7, 8, 9};
+      auto code = k_encode<int>(v, v + 3);
+
+   :param begin: an iterator to the start of the sequence to be encoded.
+   :param end: an iterator to the end of the sequence to be encoded.
+
+   :return: the result of the codification of the input sequence.
+
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, ``std::distance()``,
+      the public interface of :cpp:class:`piranha::k_encoder`, or the public interface of ``It``.
+
+.. cpp:function:: template <typename T, piranha::KEncodableForwardRange<T> R> T piranha::k_encode(R &&r)
+
+   Kronecker-encode a forward range.
+
+   Example:
+
+   .. code-block:: c++
+
+      std::vector<long> v{1, 2, 3};
+      auto code = k_encode<long>(v);
+
+   :param r: the input range.
+
+   :return: the result of the codification of the input range.
+
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, ``std::distance()``,
+      the public interface of :cpp:class:`piranha::k_encoder`, or the public interface of the iterator type of ``R``.
 
 Concepts
 --------

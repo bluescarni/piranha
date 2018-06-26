@@ -11,6 +11,5 @@ Reference
    symbol_management.rst
    math.rst
    key_interface.rst
-   conversions.rst
-   kronecker_encdec.rst
+   utils.rst
    kronecker_monomial.rst
