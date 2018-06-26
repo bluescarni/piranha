@@ -156,22 +156,22 @@ Iterators and ranges
 .. cpp:concept:: template <typename T> piranha::Iterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for iterator types.
+   for `iterator types <https://en.cppreference.com/w/cpp/named_req/Iterator>`__.
 
 .. cpp:concept:: template <typename T> piranha::InputIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for input iterator types.
+   for `input iterator types <https://en.cppreference.com/w/cpp/named_req/InputIterator>`__.
 
 .. cpp:concept:: template <typename T, typename U> piranha::OutputIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for output iterator types to which instances of ``U`` can be assigned.
+   for `output iterator types <https://en.cppreference.com/w/cpp/named_req/OutputIterator>`__ to which instances of ``U`` can be assigned.
 
 .. cpp:concept:: template <typename T> piranha::ForwardIterator
 
    This concept is satisfied if ``T`` fulfills all the compile-time requirements specified by the C++ standard
-   for forward iterator types.
+   for `forward iterator types <https://en.cppreference.com/w/cpp/named_req/ForwardIterator>`__.
 
 .. cpp:concept:: template <typename T> piranha::MutableForwardIterator
 
