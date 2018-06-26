@@ -59,7 +59,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key/key_degree.hpp>
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_ldegree.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/is_zero.hpp>
 #include <piranha/math/pow.hpp>
@@ -70,6 +69,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 
 namespace piranha
 {

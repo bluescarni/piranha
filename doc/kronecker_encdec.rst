@@ -1,6 +1,8 @@
 Kronecker encoding/decoding
 ===========================
 
+*#include <piranha/utils/kronecker_encdec.hpp>*
+
 Classes
 -------
 

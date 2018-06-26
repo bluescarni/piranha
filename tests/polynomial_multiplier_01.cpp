@@ -40,13 +40,13 @@ see https://www.gnu.org/licenses/. */
 #include <type_traits>
 
 #include <piranha/integer.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math/pow.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
 #include <piranha/settings.hpp>
 #include <piranha/symbol_utils.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 
 using namespace piranha;
 

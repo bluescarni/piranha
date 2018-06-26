@@ -26,9 +26,9 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#include <piranha/kronecker_array.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 
-#define BOOST_TEST_MODULE kronecker_array_test
+#define BOOST_TEST_MODULE kronecker_encdec_test
 #include <boost/test/included/unit_test.hpp>
 
 #include <cstddef>
@@ -77,7 +77,7 @@ struct limits_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_array_limits_test)
+BOOST_AUTO_TEST_CASE(kronecker_limits_test)
 {
     tuple_for_each(int_types{}, limits_tester{});
 }
@@ -148,7 +148,7 @@ struct coding_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_array_coding_test)
+BOOST_AUTO_TEST_CASE(kronecker_coding_test)
 {
     tuple_for_each(int_types{}, coding_tester{});
 }
@@ -163,7 +163,7 @@ struct k_decode_iterator_tester {
     }
 };
 
-BOOST_AUTO_TEST_CASE(kronecker_array_k_decode_iterator_test)
+BOOST_AUTO_TEST_CASE(kronecker_k_decode_iterator_test)
 {
     tuple_for_each(int_types{}, k_decode_iterator_tester{});
 }

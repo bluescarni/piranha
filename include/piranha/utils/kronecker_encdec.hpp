@@ -26,8 +26,8 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
-#ifndef PIRANHA_KRONECKER_ARRAY_HPP
-#define PIRANHA_KRONECKER_ARRAY_HPP
+#ifndef PIRANHA_UTILS_KRONECKER_ENCDEC_HPP
+#define PIRANHA_UTILS_KRONECKER_ENCDEC_HPP
 
 #include <algorithm>
 #include <cstddef>
@@ -58,7 +58,7 @@ inline namespace impl
 {
 
 template <typename T>
-struct kronecker_array_statics {
+struct kronecker_statics {
     // Determine limits for the codification of m-dimensional arrays.
     // The returned value is a 4-tuple built as follows:
     // 0. vector of absolute values of the upper/lower limit for each component,
@@ -183,14 +183,14 @@ struct kronecker_array_statics {
 
 // Static init.
 template <typename T>
-const std::vector<std::tuple<std::vector<T>, T, T, T>> kronecker_array_statics<T>::s_limits
-    = kronecker_array_statics<T>::determine_limits();
+const std::vector<std::tuple<std::vector<T>, T, T, T>> kronecker_statics<T>::s_limits
+    = kronecker_statics<T>::determine_limits();
 
 // Handy getter for the limits.
 template <typename T>
 inline const std::vector<std::tuple<std::vector<T>, T, T, T>> &k_limits()
 {
-    return kronecker_array_statics<T>::s_limits;
+    return kronecker_statics<T>::s_limits;
 }
 } // namespace impl
 
