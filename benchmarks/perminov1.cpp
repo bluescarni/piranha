@@ -39,7 +39,6 @@ see https://www.gnu.org/licenses/. */
 
 #include <piranha/divisor.hpp>
 #include <piranha/divisor_series.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/poisson_series.hpp>
 #include <piranha/polynomial.hpp>
