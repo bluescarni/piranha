@@ -635,8 +635,8 @@ struct pow_tester {
             [](const std::overflow_error &e) { return boost::contains(e.what(), "results in overflow"); });
         k1 = k_type{1};
         if (std::get<0u>(limits[1u])[0u] < std::numeric_limits<T>::max()) {
-            BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::invalid_argument,
-                                  [](const std::invalid_argument &e) {
+            BOOST_CHECK_EXCEPTION(k1.pow(std::get<0u>(limits[1u])[0u] + T(1), symbol_fset{"x"}), std::overflow_error,
+                                  [](const std::overflow_error &e) {
                                       return boost::contains(
                                           e.what(),
                                           "one of the elements of a sequence to be Kronecker-encoded is out of "
@@ -690,7 +690,7 @@ struct partial_tester {
         const auto &limits = ka::get_limits();
         k1 = k_type{-std::get<0u>(limits[2u])[0u], -std::get<0u>(limits[2u])[0u]};
         BOOST_CHECK_EXCEPTION(
-            ret = k1.partial(0, symbol_fset{"x", "y"}), std::invalid_argument, [](const std::invalid_argument &e) {
+            ret = k1.partial(0, symbol_fset{"x", "y"}), std::overflow_error, [](const std::overflow_error &e) {
                 return boost::contains(e.what(), "one of the elements of a sequence to be Kronecker-encoded is out of "
                                                  "bounds: the value of the element is ");
             });
@@ -972,7 +972,7 @@ struct integrate_tester {
         typedef kronecker_array<T> ka;
         const auto &limits = ka::get_limits();
         k1 = k_type{std::get<0u>(limits[2u])[0u], std::get<0u>(limits[2u])[0u]};
-        BOOST_CHECK_THROW(ret = k1.integrate("b", symbol_fset{"b", "d"}), std::invalid_argument);
+        BOOST_CHECK_THROW(ret = k1.integrate("b", symbol_fset{"b", "d"}), std::overflow_error);
     }
 };
 

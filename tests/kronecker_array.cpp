@@ -137,9 +137,9 @@ struct coding_tester {
             }
         }
         // Exceptions tests.
-        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>(l.size())), std::invalid_argument);
-        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>{T(0), std::numeric_limits<T>::min()}), std::invalid_argument);
-        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>{T(0), std::numeric_limits<T>::max()}), std::invalid_argument);
+        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>(l.size())), std::overflow_error);
+        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>{T(0), std::numeric_limits<T>::min()}), std::overflow_error);
+        BOOST_CHECK_THROW(k_encode<T>(std::vector<T>{T(0), std::numeric_limits<T>::max()}), std::overflow_error);
         std::vector<T> v1;
         v1.resize(static_cast<typename std::vector<T>::size_type>(l.size()));
         BOOST_CHECK_THROW(k_decode(T(0), v1), std::invalid_argument);
