@@ -327,8 +327,7 @@ inline namespace impl
 template <typename T, typename It>
 inline T k_encode_impl(It begin, It end)
 {
-    const auto size = piranha::safe_cast<std::size_t>(std::distance(begin, end));
-    k_encoder<T> enc(size);
+    k_encoder<T> enc(piranha::safe_cast<std::size_t>(std::distance(begin, end)));
     for (; begin != end; ++begin) {
         enc << piranha::safe_cast<T>(*begin);
     }
@@ -391,7 +390,7 @@ public:
     {
         const auto &limits = k_limits<T>();
         if (unlikely(m_size >= limits.size())) {
-            piranha_throw(std::out_of_range,
+            piranha_throw(std::overflow_error,
                           "cannot Kronecker-decode the signed integer " + std::to_string(n) + " of type '"
                               + demangle<T>() + "' into an output range of size " + std::to_string(m_size)
                               + ": the maximum allowed size for the range is " + std::to_string(limits.size() - 1u));
@@ -415,7 +414,7 @@ public:
             }
         }
     }
-    T get()
+    k_decoder &operator>>(T &out)
     {
         if (unlikely(m_index == m_size)) {
             piranha_throw(std::out_of_range, "cannot decode any more values from this Kronecker decoder: the number of "
@@ -430,15 +429,15 @@ public:
         // of the minmax vector.
         const auto minmax = minmax_vec[static_cast<decltype(minmax_vec.size())>(m_index)];
         piranha_assert(minmax > T(0));
-        // Comput the next mod_arg.
+        // Compute the next mod_arg.
         const auto next_mod_arg = static_cast<T>(m_mod_arg * (2 * minmax + 1));
-        // Compute the return value
-        auto retval = static_cast<T>((m_code % next_mod_arg) / m_mod_arg - minmax);
+        // Comput and write the return value.
+        out = static_cast<T>((m_code % next_mod_arg) / m_mod_arg - minmax);
         // Update m_mod_arg.
         m_mod_arg = next_mod_arg;
         // Update the index.
         ++m_index;
-        return retval;
+        return *this;
     }
 
 private:
@@ -448,70 +447,83 @@ private:
     T m_mod_arg;
 };
 
-// NOTE: here we are checking that:
-// - an rvalue of T is safely castable to the value type,
-// - the value type is move assignable,
-// - an rvalue of the difference type is safely castable to std::size_t.
-// That is, we are testing an expression like *it = safe_cast<value_type>(T &&).
+// Forward iterator type into which a code of type T can be decoded.
 template <typename It, typename T>
-using is_k_decodable_iterator
-    = conjunction<is_mutable_forward_iterator<It>, is_safely_castable<T, detected_t<it_traits_value_type, It>>,
+using is_k_decodable_forward_iterator
+    = conjunction<is_mutable_forward_iterator<It>, is_uncv_cpp_signed_integral<T>,
+                  is_safely_castable<T, detected_t<it_traits_value_type, It>>,
                   std::is_move_assignable<detected_t<it_traits_value_type, It>>,
                   is_safely_castable<detected_t<it_traits_difference_type, It>, std::size_t>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename It, typename T>
-concept bool KDecodableIterator = is_k_decodable_iterator<It, T>::value;
+concept bool KDecodableForwardIterator = is_k_decodable_forward_iterator<It, T>::value;
 
 #endif
 
-// Decodable range.
+// Forward range type into which a code of type T can be decoded.
 template <typename R, typename T>
-using is_k_decodable_range = conjunction<is_mutable_forward_range<R>, is_k_decodable_iterator<range_begin_t<R>, T>>;
+using is_k_decodable_forward_range
+    = conjunction<is_mutable_forward_range<R>, is_k_decodable_forward_iterator<range_begin_t<R>, T>>;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 
 template <typename R, typename T>
-concept bool KDecodableRange = is_k_decodable_range<R, T>::value;
+concept bool KDecodableForwardRange = is_k_decodable_forward_range<R, T>::value;
 
 #endif
 
 inline namespace impl
 {
 
-// Decodification into output iterators.
+// Decodification into mutable forward iterators.
 template <typename T, typename It>
 inline void k_decode_impl(T n, It begin, It end)
 {
-    // The value type of the iterator.
-    using v_type = typename std::iterator_traits<It>::value_type;
-    const auto size = piranha::safe_cast<std::size_t>(std::distance(begin, end));
-    k_decoder<T> dec(n, size);
+    k_decoder<T> dec(n, piranha::safe_cast<std::size_t>(std::distance(begin, end)));
+    T tmp;
     for (; begin != end; ++begin) {
-        *begin = piranha::safe_cast<v_type>(dec.get());
+        dec >> tmp;
+        // Safe cast to the value type of the iterator before assigning.
+        *begin = piranha::safe_cast<it_traits_value_type<It>>(tmp);
     }
 }
 } // namespace impl
 
-// Decodification into an iterator pair.
+// Decode into output iterator + size.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, KDecodableIterator<T> It>
+template <UncvCppSignedIntegral T, OutputIterator<T> It>
 #else
 template <typename T, typename It,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_decodable_iterator<It, T>>::value, int> = 0>
+          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_output_iterator<It, T>>::value, int> = 0>
+#endif
+inline void k_decode(T n, It begin, std::size_t size)
+{
+    k_decoder<T> dec(n, size);
+    T tmp;
+    for (std::size_t i = 0; i != size; ++i, ++begin) {
+        dec >> tmp;
+        *begin = tmp;
+    }
+}
+
+// Decodification into mutable forward iterators.
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <typename T, KDecodableForwardIterator<T> It>
+#else
+template <typename T, typename It, enable_if_t<is_k_decodable_forward_iterator<It, T>::value, int> = 0>
 #endif
 inline void k_decode(T n, It begin, It end)
 {
     k_decode_impl(n, begin, end);
 }
 
-// Decodification into a range.
+// Decodification into a mutable forward range.
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <UncvCppSignedIntegral T, KDecodableRange<T> R>
+template <typename T, KDecodableForwardRange<T> R>
 #else
-template <typename T, typename R,
-          enable_if_t<conjunction<is_uncv_cpp_signed_integral<T>, is_k_decodable_range<R, T>>::value, int> = 0>
+template <typename T, typename R, enable_if_t<is_k_decodable_forward_range<R, T>::value, int> = 0>
 #endif
 inline void k_decode(T n, R &&r)
 {

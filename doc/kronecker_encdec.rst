@@ -55,6 +55,45 @@ Classes
       :exception std\:\:out_of_range: if fewer than *size* values have been pushed to the encoder (where *size* is
          the parameter used for the construction of this :cpp:class:`~piranha::k_encoder` object).
 
+.. cpp:class:: template <piranha::UncvCppSignedIntegral T> piranha::k_decoder
+
+   Streaming Kronecker decoder.
+
+   This class can be used to iteratively Kronecker-decode a signed integral of type ``T``.
+   The typical use is as follows:
+
+   .. code-block:: c++
+
+      k_decoder<int> k(123, 3); // Prepare a k_decoder to decode the value 123 into a sequence of 3 values.
+      int a, b, c;              // Prepare storage for the 3 decoded values.
+      k >> a >> b >> c;         // Decode and write out the individual values via the '>>' operator.
+
+   .. cpp:function:: explicit k_decoder(T n, std::size_t size)
+
+      Constructor from value and sequence size.
+
+      This constructor will create a :cpp:class:`~piranha::k_decoder` that can be used to decode the input value *n*
+      into a sequence of a given *size*.
+
+      :param n: the value to be decoded.
+      :param size: the sequence size.
+
+      :exception std\:\:overflow_error: if *size* is larger than an implementation-defined limit, or if *n* is outside
+         an implementation-defined range.
+      :exception std\:\:invalid_argument: if *size* is zero and *n* isn't (that is, only a value of zero can be decoded
+         into a sequence of size zero).
+
+   .. cpp:function:: k_decoder &operator>>(T &out)
+
+      Decode and write to *out* the next value of the sequence.
+
+      :param out: the object that will hold the decoded value.
+
+      :return: a reference to *this*.
+
+      :exception std\:\:out_of_range: if *size* values have already been decoded (where *size* is
+         the second parameter used for the construction of this :cpp:class:`~piranha::k_decoder` object).
+
 Functions
 ---------
 
