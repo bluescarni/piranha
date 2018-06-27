@@ -152,18 +152,3 @@ BOOST_AUTO_TEST_CASE(kronecker_coding_test)
 {
     tuple_for_each(int_types{}, coding_tester{});
 }
-
-// k_decode_iterator.
-struct k_decode_iterator_tester {
-    template <typename T>
-    void operator()(const T &) const
-    {
-        using it_type = k_decode_iterator<T>;
-        BOOST_CHECK((is_input_iterator<it_type>::value));
-    }
-};
-
-BOOST_AUTO_TEST_CASE(kronecker_k_decode_iterator_test)
-{
-    tuple_for_each(int_types{}, k_decode_iterator_tester{});
-}
