@@ -63,7 +63,7 @@ Implementations
    This default implementation does not define any call operator, and thus no default implementation
    of :cpp:func:`piranha::binomial()` is available.
 
-.. cpp:class:: template <CppIntegral T, CppIntegral U> piranha::binomial_impl<T, U>
+.. cpp:class:: template <piranha::CppIntegral T, piranha::CppIntegral U> piranha::binomial_impl<T, U>
 
    Specialisation of the function object implementing :cpp:func:`piranha::binomial()` for C++'s integral types.
 
