@@ -11,7 +11,8 @@ Classes
    Streaming Kronecker encoder.
 
    This class can be used to iteratively Kronecker-encode a sequence of signed integrals of type ``T``.
-   The typical use is as follows:
+
+   Example:
 
    .. code-block:: c++
 
@@ -60,11 +61,12 @@ Classes
    Streaming Kronecker decoder.
 
    This class can be used to iteratively Kronecker-decode a signed integral of type ``T``.
-   The typical use is as follows:
+
+   Example:
 
    .. code-block:: c++
 
-      k_decoder<int> k(123, 3); // Prepare a k_decoder to decode the value 123 into a sequence of 3 values.
+      k_decoder<int> k(123, 3); // Prepare a k_decoder to decode the int 123 into a sequence of 3 values.
       int a, b, c;              // Prepare storage for the 3 decoded values.
       k >> a >> b >> c;         // Decode and write out the individual values via the '>>' operator.
 
@@ -116,8 +118,8 @@ Functions
 
    :return: the result of the codification of the input sequence.
 
-   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()` or by the public interface
-      of :cpp:class:`piranha::k_encoder`.
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, the public interface
+      of :cpp:class:`piranha::k_encoder` or the public interface of ``It``.
 
 .. cpp:function:: template <typename T, piranha::KEncodableForwardIterator<T> It> T piranha::k_encode(It begin, It end)
 
@@ -156,6 +158,30 @@ Functions
    :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, ``std::distance()``,
       the public interface of :cpp:class:`piranha::k_encoder`, or the public interface of the iterator type of ``R``.
 
+.. cpp:function:: template <piranha::UncvCppSignedIntegral T, piranha::OutputIterator<T> It> void piranha::k_decode(T n, It begin, std::size_t size)
+
+   Kronecker-decode into a sequence of values of length ``size`` starting at ``begin``.
+
+   Example:
+
+   .. code-block:: c++
+
+      int vec[3];
+      k_decode(42, vec, 3);
+
+   Note that, because output iterators might have no meaningful value type, it is not possible to safely cast the result of the decodification
+   before writing to the iterator: it is the caller's responsibility to ensure that the result of the decodification can be safely
+   assigned to the iterator.
+
+   :param n: the code to be decoded.
+   :param begin: an iterator to the start of the sequence that will hold the result of the decodification.
+   :param size: the size of the sequence of values into which *n* will be decoded.
+
+   :exception unspecified: any exception thrown by the public interface
+      of :cpp:class:`piranha::k_decoder` or the public interface of ``It``.
+
+.. cpp:function:: template <typename T, piranha::KDecodableForwardIterator<T> It> void piranha::k_decode(T n, It begin, It end)
+
 Concepts
 --------
 
@@ -186,3 +212,22 @@ Concepts
 
    This concept is satisfied if ``R`` is a :cpp:concept:`piranha::ForwardRange` whose iterator type
    satisfies the :cpp:concept:`piranha::KEncodableForwardIterator` concept for the signed integral type ``T``.
+
+.. cpp:concept:: template <typename It, typename T> piranha::KDecodableForwardIterator
+
+   This concept is satisfied if ``It`` is an iterator that can be used as an output in the
+   decodification of a Kronecker code of type ``T``.
+
+   Specifically, this concept is satisfied if the following conditions hold:
+
+   * ``It`` is a :cpp:concept:`piranha::MutableForwardIterator`,
+   * ``T`` satisfies the :cpp:concept:`piranha::UncvCppSignedIntegral` concept,
+   * ``T`` is :cpp:concept:`safely castable <piranha::SafelyCastable>` to the value type of ``It``,
+   * the value type of ``It`` is move-assignable,
+   * the difference type of ``It`` is :cpp:concept:`safely castable <piranha::SafelyCastable>`
+     to ``std::size_t``.
+
+.. cpp:concept:: template <typename R, typename T> piranha::KDecodableForwardRange
+
+   This concept is satisfied if ``R`` is a :cpp:concept:`piranha::MutableForwardRange` whose iterator type
+   satisfies the :cpp:concept:`piranha::KDecodableForwardIterator` concept for the signed integral type ``T``.

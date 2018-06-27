@@ -431,7 +431,7 @@ public:
         piranha_assert(minmax > T(0));
         // Compute the next mod_arg.
         const auto next_mod_arg = static_cast<T>(m_mod_arg * (2 * minmax + 1));
-        // Comput and write the return value.
+        // Compute and write the return value.
         out = static_cast<T>((m_code % next_mod_arg) / m_mod_arg - minmax);
         // Update m_mod_arg.
         m_mod_arg = next_mod_arg;
