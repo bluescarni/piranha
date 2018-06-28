@@ -123,7 +123,7 @@ Functions
 
 .. cpp:function:: template <typename T, piranha::KEncodableForwardIterator<T> It> T piranha::k_encode(It begin, It end)
 
-   Kronecker-encode a half-open forward iterator range.
+   Kronecker-encode a half-open iterator range.
 
    Example:
 
@@ -142,7 +142,7 @@ Functions
 
 .. cpp:function:: template <typename T, piranha::KEncodableForwardRange<T> R> T piranha::k_encode(R &&r)
 
-   Kronecker-encode a forward range.
+   Kronecker-encode a range.
 
    Example:
 
@@ -160,7 +160,7 @@ Functions
 
 .. cpp:function:: template <piranha::UncvCppSignedIntegral T, piranha::OutputIterator<T> It> void piranha::k_decode(T n, It begin, std::size_t size)
 
-   Kronecker-decode into a sequence of values of length ``size`` starting at ``begin``.
+   Decode a Kronecker code into a sequence of values of length ``size`` starting at ``begin``.
 
    Example:
 
@@ -169,9 +169,11 @@ Functions
       int vec[3];
       k_decode(42, vec, 3);
 
-   Note that, because output iterators might have no meaningful value type, it is not possible to safely cast the result of the decodification
-   before writing to the iterator: it is the caller's responsibility to ensure that the result of the decodification can be safely
-   assigned to the iterator.
+   .. note::
+
+      Due to the way output iterators are modelled, this function cannot safely cast the result of the decodification
+      before writing to the iterator. It is thus the caller's responsibility to ensure that the decoded values can be written to the output
+      iterators without overflow, loss of precision, etc.
 
    :param n: the code to be decoded.
    :param begin: an iterator to the start of the sequence that will hold the result of the decodification.
@@ -181,6 +183,39 @@ Functions
       of :cpp:class:`piranha::k_decoder` or the public interface of ``It``.
 
 .. cpp:function:: template <typename T, piranha::KDecodableForwardIterator<T> It> void piranha::k_decode(T n, It begin, It end)
+
+   Decode a Kronecker code into a half-open iterator range.
+
+   Example:
+
+   .. code-block:: c++
+
+      int vec[3];
+      k_decode(42, vec, vec + 3);
+
+   :param n: the code to be decoded.
+   :param begin: an iterator to the start of the sequence that will hold the result of the decodification.
+   :param end: an iterator to the end of the sequence that will hold the result of the decodification.
+
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, ``std::distance()``,
+      the public interface of :cpp:class:`piranha::k_decoder`, or the public interface of ``It``.
+
+.. cpp:function:: template <typename T, piranha::KDecodableForwardRange<T> R> void piranha::k_decode(T n, R &&r)
+
+   Decode a Kronecker code into a range.
+
+   Example:
+
+   .. code-block:: c++
+
+      std::vector<int> vec(3);
+      k_decode(42, vec);
+
+   :param n: the code to be decoded.
+   :param range: the range that will hold the result of the decodification.
+
+   :exception unspecified: any exception thrown by :cpp:func:`piranha::safe_cast()`, ``std::distance()``,
+      the public interface of :cpp:class:`piranha::k_decoder`, or the public interface of the iterator type of ``R``.
 
 Concepts
 --------
