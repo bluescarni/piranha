@@ -74,8 +74,8 @@ inline To safe_cast(From &&x)
     if (likely(piranha::safe_convert(retval, std::forward<From>(x)))) {
         return retval;
     }
-    piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + demangle<decltype(x)>()
-                                         + "' to the type '" + demangle<To>() + "' failed");
+    piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + piranha::demangle<decltype(x)>()
+                                         + "' to the type '" + piranha::demangle<To>() + "' failed");
 }
 
 inline namespace impl

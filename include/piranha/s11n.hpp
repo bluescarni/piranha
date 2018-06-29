@@ -1382,7 +1382,8 @@ template <typename T, enable_if_t<disjunction<negation<has_boost_save<boost::arc
                                   int> = 0>
 inline void save_file_boost_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via Boost");
+    piranha_throw(not_implemented_error,
+                  "type '" + piranha::demangle<T>() + "' does not support serialization via Boost");
 }
 
 template <typename T, enable_if_t<conjunction<has_boost_load<boost::archive::binary_iarchive, T>,
@@ -1420,7 +1421,8 @@ template <typename T, enable_if_t<disjunction<negation<has_boost_load<boost::arc
                                   int> = 0>
 inline void load_file_boost_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via Boost");
+    piranha_throw(not_implemented_error,
+                  "type '" + piranha::demangle<T>() + "' does not support deserialization via Boost");
 }
 
 #else
@@ -1518,7 +1520,8 @@ template <
                 int> = 0>
 inline void save_file_msgpack_impl(const T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support serialization via msgpack");
+    piranha_throw(not_implemented_error,
+                  "type '" + piranha::demangle<T>() + "' does not support serialization via msgpack");
 }
 
 template <typename T, enable_if_t<has_msgpack_convert<T>::value, int> = 0>
@@ -1555,7 +1558,8 @@ inline void load_file_msgpack_impl(T &x, const std::string &filename, data_forma
 template <typename T, enable_if_t<!has_msgpack_convert<T>::value, int> = 0>
 inline void load_file_msgpack_impl(T &, const std::string &, data_format, compression)
 {
-    piranha_throw(not_implemented_error, "type '" + demangle<T>() + "' does not support deserialization via msgpack");
+    piranha_throw(not_implemented_error,
+                  "type '" + piranha::demangle<T>() + "' does not support deserialization via msgpack");
 }
 
 #else

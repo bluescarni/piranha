@@ -55,26 +55,26 @@ namespace myns
 template <typename T>
 struct bar {
 };
-}
+} // namespace myns
 
 BOOST_AUTO_TEST_CASE(demangle_test)
 {
     // Likely not a valid mangled name.
-    std::cout << demangle("helloworld!") << '\n';
-    std::cout << demangle("") << '\n';
-    std::cout << demangle(std::string("")) << '\n';
+    std::cout << piranha::demangle("helloworld!") << '\n';
+    std::cout << piranha::demangle("") << '\n';
+    std::cout << piranha::demangle(std::string("")) << '\n';
     // A few valid types.
-    std::cout << demangle<int>() << '\n';
-    std::cout << demangle<std::vector<int>>() << '\n';
-    std::cout << demangle(std::type_index(typeid(std::vector<std::string>{}))) << '\n';
-    std::cout << demangle(typeid(std::unordered_set<std::string>{})) << '\n';
-    std::cout << demangle(typeid(std::unordered_set<std::string>{}).name()) << '\n';
-    std::cout << demangle(std::string(typeid(std::unordered_set<std::string>{}).name())) << '\n';
-    std::cout << demangle<base_foo>() << '\n';
-    std::cout << demangle<foo>() << '\n';
-    std::cout << demangle<myns::bar<int>>() << '\n';
+    std::cout << piranha::demangle<int>() << '\n';
+    std::cout << piranha::demangle<std::vector<int>>() << '\n';
+    std::cout << piranha::demangle(std::type_index(typeid(std::vector<std::string>{}))) << '\n';
+    std::cout << piranha::demangle(typeid(std::unordered_set<std::string>{})) << '\n';
+    std::cout << piranha::demangle(typeid(std::unordered_set<std::string>{}).name()) << '\n';
+    std::cout << piranha::demangle(std::string(typeid(std::unordered_set<std::string>{}).name())) << '\n';
+    std::cout << piranha::demangle<base_foo>() << '\n';
+    std::cout << piranha::demangle<foo>() << '\n';
+    std::cout << piranha::demangle<myns::bar<int>>() << '\n';
     // Check with dynamic polymorphism.
     std::unique_ptr<base_foo> foo_ptr(new foo{});
     auto ptr = foo_ptr.get();
-    BOOST_CHECK_EQUAL(demangle(typeid(*ptr)), demangle<foo>());
+    BOOST_CHECK_EQUAL(piranha::demangle(typeid(*ptr)), piranha::demangle<foo>());
 }

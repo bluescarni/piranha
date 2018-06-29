@@ -80,7 +80,7 @@ inline namespace impl
 template <typename T>
 inline std::string safe_int_arith_err(const char *op, T op1, T op2)
 {
-    return std::string("overflow error in an integral ") + op + ": the operands' type is '" + demangle<T>()
+    return std::string("overflow error in an integral ") + op + ": the operands' type is '" + piranha::demangle<T>()
            + "', and the operands' values are " + std::to_string(op1) + " and " + std::to_string(op2);
 }
 
@@ -204,8 +204,8 @@ inline bool safe_int_sub(bool a, bool b)
     }
     return (a - b) != 0;
 }
-}
-}
+} // namespace impl
+} // namespace piranha
 
 // Undefine the macro, if necessary, as we don't need it outside this file.
 #if defined(PIRANHA_HAVE_INTEGER_OVERFLOW_BUILTINS)
