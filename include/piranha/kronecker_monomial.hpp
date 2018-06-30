@@ -372,7 +372,7 @@ public:
         if (!s) {
             return !m_value;
         }
-        const auto &limits = k_limits<T>();
+        const auto &limits = piranha::k_limits<T>();
         // If we overflow the maximum size available, we cannot use this object as key in series.
         if (s >= limits.size()) {
             return false;
