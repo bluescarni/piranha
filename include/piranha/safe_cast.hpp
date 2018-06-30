@@ -69,11 +69,10 @@ concept bool SafelyCastable = is_safely_castable<From, To>::value;
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename To, SafelyCastable<To> From>
-inline To safe_cast(From &&x)
 #else
 template <typename To, typename From, enable_if_t<is_safely_castable<From, To>::value, int> = 0>
-inline To safe_cast(From &&x)
 #endif
+inline To safe_cast(From &&x)
 {
     To retval;
     if (likely(piranha::safe_convert(retval, std::forward<From>(x)))) {

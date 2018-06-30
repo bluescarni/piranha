@@ -12,7 +12,7 @@ Types
    lexicographically.
 
    This data structure is implemented on top of the
-   `boost::flat_set <https://www.boost.org/doc/libs/release/doc/html/boost/container/flat_set.html>`__ class. 
+   `boost::flat_set <https://www.boost.org/doc/libs/release/doc/html/boost/container/flat_set.html>`__ class.
 
 .. cpp:type:: piranha::symbol_idx = piranha::symbol_fset::size_type
 

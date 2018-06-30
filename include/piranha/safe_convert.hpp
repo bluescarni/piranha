@@ -87,11 +87,10 @@ concept bool SafelyConvertible = is_safely_convertible<From, To>::value;
 // Safe conversion.
 #if defined(PIRANHA_HAVE_CONCEPTS)
 template <typename To, SafelyConvertible<To> From>
-inline bool safe_convert(To &&x, From &&y)
 #else
 template <typename To, typename From, enable_if_t<is_safely_convertible<From, To>::value, int> = 0>
-inline bool safe_convert(To &&x, From &&y)
 #endif
+inline bool safe_convert(To &&x, From &&y)
 {
     return safe_convert_impl<uncvref_t<To>, uncvref_t<From>>{}(std::forward<To>(x), std::forward<From>(y));
 }
