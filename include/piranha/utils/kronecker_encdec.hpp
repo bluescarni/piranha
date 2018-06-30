@@ -45,6 +45,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/config.hpp>
 #include <piranha/detail/demangle.hpp>
 #include <piranha/detail/init.hpp>
+#include <piranha/detail/safe_integral_arith.hpp>
 #include <piranha/exceptions.hpp>
 #include <piranha/integer.hpp>
 #include <piranha/safe_cast.hpp>
@@ -177,7 +178,7 @@ struct kronecker_statics {
     {
         std::vector<std::tuple<std::vector<T>, T, T, T>> retval;
         retval.emplace_back(std::vector<T>{}, T(0), T(0), T(0));
-        for (std::size_t i = 1;; ++i) {
+        for (std::size_t i = 1;; i = piranha::safe_int_add(i, std::size_t(1))) {
             auto tmp = determine_limit(i);
             if (std::get<0>(tmp).empty()) {
                 break;
