@@ -61,7 +61,7 @@ Implementations
    This default implementation does not define any call operator, and thus no default implementation
    of :cpp:func:`piranha::gcd()` is available.
 
-.. cpp:class:: template <CppIntegral T, CppIntegral U> piranha::gcd_impl<T, U>
+.. cpp:class:: template <piranha::CppIntegral T, piranha::CppIntegral U> piranha::gcd_impl<T, U>
 
    Specialisation of the function object implementing :cpp:func:`piranha::gcd()` for C++'s integral types.
 

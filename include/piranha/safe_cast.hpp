@@ -50,6 +50,11 @@ public:
     using std::invalid_argument::invalid_argument;
 };
 
+// NOTE: here we are checking def-ctible, which corresponds to value initialisation, but
+// what we are really doing in the body of the function is a default initialisation. I can't
+// come up with an example where a type is value-initable and not default-initable, so
+// perhaps the distinction here is only academic. In any case, we can in principle write a
+// default_initializable concept/type trait using placement new, if needed.
 template <typename From, typename To>
 using is_safely_castable
     = conjunction<std::is_default_constructible<To>, is_safely_convertible<From, addlref_t<To>>, is_returnable<To>>;
@@ -62,15 +67,14 @@ concept bool SafelyCastable = is_safely_castable<From, To>::value;
 #endif
 
 #if defined(PIRANHA_HAVE_CONCEPTS)
-template <typename To>
-inline To safe_cast(SafelyCastable<To> &&x)
+template <typename To, SafelyCastable<To> From>
 #else
 template <typename To, typename From, enable_if_t<is_safely_castable<From, To>::value, int> = 0>
-inline To safe_cast(From &&x)
 #endif
+inline To safe_cast(From &&x)
 {
     To retval;
-    if (likely(piranha::safe_convert(retval, std::forward<decltype(x)>(x)))) {
+    if (likely(piranha::safe_convert(retval, std::forward<From>(x)))) {
         return retval;
     }
     piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + demangle<decltype(x)>()
@@ -154,6 +158,6 @@ template <typename T, typename To>
 concept bool SafelyCastableMutableForwardRange = is_safely_castable_mutable_forward_range<T, To>::value;
 
 #endif
-}
+} // namespace piranha
 
 #endif
