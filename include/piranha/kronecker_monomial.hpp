@@ -65,7 +65,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/rational.hpp>
 #include <piranha/s11n.hpp>
 #include <piranha/safe_cast.hpp>
-#include <piranha/static_vector.hpp>
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
@@ -79,6 +78,8 @@ inline namespace impl
 
 // Check the size of a k_monomial after deserialization (s1) against the
 // size of the associated symbol set (s2).
+// NOTE: once serialization is not implemented in member functions any more,
+// we can move this down.
 template <typename T, typename U>
 inline void k_monomial_load_check_sizes(T s1, U s2)
 {
@@ -124,23 +125,6 @@ class kronecker_monomial
 public:
     /// Alias for \p T.
     using value_type = T;
-
-private:
-    using ka = kronecker_array<T>;
-
-public:
-    /// Size type.
-    /**
-     * Used to represent the number of variables in the monomial. Equivalent to the size type of
-     * piranha::kronecker_array.
-     */
-    using size_type = typename ka::size_type;
-    /// Vector type used for temporary packing/unpacking.
-    // NOTE: this essentially defines a maximum number of small ints that can be packed in m_value,
-    // as we always need to pass through pack/unpack. In practice, it does not matter: in current
-    // architectures the bit width limit will result in kronecker array's limits to be smaller than
-    // 255 items.
-    using v_type = static_vector<T, 255u>;
     /// Arity of the multiply() method.
     static const std::size_t multiply_arity = 1u;
     /// Default constructor.
