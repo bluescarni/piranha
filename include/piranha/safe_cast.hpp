@@ -50,6 +50,11 @@ public:
     using std::invalid_argument::invalid_argument;
 };
 
+// NOTE: here we are checking def-ctible, which corresponds to value initialisation, but
+// what we are really doing in the body of the function is a default initialisation. I can't
+// come up with an example where a type is value-initable and not default-initable, so
+// perhaps the distinction here is only academic. In any case, we can in principle write a
+// default_initializable concept/type trait using placement new, if needed.
 template <typename From, typename To>
 using is_safely_castable
     = conjunction<std::is_default_constructible<To>, is_safely_convertible<From, addlref_t<To>>, is_returnable<To>>;
