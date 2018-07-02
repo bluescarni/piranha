@@ -96,240 +96,57 @@ inline void k_monomial_load_check_sizes(T s1, U s2)
 }
 } // namespace impl
 
-/// Kronecker monomial class.
-/**
- * This class represents a multivariate monomial with integral exponents. The values of the exponents are packed in a
- * signed integer using Kronecker substitution, using the facilities provided by piranha::kronecker_array.
- *
- * This class satisfies the piranha::is_key, piranha::is_key_degree_type, piranha::is_key_ldegree_type and
- * piranha::key_is_differentiable type traits.
- *
- * ## Type requirements ##
- *
- * \p T must be suitable for use in piranha::kronecker_array. The default type for \p T is the signed counterpart of \p
- * std::size_t.
- *
- * ## Exception safety guarantee ##
- *
- * Unless otherwise specified, this class provides the strong exception safety guarantee for all operations.
- *
- * ## Move semantics ##
- *
- * The move semantics of this class are equivalent to the move semantics of C++ signed integral types.
- */
+// Kronecker monomial class.
 // NOTE:
 // - consider abstracting the km_commons in a class and use it both here and in rtkm.
-template <typename T = std::make_signed<std::size_t>::type>
+#if defined(PIRANHA_HAVE_CONCEPTS)
+template <UncvCppSignedIntegral T>
+#else
+template <typename T, enable_if_t<is_uncv_cpp_signed_integral<T>::value, int> = 0>
+#endif
 class kronecker_monomial
 {
 public:
-    /// Alias for \p T.
+    // Alias for \p T.
     using value_type = T;
-    /// Arity of the multiply() method.
+    // Arity of the multiply() method.
     static const std::size_t multiply_arity = 1u;
-    /// Default constructor.
-    /**
-     * After construction all exponents in the monomial will be zero.
-     */
+    // Default constructor.
     kronecker_monomial() : m_value(0) {}
-    /// Defaulted copy constructor.
-    kronecker_monomial(const kronecker_monomial &) = default;
-    /// Defaulted move constructor.
-    kronecker_monomial(kronecker_monomial &&) = default;
-
-private:
-    // Enabler for the ctor from container.
-    // NOTE: here we are checking that the dereference of an lvalue of the iterator type
-    // of the input range is safely castable to T.
-    template <typename U>
-    using container_ctor_enabler
-        = enable_if_t<conjunction<is_input_range<U>, is_safely_castable<det_deref_t<range_begin_t<U>>, T>>::value, int>;
-    // Implementation of the ctor from range.
-    struct range_ctor_safe_caster {
-        // NOTE: this is a small helper to perfectly forward whatever
-        // comes out from the dereferencing of an input iterator (which
-        // could be something else than a real reference) to safe_cast().
-        // This would just be a generic lambda in C++>=14.
-        template <typename U>
-        T operator()(U &&x) const
-        {
-            return piranha::safe_cast<T>(std::forward<U>(x));
-        }
-    };
-    template <typename Iterator>
-    typename v_type::size_type construct_from_range(Iterator begin, Iterator end)
+    // Constructors from ranges/sequences.
+    template <KEncodableIterator<T> It>
+    explicit kronecker_monomial(It begin, std::size_t size) : m_value(piranha::k_encode(begin, size))
     {
-        v_type tmp;
-        std::transform(begin, end, std::back_inserter(tmp), range_ctor_safe_caster{});
-        m_value = ka::encode(tmp);
-        return tmp.size();
     }
-
-public:
-    /// Constructor from container.
-    /**
-     * \note
-     * This constructor is enabled only if \p U satisfies piranha::is_safely_castable_input_range.
-     *
-     * This constructor will build internally a vector of values from the input container \p c, encode it and assign the
-     * result to the internal integer instance. The value type of the container is converted to \p T using
-     * piranha::safe_cast().
-     *
-     * @param c the input container.
-     *
-     * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
-     */
-    template <typename U, container_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(U &&c)
+    template <KEncodableForwardIterator<T> It>
+    explicit kronecker_monomial(It begin, It end) : m_value(piranha::k_encode(begin, end))
     {
-        using std::begin;
-        using std::end;
-        construct_from_range(begin(std::forward<U>(c)), end(std::forward<U>(c)));
     }
-
-private:
-    template <typename U>
-    using init_list_ctor_enabler = container_ctor_enabler<std::initializer_list<U> &>;
-
-public:
-    /// Constructor from initializer list.
-    /**
-     * \note
-     * This constructor is enabled only if \p U can be safely cast to \p T.
-     *
-     * @param list the input initializer list.
-     *
-     * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator).
-     */
-    template <typename U, init_list_ctor_enabler<U> = 0>
-    explicit kronecker_monomial(std::initializer_list<U> list)
+    template <KEncodableForwardRange<T> R>
+    explicit kronecker_monomial(R &&r) : m_value(piranha::k_encode(std::forward<R>(r)))
     {
-        using std::begin;
-        using std::end;
-        construct_from_range(begin(list), end(list));
     }
-
-private:
-    // NOTE: here we are checking that the dereference of an lvalue of Iterator
-    // is safely castable to T.
-    template <typename Iterator>
-    using it_ctor_enabler
-        = enable_if_t<conjunction<is_input_iterator<Iterator>, is_safely_castable<det_deref_t<Iterator>, T>>::value,
-                      int>;
-
-public:
-    /// Constructor from range.
-    /**
-     * \note
-     * This constructor is enabled only if \p Iterator is an input iterator whose value type
-     * is safely convertible to \p T.
-     *
-     * This constructor will build internally a vector of values from the input iterators, encode it and assign the
-     * result to the internal integer instance. The value type of the iterator is converted to \p T using
-     * piranha::safe_cast().
-     *
-     * @param begin the beginning of the range.
-     * @param end the end of the range.
-     *
-     * @throws unspecified any exception thrown by:
-     * - piranha::kronecker_array::encode(),
-     * - piranha::safe_cast(),
-     * - piranha::static_vector::push_back(),
-     * - increment and dereference of the input iterators.
-     */
-    template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-    explicit kronecker_monomial(Iterator begin, Iterator end)
+    template <SafelyConvertible<T> U>
+    explicit kronecker_monomial(std::initializer_list<U> list) : kronecker_monomial(list.begin(), list.end())
     {
-        construct_from_range(begin, end);
     }
-    /// Constructor from range and symbol set.
-    /**
-     * \note
-     * This constructor is enabled only if \p Iterator is an input iterator whose value type
-     * is safely convertible to \p T.
-     *
-     * This constructor is identical to the constructor from range. In addition, after construction
-     * it will also check that the distance between \p begin and \p end is equal to the size of \p s.
-     *
-     * @param begin the beginning of the range.
-     * @param end the end of the range.
-     * @param s the associated piranha::symbol_fset.
-     *
-     * @throws std::invalid_argument if the distance between \p begin and \p end is different from
-     * the size of \p s.
-     * @throws unspecified any exception thrown by kronecker_monomial::kronecker_monomial(Iterator, Iterator)
-     */
-    template <typename Iterator, it_ctor_enabler<Iterator> = 0>
-    explicit kronecker_monomial(Iterator begin, Iterator end, const symbol_fset &s)
-    {
-        const auto c_size = construct_from_range(begin, end);
-        if (unlikely(c_size != s.size())) {
-            piranha_throw(std::invalid_argument, "the Kronecker monomial constructor from range and symbol set "
-                                                 "yielded an invalid monomial: the range length ("
-                                                     + std::to_string(c_size)
-                                                     + ") differs from the size of the symbol set ("
-                                                     + std::to_string(s.size()) + ")");
-        }
-    }
-    /// Constructor from set of symbols.
-    /**
-     * After construction all exponents in the monomial will be zero.
-     */
+    // Constructor from set of symbols.
     explicit kronecker_monomial(const symbol_fset &) : kronecker_monomial() {}
-    /// Converting constructor.
-    /**
-     * This constructor is for use when converting from one term type to another in piranha::series. It will
-     * set the internal integer instance to the same value of \p other.
-     *
-     * @param other the construction argument.
-     */
+    // Converting constructor.
     explicit kronecker_monomial(const kronecker_monomial &other, const symbol_fset &) : kronecker_monomial(other) {}
-    /// Constructor from \p T.
-    /**
-     * This constructor will initialise the internal integer instance
-     * to \p n.
-     *
-     * @param n the value that will be used to construct the internal integer instance.
-     */
+    // Constructor from \p T.
     explicit kronecker_monomial(const T &n) : m_value(n) {}
-    /// Destructor.
-    ~kronecker_monomial()
-    {
-        PIRANHA_TT_CHECK(is_key, kronecker_monomial);
-        PIRANHA_TT_CHECK(is_key_degree_type, kronecker_monomial);
-        PIRANHA_TT_CHECK(is_key_ldegree_type, kronecker_monomial);
-        PIRANHA_TT_CHECK(key_is_differentiable, kronecker_monomial);
-    }
-    /// Copy assignment operator.
-    /**
-     * @param other the assignment argument.
-     *
-     * @return a reference to \p this.
-     */
-    kronecker_monomial &operator=(const kronecker_monomial &other) = default;
-    /// Defaulted move assignment operator.
-    /**
-     * @param other the assignment argument.
-     *
-     * @return a reference to \p this.
-     */
-    kronecker_monomial &operator=(kronecker_monomial &&other) = default;
-    /// Set the internal integer instance.
-    /**
-     * @param n the value to which the internal integer instance will be set.
-     */
+    // Set the internal integer instance.
     void set_int(const T &n)
     {
         m_value = n;
     }
-    /// Get internal instance.
-    /**
-     * @return value of the internal integer instance.
-     */
+    // Get internal instance.
     T get_int() const
     {
         return m_value;
     }
+#if 0
     /// Compatibility check.
     /**
      * A monomial is considered incompatible with a piranha::symbol_fset if any of these conditions holds:
@@ -1111,13 +928,13 @@ public:
         }
     }
 #endif
-
+#endif
 private:
     T m_value;
 };
 
-/// Alias for piranha::kronecker_monomial with default type.
-using k_monomial = kronecker_monomial<>;
+// Alias for piranha::kronecker_monomial with default type.
+using k_monomial = kronecker_monomial<std::make_signed<std::size_t>::type>;
 
 // Implementation of piranha::key_is_one() for kronecker_monomial.
 template <typename T>

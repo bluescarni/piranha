@@ -3,6 +3,19 @@ Kronecker encoding/decoding
 
 *#include <piranha/utils/kronecker_encdec.hpp>*
 
+Kronecker encoding is a technique to map a vector of integers to a single integer scalar. Specifically, given
+a vector :math:`\boldsymbol{n} = \left(n_0, n_1, n_2, \ldots \right)` of values :math:`n_i \in \mathbb{Z}`, Kronecker
+encoding produces a value :math:`N \in \mathbb{Z}` via the scalar product
+
+.. math::
+
+   N = \boldsymbol{n} \cdot \boldsymbol{c},
+
+where :math:`\boldsymbol{c}` is an *encoding vector* of positive integrals. Kronecker decoding is the inverse process
+of determining :math:`\boldsymbol{n}` given a scalar :math:`N` and an encoding vector :math:`\boldsymbol{c}`.
+
+Kronecker encoding can be seen as a generalisation of bit packing for signed values.
+
 Classes
 -------
 
