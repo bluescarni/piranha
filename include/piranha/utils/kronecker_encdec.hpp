@@ -84,6 +84,17 @@ struct kronecker_statics {
     // https://stackoverflow.com/questions/4475996/given-prime-number-n-compute-the-next-prime
     // https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
     // https://en.wikipedia.org/wiki/Prime_number_theorem
+    //
+    // NOTE: some other improvements we should look into:
+    // - perhaps drop the perturb part in determine_limit, not sure if it does anything
+    //   and it seems to just complicate the code;
+    // - it seems like encoding could be simplified conceptually by doing a direct
+    //   dot product c \dot n, instead now it seems like we are doing it slightly
+    //   different with a translation at the end instead. Need to investigate;
+    // - it seems like while decoding we are computing over and over m_mod_arg, which
+    //   could probably be cached on startup;
+    // - look into using libdivide. It does not look like they provide a modulo operation,
+    //   but perhaps we can at least reduce the division time in the decoder.
     static std::tuple<std::vector<T>, T, T, T> determine_limit(const std::size_t &m)
     {
         piranha_assert(m >= 1u);

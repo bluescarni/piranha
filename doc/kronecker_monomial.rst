@@ -7,6 +7,8 @@ Kronecker monomial
 
    .. cpp:type:: value_type = T
 
+      Alias for the signed integral type :cpp:type:`T`.
+
    .. cpp:function:: kronecker_monomial()
 
       Default constructor.
@@ -18,11 +20,23 @@ Kronecker monomial
    .. cpp:function:: template <piranha::KEncodableForwardRange<T> R> explicit kronecker_monomial(R &&r)
    .. cpp:function:: template <piranha::SafelyConvertible<T> U> explicit kronecker_monomial(std::initializer_list<U> list)
 
-      Constructors from ranges.
+      Constructors from ranges and ``std::initializer_list``.
 
       These constructors will initialise a :cpp:class:`~piranha::kronecker_monomial` whose internal value will be
       computed from the Kronecker codification, via one of the overloads of :cpp:func:`piranha::k_encode()`, of the values
-      pointed to by the input ranges.
+      contained in the input ranges.
+
+      Example:
+
+      .. code-block:: c++
+
+         int values[] = {0, 1, 2};
+
+         // Four ways of constructing the same Kronecker monomial.
+         kronecker_monomial<int> k0(values);
+         kronecker_monomial<int> k1(values, values + 3);
+         kronecker_monomial<int> k2(values, 3);
+         kronecker_monomial<int> k3{0, 1, 2};
 
       :exception unspecified: any exception thrown by the invoked :cpp:func:`piranha::k_encode()` overload.
 

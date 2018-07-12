@@ -114,19 +114,35 @@ public:
     // Default constructor.
     kronecker_monomial() : m_value(0) {}
     // Constructors from ranges/sequences.
+#if defined(PIRANHA_HAVE_CONCEPTS)
     template <KEncodableIterator<T> It>
-    explicit kronecker_monomial(It begin, std::size_t size) : m_value(piranha::k_encode(begin, size))
+#else
+    template <typename It, enable_if_t<is_k_encodable_iterator<It, T>::value, int> = 0>
+#endif
+    explicit kronecker_monomial(It begin, std::size_t size) : m_value(piranha::k_encode<T>(begin, size))
     {
     }
+#if defined(PIRANHA_HAVE_CONCEPTS)
     template <KEncodableForwardIterator<T> It>
-    explicit kronecker_monomial(It begin, It end) : m_value(piranha::k_encode(begin, end))
+#else
+    template <typename It, enable_if_t<is_k_encodable_forward_iterator<It, T>::value, int> = 0>
+#endif
+    explicit kronecker_monomial(It begin, It end) : m_value(piranha::k_encode<T>(begin, end))
     {
     }
+#if defined(PIRANHA_HAVE_CONCEPTS)
     template <KEncodableForwardRange<T> R>
-    explicit kronecker_monomial(R &&r) : m_value(piranha::k_encode(std::forward<R>(r)))
+#else
+    template <typename R, enable_if_t<is_k_encodable_forward_range<R, T>::value, int> = 0>
+#endif
+    explicit kronecker_monomial(R &&r) : m_value(piranha::k_encode<T>(std::forward<R>(r)))
     {
     }
-    template <SafelyConvertible<T> U>
+#if defined(PIRANHA_HAVE_CONCEPTS)
+    template <SafelyCastable<T> U>
+#else
+    template <typename U, enable_if_t<is_safely_castable<U, T>::value, int> = 0>
+#endif
     explicit kronecker_monomial(std::initializer_list<U> list) : kronecker_monomial(list.begin(), list.end())
     {
     }
