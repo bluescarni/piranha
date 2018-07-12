@@ -18,13 +18,13 @@ Kronecker monomial
    .. cpp:function:: template <piranha::KEncodableIterator<T> It> explicit kronecker_monomial(It begin, std::size_t size)
    .. cpp:function:: template <piranha::KEncodableForwardIterator<T> It> explicit kronecker_monomial(It begin, It end)
    .. cpp:function:: template <piranha::KEncodableForwardRange<T> R> explicit kronecker_monomial(R &&r)
-   .. cpp:function:: template <piranha::SafelyConvertible<T> U> explicit kronecker_monomial(std::initializer_list<U> list)
+   .. cpp:function:: template <piranha::SafelyCastable<T> U> explicit kronecker_monomial(std::initializer_list<U> list)
 
       Constructors from ranges and ``std::initializer_list``.
 
       These constructors will initialise a :cpp:class:`~piranha::kronecker_monomial` whose internal value will be
-      computed from the Kronecker codification, via one of the overloads of :cpp:func:`piranha::k_encode()`, of the values
-      contained in the input ranges.
+      computed from the Kronecker codification of the values contained in the input ranges via one of the overloads
+      of :cpp:func:`piranha::k_encode()`.
 
       Example:
 
