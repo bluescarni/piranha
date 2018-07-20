@@ -1112,6 +1112,17 @@ using is_input_iterator = conjunction<
     is_iterator<T>,
     // Lvalue equality-comparable (just test the const-const variant).
     is_equality_comparable<addlref_t<const T>>,
+    // Quoting the standard:
+    // """
+    // For every iterator type X for which equality is defined, there is a corresponding signed integer type called the
+    // difference type of the iterator.
+    // """
+    // http://eel.is/c++draft/iterator.requirements#general-1
+    // The equality comparable requirement appears in the input iterator requirements,
+    // and it is then inherited by all the other iterator types (i.e., forward iterator,
+    // bidir iterator, etc.).
+    std::is_integral<detected_t<it_traits_difference_type, T>>,
+    std::is_signed<detected_t<it_traits_difference_type, T>>,
     // *it returns it_traits::reference_type, both in mutable and const forms.
     // NOTE: it_traits::reference_type is never nonesuch, we tested its availability
     // in is_iterator.
