@@ -29,6 +29,7 @@ see https://www.gnu.org/licenses/. */
 #ifndef PIRANHA_SAFE_CAST_HPP
 #define PIRANHA_SAFE_CAST_HPP
 
+#include <iterator>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -77,87 +78,25 @@ inline To safe_cast(From &&x)
     if (likely(piranha::safe_convert(retval, std::forward<From>(x)))) {
         return retval;
     }
-    piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + demangle<decltype(x)>()
-                                         + "' to the type '" + demangle<To>() + "' failed");
+    piranha_throw(safe_cast_failure, "the safe conversion of a value of type '" + piranha::demangle<decltype(x)>()
+                                         + "' to the type '" + piranha::demangle<To>() + "' failed");
 }
 
-// Input iterator whose ref type is safely castable to To.
-// NOTE: the way this is currently written we are in the situation in which:
-// - the iterator being dereferenced is an lvalue (see definition of det_deref_t),
-// - we are checking the expression safe_cast<To>(*it), that is, we are applying
-//   safe_cast() directly to the rvalue result of the dereferencing (rather than, say,
-//   storing the dereference somewhere and casting it later as an lvalue).
-template <typename T, typename To>
-using is_safely_castable_input_iterator = conjunction<is_input_iterator<T>, is_safely_castable<det_deref_t<T>, To>>;
+inline namespace impl
+{
 
-#if defined(PIRANHA_HAVE_CONCEPTS)
+// This is a small helper to verify that the size() of a container
+// can be safely converted to the difference type of its iterator type.
+// In a few places we use std::distance to determine the size of a range,
+// and that could overflow if the range is a container with an (unsigned)
+// size which is too large.
+template <typename Container>
+inline void check_distance_size(Container &c)
+{
+    (void)piranha::safe_cast<typename std::iterator_traits<decltype(c.begin())>::difference_type>(c.size());
+}
 
-template <typename T, typename To>
-concept bool SafelyCastableInputIterator = is_safely_castable_input_iterator<T, To>::value;
-
-#endif
-
-// Forward iterator whose ref type is safely castable to To.
-template <typename T, typename To>
-using is_safely_castable_forward_iterator = conjunction<is_forward_iterator<T>, is_safely_castable<det_deref_t<T>, To>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename To>
-concept bool SafelyCastableForwardIterator = is_safely_castable_forward_iterator<T, To>::value;
-
-#endif
-
-// Mutable forward iterator whose ref type is safely castable to To.
-template <typename T, typename To>
-using is_safely_castable_mutable_forward_iterator
-    = conjunction<is_mutable_forward_iterator<T>, is_safely_castable<det_deref_t<T>, To>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename To>
-concept bool SafelyCastableMutableForwardIterator = is_safely_castable_mutable_forward_iterator<T, To>::value;
-
-#endif
-
-// Input range whose ref type is safely castable to To.
-template <typename T, typename To>
-using is_safely_castable_input_range
-    // NOTE: we avoid re-using is_safely_castable_input_iterator in the implementation:
-    // we already know from is_input_range that the iterator type of T is an input iterator,
-    // we just need to check for the safe castability.
-    = conjunction<is_input_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename To>
-concept bool SafelyCastableInputRange = is_safely_castable_input_range<T, To>::value;
-
-#endif
-
-// Forward range whose ref type is safely castable to To.
-template <typename T, typename To>
-using is_safely_castable_forward_range
-    = conjunction<is_forward_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename To>
-concept bool SafelyCastableForwardRange = is_safely_castable_forward_range<T, To>::value;
-
-#endif
-
-// Mutable forward range whose ref type is safely castable to To.
-template <typename T, typename To>
-using is_safely_castable_mutable_forward_range
-    = conjunction<is_mutable_forward_range<T>, is_safely_castable<det_deref_t<detected_t<begin_adl::type, T>>, To>>;
-
-#if defined(PIRANHA_HAVE_CONCEPTS)
-
-template <typename T, typename To>
-concept bool SafelyCastableMutableForwardRange = is_safely_castable_mutable_forward_range<T, To>::value;
-
-#endif
+} // namespace impl
 } // namespace piranha
 
 #endif

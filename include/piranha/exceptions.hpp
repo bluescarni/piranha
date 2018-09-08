@@ -115,7 +115,7 @@ struct ex_thrower {
 #if defined(PIRANHA_WITH_BOOST_STACKTRACE)
         }
 #endif
-        oss << "\nException type   : " << demangle<Exception>();
+        oss << "\nException type   : " << piranha::demangle<Exception>();
         oss << "\nException message: " << std::forward<Str>(desc) << "\n";
         throw Exception(oss.str(), std::forward<Args>(args)...);
     }
@@ -126,8 +126,8 @@ struct ex_thrower {
     optional_st_t m_st;
 #endif
 };
-}
-}
+} // namespace impl
+} // namespace piranha
 
 // Exception-throwing macro.
 /**
@@ -171,6 +171,6 @@ namespace piranha
 struct not_implemented_error final : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
-}
+} // namespace piranha
 
 #endif

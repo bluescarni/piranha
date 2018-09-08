@@ -60,7 +60,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/is_key.hpp>
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_is_zero.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/binomial.hpp>
 #include <piranha/math/cos.hpp>
@@ -71,6 +70,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/symbol_utils.hpp>
 #include <piranha/term.hpp>
 #include <piranha/type_traits.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 
 namespace piranha
 {
@@ -120,6 +120,7 @@ namespace piranha
 // - need to do some reasoning on the impact of the codification in a specialised fast poisson series multiplier: how do
 //   we deal with the canonical form without going through code/decode? if we require the last multiplier to be always
 //   positive (instead of the first), can we just check/flip the sign of the coded value?
+// - need to fix iterators-related TMP, as done in kronecker_array.
 template <typename T = std::make_signed<std::size_t>::type>
 class real_trigonometric_kronecker_monomial
 {
@@ -1477,7 +1478,7 @@ inline void load(Archive &ar, piranha::boost_s11n_key_wrapper<piranha::real_trig
         typename piranha::real_trigonometric_kronecker_monomial<T>::v_type tmp;
         piranha::boost_load(ar, tmp);
         if (unlikely(tmp.size() != k.ss().size())) {
-            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronercker "
+            piranha_throw(std::invalid_argument, "invalid size detected in the deserialization of a real Kronecker "
                                                  "trigonometric monomial: the deserialized size is "
                                                      + std::to_string(tmp.size())
                                                      + " but the reference symbol set has a size of "

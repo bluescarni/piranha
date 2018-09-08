@@ -104,6 +104,8 @@ namespace piranha
  *
  * Move semantics is equivalent to piranha::array_key's move semantics.
  */
+// NOTEs:
+// - need to fix iterators-related TMP, as done in kronecker_array.
 template <typename T, typename S = std::integral_constant<std::size_t, 0u>>
 class monomial : public array_key<T, monomial<T, S>, S>
 {

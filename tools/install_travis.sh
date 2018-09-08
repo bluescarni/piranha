@@ -14,7 +14,7 @@ if [[ "${PIRANHA_BUILD}" == "Documentation" ]]; then
     CXX=g++-4.8 CC=gcc-4.8 cmake -DCMAKE_INSTALL_PREFIX=$deps_dir -DCMAKE_PREFIX_PATH=$deps_dir -DPIRANHA_WITH_BOOST_STACKTRACE=yes -DPIRANHA_WITH_BOOST_S11N=yes -DPIRANHA_WITH_BZIP2=yes -DPIRANHA_WITH_MSGPACK=yes -DPIRANHA_WITH_ZLIB=yes ../;
 
     cd ../doc;
-    pip install "sphinx<1.7" requests[security] sphinx-bootstrap-theme;
+    pip install "sphinx<1.7" requests[security];
     export SPHINX_OUTPUT=`make html linkcheck 2>&1 >/dev/null`;
     if [[ "${SPHINX_OUTPUT}" != "" ]]; then
         echo "Sphinx encountered some problem:";

@@ -71,7 +71,6 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key/key_is_one.hpp>
 #include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_multipliable.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/kronecker_monomial.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/degree.hpp>
@@ -90,6 +89,7 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/trigonometric_series.hpp>
 #include <piranha/tuning.hpp>
 #include <piranha/type_traits.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 
 namespace piranha
 {
@@ -124,7 +124,7 @@ struct key_has_is_linear {
     using is_linear_t = decltype(std::declval<const U &>().is_linear(std::declval<const symbol_fset &>()));
     static const bool value = std::is_same<detected_t<is_linear_t, Key>, std::pair<bool, symbol_idx>>::value;
 };
-}
+} // namespace detail
 
 /// Polynomial class.
 /**
@@ -409,11 +409,11 @@ class polynomial
                                 int>::type;
     // Implementation of find_cf().
     template <typename T>
-    using find_cf_enabler = enable_if_t<
-        conjunction<is_input_range<T>,
-                    std::is_constructible<typename base::term_type::key_type, addlref_t<detected_t<begin_adl::type, T>>,
-                                          addlref_t<detected_t<begin_adl::type, T>>, const symbol_fset &>>::value,
-        int>;
+    using find_cf_enabler
+        = enable_if_t<conjunction<is_input_range<T>,
+                                  std::is_constructible<typename base::term_type::key_type, addlref_t<range_begin_t<T>>,
+                                                        addlref_t<range_begin_t<T>>, const symbol_fset &>>::value,
+                      int>;
     template <typename T>
     using find_cf_init_list_enabler = find_cf_enabler<std::initializer_list<T> &>;
     template <typename Iterator>
@@ -969,7 +969,7 @@ const bool has_get_auto_truncate_degree<S>::value;
 // Global enabler for the polynomial multiplier.
 template <typename Series>
 using poly_multiplier_enabler = typename std::enable_if<std::is_base_of<detail::polynomial_tag, Series>::value>::type;
-}
+} // namespace detail
 
 /// Specialisation of piranha::series_multiplier for piranha::polynomial.
 /**
@@ -1966,6 +1966,6 @@ private:
         }
     }
 };
-}
+} // namespace piranha
 
 #endif

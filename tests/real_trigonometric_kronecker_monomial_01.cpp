@@ -58,12 +58,12 @@ see https://www.gnu.org/licenses/. */
 #include <piranha/key/key_ldegree.hpp>
 #include <piranha/key_is_convertible.hpp>
 #include <piranha/key_is_multipliable.hpp>
-#include <piranha/kronecker_array.hpp>
 #include <piranha/math.hpp>
 #include <piranha/math/cos.hpp>
 #include <piranha/math/sin.hpp>
 #include <piranha/monomial.hpp>
 #include <piranha/rational.hpp>
+#include <piranha/utils/kronecker_encdec.hpp>
 #if defined(MPPP_WITH_MPFR)
 #include <piranha/real.hpp>
 #endif
@@ -596,8 +596,8 @@ namespace math
 template <typename T>
 struct mul3_impl<T, typename std::enable_if<std::is_same<T, mock_cf3>::value>::type> {
 };
-}
-}
+} // namespace math
+} // namespace piranha
 
 struct multiply_tester {
     template <typename T>
