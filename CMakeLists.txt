@@ -43,6 +43,10 @@ option(PIRANHA_WITH_BZIP2 "Enable support for bzip2 compression." OFF)
 option(PIRANHA_INSTALL_HEADERS "Enable the installation of the headers." ON)
 mark_as_advanced(PIRANHA_INSTALL_HEADERS)
 
+# Configure piranha to only run on the main thread.
+option(PIRANHA_SINGLE_THREAD "Configure piranha to only run on the main thread." OFF)
+mark_as_advanced(PIRANHA_SINGLE_THREAD)
+
 # A general-purpose option to signal that we intend to run Piranha under Valgrind.
 # At the moment it just disables tests involving long double that give problems in Valgrind,
 # in the future it might become a more general-purpose flag.
