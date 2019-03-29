@@ -89,6 +89,7 @@ template <typename = void>
 class settings_ : private detail::base_settings<>
 {
 public:
+#ifndef PIRANHA_SINGLE_THREAD
     /// Get the number of threads available for use by piranha.
     /**
      * The initial value is set to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
@@ -154,6 +155,7 @@ public:
     {
         return thread_pool::get_binding();
     }
+#endif
     /// Get the cache line size.
     /**
      * The initial value is set to the output of piranha::runtime_info::get_cache_line_size(). The value

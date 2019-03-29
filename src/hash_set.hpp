@@ -491,12 +491,15 @@ private:
         if (unlikely(!new_ptr)) {
             piranha_throw(std::bad_alloc, );
         }
+#ifndef PIRANHA_SINGLE_THREAD
         if (n_threads == 1u) {
+#endif
             // Default-construct the elements of the array.
             // NOTE: this is a noexcept operation, no need to account for rolling back.
             for (size_type i = 0u; i < size; ++i) {
                 allocator().construct(&new_ptr[i]);
             }
+#ifndef PIRANHA_SINGLE_THREAD
         } else {
             // Sync variables.
             using crs_type = std::vector<std::pair<size_type, size_type>>;
@@ -540,6 +543,7 @@ private:
                 throw;
             }
         }
+#endif
         // Assign the members.
         ptr() = new_ptr;
         m_log2_size = log2_size;
@@ -689,7 +693,8 @@ public:
      * @param n_buckets desired number of buckets.
      * @param h hasher functor.
      * @param k equality predicate.
-     * @param n_threads number of threads to use during initialisation.
+     * @param n_threads number of threads to use during initialisation. Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this argument has no effect.
      *
      * @throws std::bad_alloc if the desired number of buckets is greater than an implementation-defined maximum, or in
      * case
@@ -1133,7 +1138,8 @@ public:
      * the rehash operation.
      *
      * @param new_size new desired number of buckets.
-     * @param n_threads number of threads to use.
+     * @param n_threads number of threads to use. Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this argument has no effect.
      *
      * @throws std::invalid_argument if \p n_threads is zero.
      * @throws unspecified any exception thrown by the constructor from number of buckets,

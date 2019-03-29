@@ -113,10 +113,13 @@ struct base_series_multiplier_impl {
                       j += tmp;
                   }
               };
+#ifndef PIRANHA_SINGLE_THREAD
         if (n_threads == 1u) {
+#endif
             thread_func(0u, &c1, &v1);
             thread_func(0u, &c2, &v2);
             return;
+#ifndef PIRANHA_SINGLE_THREAD
         }
         auto thread_wrapper = [&thread_func, n_threads](const container_type *c, std::vector<term_type const *> *v) {
             // In the multi-threaded case, each thread needs to work on a separate vector.
@@ -145,6 +148,7 @@ struct base_series_multiplier_impl {
         };
         thread_wrapper(&c1, &v1);
         thread_wrapper(&c2, &v2);
+#endif
     }
 };
 
@@ -280,12 +284,15 @@ private:
         const auto l2 = this->m_lcm * this->m_lcm;
         auto &container = s._container();
         // Single thread implementation.
+#ifndef PIRANHA_SINGLE_THREAD
         if (m_n_threads == 1u) {
+#endif
             for (const auto &t : container) {
                 t.m_cf._set_den(l2);
                 t.m_cf.canonicalise();
             }
             return;
+#ifndef PIRANHA_SINGLE_THREAD
         }
         // Multi-thread implementation.
         // Buckets per thread.
@@ -318,6 +325,7 @@ private:
             ff_list.wait_all();
             throw;
         }
+#endif
     }
     template <typename T,
               typename std::enable_if<!detail::is_mp_rational<typename T::term_type::cf_type>::value, int>::type = 0>
@@ -388,10 +396,14 @@ public:
             }
         }
         // Set the number of threads.
+#ifndef PIRANHA_SINGLE_THREAD
         m_n_threads = (ctr1->size() && ctr2->size())
                           ? thread_pool::use_threads(integer(ctr1->size()) * ctr2->size(),
                                                      integer(settings::get_min_work_per_thread()))
                           : 1u;
+#else
+        m_n_threads = 1u;
+#endif
         this->fill_term_pointers(*ctr1, *ctr2, m_v1, m_v2);
     }
 
@@ -687,17 +699,24 @@ protected:
                 tmp._container().clear();
             }
             // Accumulate in the shared variable.
+#ifndef PIRANHA_SINGLE_THREAD
             if (n_threads == 1u) {
+#endif
                 // No locking needed.
                 c_estimate += acc;
+#ifndef PIRANHA_SINGLE_THREAD
             } else {
                 std::lock_guard<std::mutex> lock(mut);
                 c_estimate += acc;
             }
+#endif
         };
         // Run the estimation functor.
+#ifndef PIRANHA_SINGLE_THREAD
         if (n_threads == 1u) {
+#endif
             estimator(0u);
+#ifndef PIRANHA_SINGLE_THREAD
         } else {
             future_list<void> f_list;
             try {
@@ -713,6 +732,7 @@ protected:
                 throw;
             }
         }
+#endif
         piranha_assert(c_estimate >= n_trials);
         // Return the mean.
         return static_cast<bucket_size_type>(c_estimate / n_trials);
@@ -842,7 +862,8 @@ protected:
      * re-throwing.
      *
      * @param retval the series to be sanitised.
-     * @param n_threads the number of threads to be used.
+     * @param n_threads the number of threads to be used. Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this argument has no effect.
      *
      * @throws std::invalid_argument if \p n_threads is zero, or if one of the terms in \p retval is not compatible
      * with the symbol set of \p retval.
@@ -865,7 +886,9 @@ protected:
         // Reset the size to zero before doing anything.
         container._update_size(static_cast<bucket_size_type>(0u));
         // Single-thread implementation.
+#ifndef PIRANHA_SINGLE_THREAD
         if (n_threads == 1u) {
+#endif
             const auto it_end = container.end();
             for (auto it = container.begin(); it != it_end;) {
                 if (unlikely(!it->is_compatible(args))) {
@@ -883,6 +906,7 @@ protected:
                 }
             }
             return;
+#ifndef PIRANHA_SINGLE_THREAD
         }
         // Multi-thread implementation.
         const auto b_count = container.bucket_count();
@@ -948,6 +972,7 @@ protected:
         }
         // Final update of the total count.
         container._update_size(static_cast<bucket_size_type>(global_count));
+#endif
     }
     /// A plain series multiplication routine.
     /**
@@ -1029,7 +1054,9 @@ protected:
             const unsigned n_threads_rehash = tuning::get_parallel_memory_set() ? static_cast<unsigned>(n_threads) : 1u;
             retval._container().rehash(n_buckets, n_threads_rehash);
         }
+#ifndef PIRANHA_SINGLE_THREAD
         if (n_threads == 1u) {
+#endif
             try {
                 // Single-thread case.
                 if (estimate) {
@@ -1046,6 +1073,7 @@ protected:
                 throw;
             }
         }
+#ifndef PIRANHA_SINGLE_THREAD
         // Multi-threaded case.
         piranha_assert(estimate);
         // Init the vector of spinlocks.
@@ -1102,6 +1130,7 @@ protected:
         }
         return retval;
     }
+#endif
     /// A plain series multiplication routine (convenience overload).
     /**
      * @return the output of the other overload of plain_multiplication(), with a limit
@@ -1145,7 +1174,8 @@ protected:
     /**
      * This value will be set by the constructor, and it represents the number of threads
      * that will be used by the multiplier. The value is always at least 1 and it is calculated
-     * via thread_pool::use_threads().
+     * via thread_pool::use_threads(). Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this value has no effect.
      */
     unsigned m_n_threads;
 

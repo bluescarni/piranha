@@ -52,9 +52,12 @@ inline void parallel_vector_transform(unsigned n_threads, const std::vector<T> &
     if (unlikely(ic.size() != oc.size())) {
         piranha_throw(std::invalid_argument, "mismatched vector sizes");
     }
+#ifndef PIRANHA_SINGLE_THREAD
     if (n_threads == 1u) {
+#endif
         std::transform(ic.begin(), ic.end(), oc.begin(), op);
         return;
+#ifndef PIRANHA_SINGLE_THREAD
     }
     const auto block_size = ic.size() / n_threads;
     auto local_transform = [&op](T const *b, T const *e, U *o) { std::transform(b, e, o, op); };
@@ -73,7 +76,8 @@ inline void parallel_vector_transform(unsigned n_threads, const std::vector<T> &
     } catch (...) {
         ff_list.wait_all();
         throw;
-    }
+   }
+#endif
 }
 }
 }

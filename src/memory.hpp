@@ -260,7 +260,8 @@ inline bool alignment_check(const std::size_t &alignment)
  *
  * @param ptr pointer to the array.
  * @param size size of the array.
- * @param n_threads number of threads to use.
+ * @param n_threads number of threads to use. Note: if piranha is configured with
+ * PIRANHA_SINGLE_THREAD this argument has no effect.
  *
  * @throws std::bad_alloc in case of memory allocation errors in multithreaded mode.
  * @throws unspecified any exception thrown by:
@@ -298,8 +299,11 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
             (*rv)[static_cast<rv_size_type>(thread_idx)].second = end;
         }
     };
+#ifndef PIRANHA_SINGLE_THREAD
     if (n_threads <= 1) {
+#endif
         init_function(ptr, ptr + size, 0u, nullptr);
+#ifndef PIRANHA_SINGLE_THREAD
     } else {
         // Init the ranges vector with (ptr,ptr) pairs, so they are empty ranges.
         ranges_vector inited_ranges(static_cast<rv_size_type>(n_threads), std::make_pair(ptr, ptr));
@@ -327,6 +331,7 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
             throw;
         }
     }
+#endif
 }
 
 /// Parallel destruction.
@@ -343,7 +348,8 @@ inline void parallel_value_init(T *ptr, const std::size_t &size, const unsigned 
  *
  * @param ptr pointer to the array.
  * @param size size of the array.
- * @param n_threads number of threads to use.
+ * @param n_threads number of threads to use. Note: if piranha is configured with
+ * PIRANHA_SINGLE_THREAD this argument has no effect.
  */
 template <typename T, typename = typename std::enable_if<is_container_element<T>::value>::type>
 inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_threads)
@@ -366,8 +372,11 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
             start->~T();
         }
     };
+#ifndef PIRANHA_SINGLE_THREAD
     if (n_threads <= 1u) {
+#endif
         destroy_function(ptr, ptr + size);
+#ifndef PIRANHA_SINGLE_THREAD
     } else {
         // A vector of ranges representing elements yet to be destroyed in case something goes wrong
         // in the multithreaded part.
@@ -412,6 +421,7 @@ inline void parallel_destroy(T *ptr, const std::size_t &size, const unsigned &n_
             }
         }
     }
+#endif
 }
 
 namespace detail
@@ -422,7 +432,11 @@ template <typename T>
 class parallel_deleter
 {
 public:
+#ifndef PIRANHA_SINGLE_THREAD
     explicit parallel_deleter(const std::size_t &size, const unsigned &n_threads) : m_size(size), m_n_threads(n_threads)
+#else
+    explicit parallel_deleter(const std::size_t &size, const unsigned &n_threads) : m_size(size), m_n_threads(1u)
+#endif
     {
     }
     void operator()(T *ptr) const
@@ -457,7 +471,8 @@ private:
  * may be used.
  *
  * @param size size of the array.
- * @param n_threads number of threads to use.
+ * @param n_threads number of threads to use. Note: if piranha is configured with
+ * PIRANHA_SINGLE_THREAD this argument has no effect.
  *
  * @return an \p std::unique_ptr wrapping the array.
  *
@@ -477,14 +492,22 @@ inline std::unique_ptr<T[], detail::parallel_deleter<T>> make_parallel_array(con
     auto ptr = static_cast<T *>(aligned_palloc(0u, static_cast<std::size_t>(size * sizeof(T))));
     try {
         // No problems here with nullptr, will be a no-op.
+#ifndef PIRANHA_SINGLE_THREAD
         parallel_value_init(ptr, size, n_threads);
+#else
+        parallel_value_init(ptr, size, 1u);
+#endif
     } catch (...) {
         piranha_assert(ptr != nullptr);
         // Free the allocated memory. This is noexcept.
         aligned_pfree(0u, static_cast<void *>(ptr));
         throw;
     }
+#ifndef PIRANHA_SINGLE_THREAD
     return std::unique_ptr<T[], detail::parallel_deleter<T>>(ptr, detail::parallel_deleter<T>{size, n_threads});
+#else
+    return std::unique_ptr<T[], detail::parallel_deleter<T>>(ptr, detail::parallel_deleter<T>{size, 1u});
+#endif
 }
 }
 
