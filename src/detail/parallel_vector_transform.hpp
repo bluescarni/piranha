@@ -76,7 +76,7 @@ inline void parallel_vector_transform(unsigned n_threads, const std::vector<T> &
     } catch (...) {
         ff_list.wait_all();
         throw;
-   }
+    }
 #endif
 }
 }
