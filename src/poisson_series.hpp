@@ -853,10 +853,13 @@ class series_multiplier<Series, detail::ps_series_multiplier_enabler<Series>> : 
         // NOTE: if we ever implement multi-threaded series division we most likely need
         // to revisit this.
         piranha_assert(this->m_n_threads > 0u);
+#ifndef PIRANHA_SINGLE_THREAD
         if (this->m_n_threads == 1u) {
+#endif
             // This is possible, as the requirements of series divisibility and trig key
             // multipliability overlap.
             s /= 2;
+#ifndef PIRANHA_SINGLE_THREAD
         } else {
             using bucket_size_type = typename base::bucket_size_type;
             using term_type = typename Series::term_type;
@@ -913,6 +916,7 @@ class series_multiplier<Series, detail::ps_series_multiplier_enabler<Series>> : 
             piranha_assert(tot <= s.size());
             container._update_size(static_cast<bucket_size_type>(s.size() - tot));
         }
+#endif
     }
 
 public:

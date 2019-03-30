@@ -26,6 +26,12 @@ You should have received copies of the GNU General Public License and the
 GNU Lesser General Public License along with the Piranha library.  If not,
 see https://www.gnu.org/licenses/. */
 
+#include "config.hpp"
+
+#ifdef PIRANHA_SINGLE_THREAD
+#define PIRANHA_THREAD_POOL_HPP
+#endif
+
 #ifndef PIRANHA_THREAD_POOL_HPP
 #define PIRANHA_THREAD_POOL_HPP
 
@@ -50,7 +56,6 @@ see https://www.gnu.org/licenses/. */
 #include <utility>
 #include <vector>
 
-#include "config.hpp"
 #include "detail/atomic_lock_guard.hpp"
 #include "detail/mpfr.hpp"
 #include "exceptions.hpp"

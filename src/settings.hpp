@@ -94,17 +94,23 @@ public:
      * The initial value is set to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
      * This function is equivalent to piranha::thread_pool::size().
      *
-     * @return the number of threads that will be available for use by piranha.
+     * @return the number of threads that will be available for use by piranha. Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this function always returns 1.
      *
      * @throws unspecified any exception thrown by piranha::thread_pool::size().
      */
     static unsigned get_n_threads()
     {
+#ifndef PIRANHA_SINGLE_THREAD
         return thread_pool::size();
+#else
+      return 1u;
+#endif
     }
     /// Set the number of threads available for use by piranha.
     /**
-     * This function is equivalent to piranha::thread_pool::resize().
+     * This function is equivalent to piranha::thread_pool::resize(). Note: if piranha is configured with
+     * PIRANHA_SINGLE_THREAD this function does nothing.
      *
      * @param n the desired number of threads.
      *
@@ -112,24 +118,30 @@ public:
      */
     static void set_n_threads(unsigned n)
     {
+#ifndef PIRANHA_SINGLE_THREAD
         thread_pool::resize(n);
+#endif
     }
     /// Reset the number of threads available for use by piranha.
     /**
      * Will set the number of threads to the maximum between 1 and piranha::runtime_info::get_hardware_concurrency().
+     * Note: if piranha is configured with PIRANHA_SINGLE_THREAD this function does nothing.
      *
      * @throws unspecified any exception thrown by set_n_threads().
      */
     static void reset_n_threads()
     {
+#ifndef PIRANHA_SINGLE_THREAD
         const auto candidate = runtime_info::get_hardware_concurrency();
         set_n_threads((candidate > 0u) ? candidate : 1u);
+#endif
     }
     /// Set the thread binding policy.
     /**
      * This method is an alias for piranha::thread_pool::set_binding(). If \p flag is \p true, each
      * thread used by piranha will be bound to a different processor/core. If \p flag is \p false,
      * this method will unbind piranha's threads from any processor/core to which they might be bound.
+     * Note: if piranha is configured with PIRANHA_SINGLE_THREAD this function does nothing.
      *
      * By default piranha's threads are not bound to any specific processor/core.
      *
@@ -139,20 +151,27 @@ public:
      */
     static void set_thread_binding(bool flag)
     {
+#ifndef PIRANHA_SINGLE_THREAD
         thread_pool::set_binding(flag);
+#endif
     }
     /// Get the thread binding policy.
     /**
      * This method is an alias for piranha::thread_pool::get_binding(). It will return the flag set by
      * settings::set_thread_binding() (which is \p false by default on program startup).
      *
-     * @return the active thread binding policy.
+     * @return the active thread binding policy. Note: if piranha is configured with PIRANHA_SINGLE_THREAD this function
+     * always returns true.
      *
      * @throws unspecified any exception thrown by piranha::thread_pool::get_binding().
      */
     static bool get_thread_binding()
     {
+#ifndef PIRANHA_SINGLE_THREAD
         return thread_pool::get_binding();
+#else
+        return true;
+#endif
     }
     /// Get the cache line size.
     /**

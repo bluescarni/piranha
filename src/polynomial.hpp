@@ -2468,11 +2468,14 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
                 std::transform(minmax_values.begin(), minmax_values.end(), (*start)->m_key.begin(),
                                minmax_values.begin(), update_minmax{});
             }
+#ifndef PIRANHA_SINGLE_THREAD
             if (this->m_n_threads == 1u) {
+#endif
                 // In single thread the output mmv should be written only once, after being def-inited.
                 piranha_assert(mmv->empty());
                 // Just move in the local minmax values in single-threaded mode.
                 *mmv = std::move(minmax_values);
+#ifndef PIRANHA_SINGLE_THREAD
             } else {
                 std::lock_guard<std::mutex> lock(mut);
                 if (mmv->empty()) {
@@ -2489,6 +2492,7 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
                     std::transform(minmax_values.begin(), minmax_values.end(), mmv->begin(), mmv->begin(), updater);
                 }
             }
+#endif
         };
         // minmax vectors for the two series.
         mm_vec minmax_values1, minmax_values2;
@@ -2552,9 +2556,12 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
                 std::transform(minmax_values.begin(), minmax_values.end(), tmp_vec.begin(), minmax_values.begin(),
                                update_minmax{});
             }
+#ifndef PIRANHA_SINGLE_THREAD
             if (this->m_n_threads == 1u) {
+#endif
                 piranha_assert(mmv->empty());
                 *mmv = std::move(minmax_values);
+#ifndef PIRANHA_SINGLE_THREAD
             } else {
                 std::lock_guard<std::mutex> lock(mut);
                 if (mmv->empty()) {
@@ -2569,6 +2576,7 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
                     std::transform(minmax_values.begin(), minmax_values.end(), mmv->begin(), mmv->begin(), updater);
                 }
             }
+#endif
         };
         mm_vec minmax_values1, minmax_values2;
         check_bounds_impl(minmax_values1, minmax_values2, thread_func);
@@ -2594,9 +2602,12 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
     template <typename MmVec, typename Func>
     void check_bounds_impl(MmVec &minmax_values1, MmVec &minmax_values2, Func &thread_func) const
     {
+#ifndef PIRANHA_SINGLE_THREAD
         if (this->m_n_threads == 1u) {
+#endif
             thread_func(0u, &(this->m_v1), &minmax_values1);
             thread_func(0u, &(this->m_v2), &minmax_values2);
+#ifndef PIRANHA_SINGLE_THREAD
         } else {
             // Series 1.
             {
@@ -2631,6 +2642,7 @@ class series_multiplier<Series, detail::poly_multiplier_enabler<Series>> : publi
                 }
             }
         }
+#endif
     }
     // Enabler for the call operator.
     template <typename T>
@@ -3154,7 +3166,9 @@ private:
                 }
             }
         };
+#ifndef PIRANHA_SINGLE_THREAD
         if (this->m_n_threads == 1u) {
+#endif
             try {
                 // Single threaded case.
                 // Create the vector of tasks.
@@ -3176,6 +3190,7 @@ private:
                 throw;
             }
             return;
+#ifndef PIRANHA_SINGLE_THREAD
         }
         // Number of buckets in retval.
         const bucket_size_type bucket_count = container.bucket_count();
@@ -3361,6 +3376,7 @@ private:
             retval._container().clear();
             throw;
         }
+#endif
     }
 };
 }
