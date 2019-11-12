@@ -30,10 +30,10 @@ message(STATUS "Required Boost libraries: ${_PIRANHA_REQUIRED_BOOST_LIBS}")
 
 if(PIRANHA_WITH_BOOST_STACKTRACE)
 	# Boost stacktrace is available since 1.65.
-	find_package(Boost 1.65.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+	find_package(Boost 1.65.0 REQUIRED COMPONENTS ${_PIRANHA_REQUIRED_BOOST_LIBS})
 else()
 	# Otherwise, we require at least 1.58 due to flat_set/flat_map API requirements.
-	find_package(Boost 1.58.0 REQUIRED COMPONENTS "${_PIRANHA_REQUIRED_BOOST_LIBS}")
+	find_package(Boost 1.58.0 REQUIRED COMPONENTS ${_PIRANHA_REQUIRED_BOOST_LIBS})
 endif()
 
 if(NOT Boost_FOUND)
