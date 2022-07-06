@@ -1,0 +1,109 @@
+{
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "options": "boost:addr2line_location=/usr/bin/addr2line\nboost:asio_no_deprecated=False\nboost:buildid=None\nboost:bzip2=True\nboost:debug_level=0\nboost:diagnostic_definitions=False\nboost:error_code_header_only=False\nboost:extra_b2_flags=None\nboost:fPIC=True\nboost:filesystem_no_deprecated=False\nboost:header_only=False\nboost:i18n_backend=deprecated\nboost:i18n_backend_iconv=libiconv\nboost:i18n_backend_icu=False\nboost:layout=system\nboost:lzma=False\nboost:magic_autolink=False\nboost:multithreading=True\nboost:namespace=boost\nboost:namespace_alias=False\nboost:pch=True\nboost:python_executable=None\nboost:python_version=None\nboost:segmented_stacks=False\nboost:shared=False\nboost:system_no_deprecated=False\nboost:system_use_utf8=False\nboost:visibility=hidden\nboost:with_stacktrace_backtrace=True\nboost:without_atomic=False\nboost:without_chrono=False\nboost:without_container=False\nboost:without_context=False\nboost:without_contract=False\nboost:without_coroutine=False\nboost:without_date_time=False\nboost:without_exception=False\nboost:without_fiber=True\nboost:without_filesystem=False\nboost:without_graph=True\nboost:without_graph_parallel=True\nboost:without_iostreams=False\nboost:without_json=True\nboost:without_locale=False\nboost:without_log=False\nboost:without_math=True\nboost:without_mpi=True\nboost:without_nowide=True\nboost:without_program_options=False\nboost:without_python=True\nboost:without_random=False\nboost:without_regex=False\nboost:without_serialization=False\nboost:without_stacktrace=False\nboost:without_system=False\nboost:without_test=False\nboost:without_thread=False\nboost:without_timer=False\nboost:without_type_erasure=False\nboost:without_wave=True\nboost:zlib=True\nboost:zstd=False\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\ngmp:disable_assembly=True\ngmp:enable_cxx=True\ngmp:fPIC=True\ngmp:run_checks=False\ngmp:shared=False\nlibbacktrace:fPIC=True\nlibbacktrace:shared=False\nlibiconv:fPIC=True\nlibiconv:shared=False\nmpfr:exact_int=gmp\nmpfr:fPIC=True\nmpfr:shared=False\nmppp:fPIC=True\nmppp:shared=False\nmppp:with_arb=False\nmppp:with_boost=False\nmppp:with_mpc=False\nmppp:with_mpfr=False\nmppp:with_quadmath=False\nmsgpack-c:fPIC=True\nmsgpack-c:shared=False\npiranha:fPIC=True\npiranha:shared=False\nzlib:fPIC=True\nzlib:shared=False",
+    "requires": [
+     "1"
+    ],
+    "path": "conanfile.py",
+    "context": "host"
+   },
+   "1": {
+    "ref": "piranha/0.11@demo/testing",
+    "options": "fPIC=True\nshared=False\nboost:addr2line_location=/usr/bin/addr2line\nboost:asio_no_deprecated=False\nboost:buildid=None\nboost:bzip2=True\nboost:debug_level=0\nboost:diagnostic_definitions=False\nboost:error_code_header_only=False\nboost:extra_b2_flags=None\nboost:fPIC=True\nboost:filesystem_no_deprecated=False\nboost:header_only=False\nboost:i18n_backend=deprecated\nboost:i18n_backend_iconv=libiconv\nboost:i18n_backend_icu=False\nboost:layout=system\nboost:lzma=False\nboost:magic_autolink=False\nboost:multithreading=True\nboost:namespace=boost\nboost:namespace_alias=False\nboost:pch=True\nboost:python_executable=None\nboost:python_version=None\nboost:segmented_stacks=False\nboost:shared=False\nboost:system_no_deprecated=False\nboost:system_use_utf8=False\nboost:visibility=hidden\nboost:with_stacktrace_backtrace=True\nboost:without_atomic=False\nboost:without_chrono=False\nboost:without_container=False\nboost:without_context=False\nboost:without_contract=False\nboost:without_coroutine=False\nboost:without_date_time=False\nboost:without_exception=False\nboost:without_fiber=True\nboost:without_filesystem=False\nboost:without_graph=True\nboost:without_graph_parallel=True\nboost:without_iostreams=False\nboost:without_json=True\nboost:without_locale=False\nboost:without_log=False\nboost:without_math=True\nboost:without_mpi=True\nboost:without_nowide=True\nboost:without_program_options=False\nboost:without_python=True\nboost:without_random=False\nboost:without_regex=False\nboost:without_serialization=False\nboost:without_stacktrace=False\nboost:without_system=False\nboost:without_test=False\nboost:without_thread=False\nboost:without_timer=False\nboost:without_type_erasure=False\nboost:without_wave=True\nboost:zlib=True\nboost:zstd=False\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\ngmp:disable_assembly=True\ngmp:enable_cxx=True\ngmp:fPIC=True\ngmp:run_checks=False\ngmp:shared=False\nlibbacktrace:fPIC=True\nlibbacktrace:shared=False\nlibiconv:fPIC=True\nlibiconv:shared=False\nmpfr:exact_int=gmp\nmpfr:fPIC=True\nmpfr:shared=False\nmppp:fPIC=True\nmppp:shared=False\nmppp:with_arb=False\nmppp:with_boost=False\nmppp:with_mpc=False\nmppp:with_mpfr=False\nmppp:with_quadmath=False\nmsgpack-c:fPIC=True\nmsgpack-c:shared=False\nzlib:fPIC=True\nzlib:shared=False",
+    "package_id": "646b86ad0b96778141b7fa9bee7993c59f5c69ed",
+    "prev": "0",
+    "requires": [
+     "2",
+     "5",
+     "7",
+     "4",
+     "8",
+     "9",
+     "10"
+    ],
+    "context": "host"
+   },
+   "2": {
+    "ref": "boost/1.79.0",
+    "options": "addr2line_location=/usr/bin/addr2line\nasio_no_deprecated=False\nbuildid=None\nbzip2=True\ndebug_level=0\ndiagnostic_definitions=False\nerror_code_header_only=False\nextra_b2_flags=None\nfPIC=True\nfilesystem_no_deprecated=False\nheader_only=False\ni18n_backend=deprecated\ni18n_backend_iconv=libiconv\ni18n_backend_icu=False\nlayout=system\nlzma=False\nmagic_autolink=False\nmultithreading=True\nnamespace=boost\nnamespace_alias=False\npch=True\npython_executable=None\npython_version=None\nsegmented_stacks=False\nshared=False\nsystem_no_deprecated=False\nsystem_use_utf8=False\nvisibility=hidden\nwith_stacktrace_backtrace=True\nwithout_atomic=False\nwithout_chrono=False\nwithout_container=False\nwithout_context=False\nwithout_contract=False\nwithout_coroutine=False\nwithout_date_time=False\nwithout_exception=False\nwithout_fiber=True\nwithout_filesystem=False\nwithout_graph=True\nwithout_graph_parallel=True\nwithout_iostreams=False\nwithout_json=True\nwithout_locale=False\nwithout_log=False\nwithout_math=True\nwithout_mpi=True\nwithout_nowide=True\nwithout_program_options=False\nwithout_python=True\nwithout_random=False\nwithout_regex=False\nwithout_serialization=False\nwithout_stacktrace=False\nwithout_system=False\nwithout_test=False\nwithout_thread=False\nwithout_timer=False\nwithout_type_erasure=False\nwithout_wave=True\nzlib=True\nzstd=False\nbzip2:build_executable=True\nbzip2:fPIC=True\nbzip2:shared=False\nlibbacktrace:fPIC=True\nlibbacktrace:shared=False\nlibiconv:fPIC=True\nlibiconv:shared=False\nzlib:fPIC=True\nzlib:shared=False",
+    "package_id": "69549d56630ee45c5f4ae29091105007d38fa02c",
+    "prev": "0",
+    "requires": [
+     "3",
+     "4",
+     "5",
+     "6"
+    ],
+    "context": "host"
+   },
+   "3": {
+    "ref": "zlib/1.2.12",
+    "options": "fPIC=True\nshared=False",
+    "package_id": "095512ed878f14a09dd732e9f6868729dd437529",
+    "prev": "0",
+    "context": "host"
+   },
+   "4": {
+    "ref": "bzip2/1.0.8",
+    "options": "build_executable=True\nfPIC=True\nshared=False",
+    "package_id": "2b8e4ed96946ad0a4cd2c6e1e01636aa2a421589",
+    "prev": "0",
+    "context": "host"
+   },
+   "5": {
+    "ref": "libbacktrace/cci.20210118",
+    "options": "fPIC=True\nshared=False",
+    "package_id": "095512ed878f14a09dd732e9f6868729dd437529",
+    "prev": "0",
+    "context": "host"
+   },
+   "6": {
+    "ref": "libiconv/1.16",
+    "options": "fPIC=True\nshared=False",
+    "package_id": "095512ed878f14a09dd732e9f6868729dd437529",
+    "prev": "0",
+    "context": "host"
+   },
+   "7": {
+    "ref": "mppp/0.26",
+    "options": "fPIC=True\nshared=False\nwith_arb=False\nwith_boost=False\nwith_mpc=False\nwith_mpfr=False\nwith_quadmath=False\ngmp:disable_assembly=True\ngmp:enable_cxx=True\ngmp:fPIC=True\ngmp:run_checks=False\ngmp:shared=False",
+    "package_id": "1f3fc0dba7e96d43c295b52e4c7123289d14cdd2",
+    "prev": "0",
+    "requires": [
+     "8"
+    ],
+    "context": "host"
+   },
+   "8": {
+    "ref": "gmp/6.2.1",
+    "options": "disable_assembly=True\nenable_cxx=True\nfPIC=True\nrun_checks=False\nshared=False",
+    "package_id": "40152a86eb328b17c39876eec5d28cf93780f236",
+    "prev": "0",
+    "context": "host"
+   },
+   "9": {
+    "ref": "mpfr/4.1.0",
+    "options": "exact_int=gmp\nfPIC=True\nshared=False\ngmp:disable_assembly=True\ngmp:enable_cxx=True\ngmp:fPIC=True\ngmp:run_checks=False\ngmp:shared=False",
+    "package_id": "16cd0cee0584f85c7226f15ccf8f89dd40c230ba",
+    "prev": "0",
+    "requires": [
+     "8"
+    ],
+    "context": "host"
+   },
+   "10": {
+    "ref": "msgpack-c/4.0.0",
+    "options": "fPIC=True\nshared=False",
+    "package_id": "e98cc99c78f8ae352930d807a85fc7d6df891023",
+    "prev": "0",
+    "context": "host"
+   }
+  },
+  "revisions_enabled": false
+ },
+ "version": "0.4",
+ "profile_host": "[settings]\narch=armv8\narch_build=armv8\nbuild_type=Release\ncompiler=apple-clang\ncompiler.libcxx=libc++\ncompiler.version=13\nos=Macos\nos_build=Macos\n[options]\n[build_requires]\n[env]\n",
+ "profile_build": "[settings]\narch=armv8\narch_build=armv8\nbuild_type=Release\ncompiler=apple-clang\ncompiler.libcxx=libc++\ncompiler.version=13\nos=Macos\nos_build=Macos\n[options]\n[build_requires]\n[env]\n"
+}
