@@ -196,6 +196,7 @@ endif()
 set(PIRANHA_MINIMUM_MPPP_VERSION 0.9)
 find_package(mp++ ${PIRANHA_MINIMUM_MPPP_VERSION} REQUIRED)
 target_link_libraries(piranha INTERFACE mp++::mp++)
+include_directories(${mp++_INCLUDE_DIRS})
 
 if(PIRANHA_WITH_MSGPACK)
 find_package(MSGPACK-C MODULE REQUIRED)

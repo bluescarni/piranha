@@ -364,7 +364,7 @@
  "root": {
   "name": null,
   "version": null,
-  "user": "demo",
-  "channel": "testing"
+  "user": null,
+  "channel": null
  }
 }

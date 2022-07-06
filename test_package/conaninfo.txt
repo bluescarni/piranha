@@ -29,7 +29,7 @@
     mpfr/4.1.0:16cd0cee0584f85c7226f15ccf8f89dd40c230ba
     mppp/0.26:1f3fc0dba7e96d43c295b52e4c7123289d14cdd2
     msgpack-c/4.0.0:e98cc99c78f8ae352930d807a85fc7d6df891023
-    piranha/0.11@demo/testing:646b86ad0b96778141b7fa9bee7993c59f5c69ed
+    piranha/0.11:646b86ad0b96778141b7fa9bee7993c59f5c69ed
     zlib/1.2.12:095512ed878f14a09dd732e9f6868729dd437529
 
 [full_options]

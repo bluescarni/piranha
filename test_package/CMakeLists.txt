@@ -17,3 +17,6 @@ target_link_libraries(example ${mpfr_LIBRARIES})
 
 find_package(gmp CONFIG REQUIRED)
 include_directories(${gmp_INCLUDE_DIRS})
+
+find_package(mp++ CONFIG REQUIRED)
+include_directories(${mp++_INCLUDE_DIRS})

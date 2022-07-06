@@ -19,7 +19,7 @@ class PiranhaConan(ConanFile):
     default_options = {"shared": False, "fPIC": True}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "pyranha/*", "include/*", "src/*", "cmake_modules/*"
+    exports_sources = "CMakeLists.txt", "pyranha/*", "include/*", "src/*", "cmake_modules/*", "doc/*", "*.in"
     requires = "boost/1.79.0", "libbacktrace/cci.20210118", "mppp/0.26", "bzip2/1.0.8", "gmp/6.2.1", "mpfr/4.1.0", "msgpack-c/4.0.0"
 
     def config_options(self):

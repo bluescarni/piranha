@@ -1,5 +1,5 @@
 [includedirs]
-/Users/victor.paleologue/.conan/data/piranha/0.11/demo/testing/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/include
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/include
 /Users/victor.paleologue/.conan/data/boost/1.79.0/_/_/package/69549d56630ee45c5f4ae29091105007d38fa02c/include
 /Users/victor.paleologue/.conan/data/mppp/0.26/_/_/package/1f3fc0dba7e96d43c295b52e4c7123289d14cdd2/include
 /Users/victor.paleologue/.conan/data/mpfr/4.1.0/_/_/package/16cd0cee0584f85c7226f15ccf8f89dd40c230ba/include
@@ -11,6 +11,7 @@
 /Users/victor.paleologue/.conan/data/gmp/6.2.1/_/_/package/40152a86eb328b17c39876eec5d28cf93780f236/include
 
 [libdirs]
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/lib
 /Users/victor.paleologue/.conan/data/boost/1.79.0/_/_/package/69549d56630ee45c5f4ae29091105007d38fa02c/lib
 /Users/victor.paleologue/.conan/data/mppp/0.26/_/_/package/1f3fc0dba7e96d43c295b52e4c7123289d14cdd2/lib
 /Users/victor.paleologue/.conan/data/mpfr/4.1.0/_/_/package/16cd0cee0584f85c7226f15ccf8f89dd40c230ba/lib
@@ -29,7 +30,7 @@
 
 
 [builddirs]
-/Users/victor.paleologue/.conan/data/piranha/0.11/demo/testing/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/
 /Users/victor.paleologue/.conan/data/boost/1.79.0/_/_/package/69549d56630ee45c5f4ae29091105007d38fa02c/
 /Users/victor.paleologue/.conan/data/mppp/0.26/_/_/package/1f3fc0dba7e96d43c295b52e4c7123289d14cdd2/
 /Users/victor.paleologue/.conan/data/mpfr/4.1.0/_/_/package/16cd0cee0584f85c7226f15ccf8f89dd40c230ba/
@@ -117,10 +118,10 @@ BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 
 
 [includedirs_piranha]
-/Users/victor.paleologue/.conan/data/piranha/0.11/demo/testing/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/include
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/include
 
 [libdirs_piranha]
-
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/lib
 
 [bindirs_piranha]
 
@@ -129,7 +130,7 @@ BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 
 
 [builddirs_piranha]
-/Users/victor.paleologue/.conan/data/piranha/0.11/demo/testing/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed/
 
 [libs_piranha]
 
@@ -165,7 +166,7 @@ BOOST_STACKTRACE_GNU_SOURCE_NOT_REQUIRED
 
 
 [rootpath_piranha]
-/Users/victor.paleologue/.conan/data/piranha/0.11/demo/testing/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed
+/Users/victor.paleologue/.conan/data/piranha/0.11/_/_/package/646b86ad0b96778141b7fa9bee7993c59f5c69ed
 
 [name_piranha]
 piranha
